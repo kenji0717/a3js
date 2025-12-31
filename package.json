@@ -1,0 +1,30 @@
+{
+  "name": "a3js",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/a3js.cjs.js",
+  "module": "dist/a3js.es.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/a3js.es.js",
+      "require": "./dist/a3js.cjs.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
+  }
+}
