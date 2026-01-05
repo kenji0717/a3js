@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>test</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+       }
+     }
+    </script>
+    <script type="module">
+     import * as THREE from 'three';
+     import * as a3js from 'https://cdn.jsdelivr.net/npm/a3js@0/+esm';
+
+     const a3 = new a3js.A3();
+
+     document.querySelector('#app').textContent = a3.txt;
+    </script>
+  </body>
+</html>

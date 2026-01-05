@@ -8,8 +8,7 @@
   "exports": {
     ".": {
       "import": "./dist/a3js.es.js",
-      "require": "./dist/a3js.cjs.js",
-      "types": "./dist/types/index.d.ts"
+      "require": "./dist/a3js.cjs.js"
     }
   },
   "files": [
@@ -21,6 +20,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/three": "^0.182.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },

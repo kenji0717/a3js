@@ -1,7 +1,10 @@
-import * as THREE from 'three';
-import { A3 } from 'a3js';
+import * as a3 from 'a3js';
 
-const a3 = new A3();
-const txt: string = a3.txt;
+const canvas = new a3.A3Canvas();
+document.body.appendChild(canvas);
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `<p>${a3.txt}</p>`;
+const scene = new a3.A3Scene();
+canvas.setScene(scene);
+
+const obj = new a3.A3Test();
+scene.add(obj);
