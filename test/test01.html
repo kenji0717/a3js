@@ -4,24 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>test</title>
+    <style>
+      body { margin: 0; padding: 0; }
+      a3-canvas { height: 100vh; }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="importmap">
-     {
-       "imports": {
-         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
-         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
-       }
-     }
-    </script>
     <script type="module">
-     import * as THREE from 'three';
-     import * as a3js from 'https://cdn.jsdelivr.net/npm/a3js@0/+esm';
+     import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@0.0.1/+esm';
 
-     const a3 = new a3js.A3();
+     const canvas = new a3.A3Canvas();
+     document.body.appendChild(canvas);
 
-     document.querySelector('#app').textContent = a3.txt;
+     const scene = new a3.A3Scene();
+     canvas.setScene(scene);
+
+     const obj = new a3.A3Test();
+     scene.add(obj);
     </script>
   </body>
 </html>

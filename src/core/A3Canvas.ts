@@ -27,7 +27,6 @@ export class A3Canvas extends HTMLElement {
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(width, height);
-      console.log("GAHA: resize");
     });
     this.ro.observe(this);
   }
