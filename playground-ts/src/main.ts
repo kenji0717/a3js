@@ -1,7 +1,5 @@
-import { A3Canvas, A3Test } from 'a3js';
+import { A3Window, A3Test } from 'a3js';
 
-const canvas = new A3Canvas();
-document.body.appendChild(canvas);
-
+const view = new A3Window(600,300);
 const obj = new A3Test();
-canvas.scene.add(obj);
+view.scene.add(obj);
