@@ -17,12 +17,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && tsc --emitDeclarationOnly",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs": "typedoc && vitepress build docs-src --outDir docs"
   },
   "devDependencies": {
     "@types/three": "^0.182.0",
+    "typedoc": "^0.28.15",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitepress": "^1.6.4"
   },
   "dependencies": {
     "three": "^0.182.0"

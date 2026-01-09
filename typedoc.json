@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs-src/public/api",
+  "name": "a3js API Documentation",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "navigationLinks": {
+    "Docs Home": "../index.html"
+  }
+}
