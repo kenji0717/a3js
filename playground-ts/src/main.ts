@@ -1,10 +1,7 @@
-import * as a3 from 'a3js';
+import { A3Canvas, A3Test } from 'a3js';
 
-const canvas = new a3.A3Canvas();
+const canvas = new A3Canvas();
 document.body.appendChild(canvas);
 
-const scene = new a3.A3Scene();
-canvas.setScene(scene);
-
-const obj = new a3.A3Test();
-scene.add(obj);
+const obj = new A3Test();
+canvas.scene.add(obj);
