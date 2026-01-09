@@ -11,16 +11,11 @@
   </head>
   <body>
     <script type="module">
-     import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@0.0.1/+esm';
+     import { A3Window, A3Test } from 'https://cdn.jsdelivr.net/npm/a3js@0.0.3/+esm';
 
-     const canvas = new a3.A3Canvas();
-     document.body.appendChild(canvas);
-
-     const scene = new a3.A3Scene();
-     canvas.setScene(scene);
-
-     const obj = new a3.A3Test();
-     scene.add(obj);
+     const view = new A3Window(600,300);
+     const obj = new A3Test();
+     view.scene.add(obj);
     </script>
   </body>
 </html>

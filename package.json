@@ -18,7 +18,7 @@
     "dev": "vite",
     "build": "vite build && tsc --emitDeclarationOnly",
     "preview": "vite preview",
-    "docs": "typedoc && vitepress build docs-src --outDir docs"
+    "docs": "typedoc && vitepress build docs-src --outDir docs && rm -r docs-src/public/api"
   },
   "devDependencies": {
     "@types/three": "^0.182.0",
