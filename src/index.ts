@@ -4,6 +4,7 @@ export { A3Scene } from './core/A3Scene';
 export { A3Camera } from './core/A3Camera';
 export { A3Object } from './core/A3Object';
 export { A3Test } from './core/A3Test';
+export { A3Text3D, initFont } from './core/A3Text3D';
 export type { A3View } from './core/A3View';
 export { A3ViewBase } from './core/A3ViewBase';
 export { GeneralCamera } from './core/GeneralCamera';
