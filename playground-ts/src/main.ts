@@ -22,4 +22,3 @@ await initFont('M-PLUS-1_Bold.json');
 const view = new A3Window(600,300);
 const obj = new A3Text3D("日本語");
 view.scene.add(obj);
-view.camera.setLoc(2,0.6,3);

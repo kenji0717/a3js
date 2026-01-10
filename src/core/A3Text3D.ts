@@ -26,6 +26,7 @@ export class A3Text3D extends A3Object {
     } else {
       const opt = {font: font,size: 1,depth: 0.5,curveSegments: 12};
       const geo = new TextGeometry(str,opt);
+      geo.center();
       const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
       const mesh = new THREE.Mesh(geo, mat);
       return mesh;
