@@ -12,7 +12,8 @@ import type { A3Camera } from './A3Camera';
   * 
   * 細かいこととして、これを実装するクラスでは、A3Cameraは
   * A3Sceneに配置した上で、座標(0,0,3)の場所に配置し、
-  * (0,0,-1)の方向を向かせて、上は(0,1,0)にするように統一しよう。
+  * (0,0,-1)の方向を向かせて、上は(0,1,0)にするように統一する。
+  * A3ViewBaseクラスも参照。
   */
 export interface A3View {
   scene: A3Scene;

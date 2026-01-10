@@ -1,13 +1,17 @@
-import * as THREE from 'three';
-import type { A3Transform } from './A3Transform';
+//import * as THREE from 'three';
+import { A3Object } from './A3Object';
+
 /**
-  * a3jsのカメラが持つべき機能を表現するインターフェース
-  * カメラは移動できるようにA3Transformも実装してないと
-  * いけないし、ヘッドライトというのがデフォルトでONで
-  * これを制御する機能を持っていないといけない。
+  * a3jsのカメラのベーストなるアブストラクトクラス。
+  * a3jsのカメラはデフォルトでヘッドライトがONの状態
+  * で持ってないといけないので、それもカメラに含まれる
+  * ものとする。
   */
-export interface A3Camera extends A3Transform {
-  headLight: THREE.Light;
-  disableHeadlight(): void;
-  enableHeadlight(): void;
+export abstract class A3Camera extends A3Object {
+  /*
+   * 必ずHeadLightを準備しなければならない。
+   */
+  //initObject(): THREE.Object3D;
+
+  abstract setHeadLightEnable(b: boolean): void;
 }

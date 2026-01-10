@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { A3Scene } from './A3Scene';
+import { A3Camera } from './A3Camera';
 import type { A3View } from './A3View';
+import { A3ViewBase } from './A3ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 
 // Windowのスタイル
@@ -26,9 +28,11 @@ const tStyle = `
 
 export class A3Window extends HTMLElement implements A3View {
   private ro?: ResizeObserver;
+  base: A3ViewBase;
   renderer;
   scene: A3Scene;
-  camera: GeneralCamera;
+  camera: A3Camera;
+  camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
   isDragging: boolean = false;
   offsetX = 0;
@@ -36,15 +40,14 @@ export class A3Window extends HTMLElement implements A3View {
   
   constructor(width: number, height: number) {
     super();
-    this.clock = new THREE.Clock();
+    this.camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
+    const camera = new GeneralCamera(this.camera3js);
+    this.base = new A3ViewBase(camera);
+    this.scene = this.base.scene;
+    this.camera = this.base.camera;
     this.renderer = new THREE.WebGLRenderer();
-    this.scene = new A3Scene();
-    const pc = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
-    this.camera = new GeneralCamera(pc);
-    this.scene.scene.add(this.camera.camera);
-    this.scene.scene.add(this.camera.headLight);
-    this.camera.setLoc(0, 0, 3);
-    this.camera.setAspect(width / height);
+    this.clock = new THREE.Clock();
+    this.camera3js.aspect = width / height;
     this.renderer.setSize(width, height);
 
     this.style = wStyle;
@@ -74,8 +77,10 @@ export class A3Window extends HTMLElement implements A3View {
   connectedCallback() {
     this.ro = new ResizeObserver(() => {
       const { width, height } = this.renderer.domElement.getBoundingClientRect();
-      this.camera.setAspect(width / height);
+      this.camera3js.aspect = width / height;
       this.renderer.setSize(width, height);
+      //this.renderer.domElement.width = width; // ???
+      //this.renderer.domElement.width = height; // ???
     });
     this.ro.observe(this);
   }
@@ -100,13 +105,7 @@ export class A3Window extends HTMLElement implements A3View {
   };
 
   replaceScene(newScene: A3Scene): A3Scene {
-    this.scene.scene.remove(this.camera.camera);
-    this.scene.scene.remove(this.camera.headLight);
-    newScene.scene.add(this.camera.camera);
-    newScene.scene.add(this.camera.headLight);
-    const oldScene = this.scene;
-    this.scene = newScene;
-    return oldScene;
+    return this.base.replaceScene(newScene);
   }
 
   animationFrameId: number = -1;
@@ -115,7 +114,7 @@ export class A3Window extends HTMLElement implements A3View {
     const dt = this.clock.getDelta();
     if (this.scene) {
       this.scene.update(dt);
-      this.renderer.render(this.scene.scene, this.camera.camera);
+      this.renderer.render(this.scene.scene, this.camera3js);
     }
   };
 }
