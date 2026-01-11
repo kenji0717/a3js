@@ -30,4 +30,5 @@ const view = new A3Window(600,300);
 const obj = await new A3glTF('RobotExpressive.glb').ready;
 obj.setLoc(0,-2,-2);
 obj.change('Walking');
+obj.morph('Head_4.Surprised',1);
 view.scene.add(obj);
