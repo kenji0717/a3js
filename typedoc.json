@@ -6,5 +6,6 @@
   "excludeInternal": true,
   "navigationLinks": {
     "Docs Home": "../index.html"
-  }
+  },
+  "includeVersion": true
 }
