@@ -15,10 +15,19 @@ const obj = new A3Test();
 view.scene.add(obj);
 */
 
-
+/*
 import { A3Window, A3Text3D, initFont } from 'a3js';
 
 await initFont('M-PLUS-1_Bold.json.zip');
 const view = new A3Window(600,300);
 const obj = new A3Text3D("日本語");
+view.scene.add(obj);
+*/
+
+import { A3Window, A3glTF } from 'a3js';
+
+const view = new A3Window(600,300);
+const obj = await new A3glTF('RobotExpressive.glb').ready;
+obj.setLoc(0,-2,-2);
+obj.change('Walking');
 view.scene.add(obj);
