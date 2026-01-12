@@ -22,6 +22,10 @@ export abstract class A3Object {
   initNeedsUpdate() { return false; } // デフォルトfalse
   update(dt: number) {dt;} // デフォルト: 何もしない
 
+  initPhysics() {
+    ;
+  }
+
   setLoc(x: number, y: number, z: number) {
     this.object.position.set(x,y,z);
   }

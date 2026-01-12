@@ -6,6 +6,7 @@ export { A3Object } from './core/A3Object';
 export { A3Test } from './core/A3Test';
 export { A3Text3D, initFont } from './core/A3Text3D';
 export { A3glTF } from './core/A3glTF';
+export { ThreeJS } from './three/ThreeJS';
 export type { A3View } from './core/A3View';
 export { A3ViewBase } from './core/A3ViewBase';
 export { GeneralCamera } from './core/GeneralCamera';
