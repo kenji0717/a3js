@@ -1,4 +1,5 @@
 export { A3Canvas } from './core/A3Canvas';
+export type { A3CanvasOpt } from './core/A3Canvas';
 export { A3Window } from './core/A3Window';
 export { A3Scene } from './core/A3Scene';
 export { A3Camera } from './core/A3Camera';

@@ -6,6 +6,12 @@ import type { A3View } from './A3View';
 import { A3ViewBase } from './A3ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 
+export interface A3CanvasOpt {
+  camera?: THREE.Camera;
+  antialias?: boolean;
+  transparent?: boolean;
+}
+
 /**
  * HTMLのエレメント(a3-canvas)として使えるA3View。
  */
@@ -18,17 +24,23 @@ export class A3Canvas extends HTMLElement implements A3View {
   camera3js: THREE.Camera;
   clock: THREE.Clock;
   
-  constructor(camera3js?: THREE.Camera) {
+  constructor(opt?: A3CanvasOpt) {
     super();
-    if (!camera3js) camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
-    this.camera3js = camera3js;
-    const camera = new GeneralCamera(camera3js);
+    if (!opt) opt = {};
+    if (!opt.camera) opt.camera = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
+    this.camera3js = opt.camera;
+    const camera = new GeneralCamera(opt.camera);
     this.base = new A3ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
-    this.renderer = new THREE.WebGLRenderer();
+    const o = {
+      antialias: (opt.antialias?opt.antialias:false),
+      alpha: (opt.transparent?opt.transparent:false)
+    };
+    this.renderer = new THREE.WebGLRenderer(o);
+    if ('opaque' in opt) this.renderer.setClearAlpha(0);
     this.clock = new THREE.Clock();
-    this.style = 'display: block;';
+    this.style = 'display: block; background: rgba(0,0,0,0);';
     this.renderer.domElement.style = 'display: block; width: 100%; height: 100%; margin: 0; padding: 0;';
     this.appendChild(this.renderer.domElement);
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
