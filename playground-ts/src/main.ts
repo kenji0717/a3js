@@ -67,7 +67,7 @@ import { A3Canvas, A3glTF } from 'a3js';
 const p = document.createElement('p');
 p.textContent = `${"あ".repeat(1000)}`;
 document.body.appendChild(p);
-const view = new A3Canvas({antialias: true, opaque: 0.5});
+const view = new A3Canvas({antialias: true, transparent: true});
 view.style = "position:fixed;top:0;left:0;width:600px;height:300px;border:solid;";
 document.body.appendChild(view);
 const obj = await new A3glTF('RobotExpressive.glb').ready;
