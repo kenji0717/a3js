@@ -1,4 +1,9 @@
 
+import type { A3Object } from './A3Object';
+import type { MutableVec3 } from './Vec3';
+import type { MutableQuat } from './Quat';
+
+
 /*
  * 念のため、物理エンジンが変更されてもa3jsへの影響が少なくなるよう
  * 物理エンジンのインターフェースを作っておく。3Dグラフィック側は
@@ -12,8 +17,11 @@ export interface A3PhysicsOption {
 
 /**
  * 物理エンジン全体を管理するインターフェース
+ * A3Sceneのstaticなプロパティのphysicsに一つだけ
+ * 生成される。
  */
 export interface A3Physics {
+  readonly isInitialized: boolean;
   /**
     * 物理演算用のWorldを生成して返す。
     * 必要であれば最初に物理エンジン自体の初期化を行う。
@@ -28,7 +36,11 @@ export interface A3Physics {
 
 export interface A3PhysicsWorld {
   update(dt: number): void;
+  createPhysicsEntity(obj: A3Object): A3PhysicsEntity;
 }
 
-export interface A3RigidBody {
+export interface A3PhysicsEntity {
+  synchronize(obj: A3Object): void;
+  setLoc(v: MutableVec3): void;
+  setQuat(q: MutableQuat): void;
 }

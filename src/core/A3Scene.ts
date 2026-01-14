@@ -19,16 +19,28 @@ export class A3Scene {
   constructor() {
     this.scene = new THREE.Scene();
     this.objects = [];
-    if (!A3Scene.physics)
+    if (!A3Scene.physics) {
+      // 以下、オブジェクトは用意されるけど、
+      // 重い初期化処理などは実行されない
       A3Scene.physics = new RapierPhysics();
+    }
   }
 
   add(object: A3Object) {
     this.scene.add(object.object);
     this.objects.push(object);
+    object.scene = this;
+    if (object.needsPhysics) {
+      if (this.physicsWorld && !object.physics) {
+        object.physics = this.physicsWorld.createPhysicsEntity(object);
+        object.needsUpdate = true;
+      }
+    }
   }
 
   async initPhysics() {
+    // ここで初めて物理エンジンが初期化されるかも
+    // しれないのでasyncが付いてる。
     const opt: A3PhysicsOption = {
       gravity: {x:0.0, y: -9.81, z:0.0},
       timestep: this.physicsDt

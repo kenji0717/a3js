@@ -35,13 +35,23 @@ obj.morph('Head_4.Surprised',1);
 view.scene.add(obj);
 */
 
+/*
 import * as THREE from 'three';
 import { A3Window, ThreeJS } from 'a3js';
 
 const view = new A3Window(600,300);
-view.scene.initPhysics();
 const geo = new THREE.BoxGeometry();
 const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const mesh = new THREE.Mesh(geo, mat);
 const obj = new ThreeJS(mesh);
 view.scene.add(obj);
+*/
+
+
+import { A3Window, A3Test } from 'a3js';
+
+const view = new A3Window(600,300);
+await view.scene.initPhysics();
+const obj = new A3Test({physics: true});
+view.scene.add(obj);
+
