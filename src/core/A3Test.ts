@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { A3Object } from './A3Object';
 
-interface A3TestOpt {
+export interface A3TestOpt {
   physics: boolean
 }
 
