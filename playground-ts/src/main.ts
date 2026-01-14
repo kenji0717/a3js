@@ -1,4 +1,9 @@
 /*
+import * as a3 from 'a3js';
+window.a3 = a3;
+*/
+
+/*
 import { A3Window, A3Test } from 'a3js';
 
 const view = new A3Window(600,300);
