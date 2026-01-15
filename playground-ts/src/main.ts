@@ -56,8 +56,8 @@ view.scene.add(obj);
 import { A3Window, A3Test } from 'a3js';
 
 const view = new A3Window(600,300);
-await view.scene.initPhysics();
 const obj = new A3Test({physics: true});
+console.log(obj.motionControlMode);
 view.scene.add(obj);
 */
 
@@ -74,3 +74,4 @@ const obj = await new A3glTF('RobotExpressive.glb').ready;
 obj.change('Walking');
 view.scene.add(obj);
 view.camera.setLoc(0,2,4);
+

@@ -50,7 +50,7 @@ export class A3glTF extends A3Object implements AsyncInitRequired<A3glTF> {
   constructor(data: any) {
     super();
     this.ready = this.asyncInit(data);
-    this.needsUpdate = true;
+    this.setMotionControlMode("user");
   }
 
   initObject() {

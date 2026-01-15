@@ -1,14 +1,13 @@
 //import RAPIER from '@dimforge/rapier3d-compat';
 import type * as Rapier from '@dimforge/rapier3d-compat';
 
-import { A3Object } from '../core/A3Object';
-import { A3Test } from '../core/A3Test';
-import type { MutableVec3 } from '../core/Vec3';
-import type { MutableQuat } from '../core/Quat';
 import type { A3Physics, A3PhysicsWorld, A3PhysicsEntity, A3PhysicsOption } from '../core/A3Physics';
 //import { getShape } from '../three/getShape.js';
 
-let RAPIER: typeof import('@dimforge/rapier3d-compat');
+interface RapierPhysicsOption extends A3PhysicsOption {
+  enableCCD: boolean;
+  timestep: number;
+}
 
 export class RapierPhysics implements A3Physics {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -27,15 +26,21 @@ export class RapierPhysics implements A3Physics {
       const R = await import('@dimforge/rapier3d-compat');
       await R.init();
       RapierPhysics.RAPIER = R;
-      RAPIER = R;
       this.isInitialized = true;
     }
+    let timestep = 1/60;
+    if (this.isRapierOption(option))
+      timestep = option.timestep;
     const world = new RapierPhysics.RAPIER.World(option.gravity);
-    return new RapierWorld(world,option.timestep);
+    return new RapierPhysicsWorld(world,timestep);
+  }
+
+  private isRapierOption(option: A3PhysicsOption): option is RapierPhysicsOption {
+    return ( "enableCCD" in option && "timestep" in option );
   }
 }
 
-export class RapierWorld implements A3PhysicsWorld {
+export class RapierPhysicsWorld implements A3PhysicsWorld {
   world: Rapier.World;
   timestep: number;
 
@@ -45,11 +50,14 @@ export class RapierWorld implements A3PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  createPhysicsEntity(obj: A3Object) {
-    const entity = new A3TestPhysicsEntity(obj);
-    entity.body = this.world.createRigidBody(entity.bodyDesc);
-    entity.collider = this.world.createCollider(entity.colliderDesc,entity.body);
-    return entity;
+  add(entity: A3PhysicsEntity) {
+    entity;
+    console.log(`RapierPhysics.add() is not implemented yet!`);
+  }
+
+  remove(entity: A3PhysicsEntity) {
+    entity;
+    console.log(`RapierPhysics.remove() is not implemented yet!`);
   }
 
   update(dt: number) {
@@ -67,37 +75,3 @@ export interface RapierPhysicsEntity {
   collider: Rapier.Collider | null;
 }
 
-export class A3TestPhysicsEntity implements A3PhysicsEntity, RapierPhysicsEntity {
-  object: A3Object;
-  bodyDesc: Rapier.RigidBodyDesc;
-  body: Rapier.RigidBody | null = null;
-  colliderDesc: Rapier.ColliderDesc;
-  collider: Rapier.Collider | null = null;
-
-  constructor(obj: A3Object) {
-    this.object = obj;
-    this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
-    this.bodyDesc.setTranslation(obj.loc.x, obj.loc.y, obj.loc.z);
-    this.colliderDesc = RAPIER.ColliderDesc.cuboid(1,1,1);
-    this.colliderDesc.setRestitution(0.3).setFriction(0.6);
-  }
-
-  synchronize(obj: A3Test) {
-    if (this.body) {
-      const t = this.body.translation();
-      obj.setLoc(t.x, t.y, t.z);
-      const r = this.body.rotation();
-      obj.setQuat(r.x, r.y, r.z, r.w);
-    }
-  }
-
-  setLoc(v: MutableVec3): void {
-    if (this.body)
-      this.body.setTranslation(v,true); // true? false?
-  }
-
-  setQuat(q: MutableQuat): void {
-    if (this.body)
-      this.body.setRotation(q,true); // true? false?
-  }
-}

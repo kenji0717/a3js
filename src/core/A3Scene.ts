@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { A3Object } from './A3Object';
-import type { A3Physics, A3PhysicsWorld, A3PhysicsOption } from './A3Physics';
+import type { A3Physics, A3PhysicsWorld } from './A3Physics';
 import { RapierPhysics } from '../rapier/RapierPhysics';
 
 
@@ -30,29 +30,48 @@ export class A3Scene {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
-    if (object.needsPhysics) {
-      if (this.physicsWorld && !object.physics) {
-        object.physics = this.physicsWorld.createPhysicsEntity(object);
-        object.needsUpdate = true;
+    // 物理計算が必要になった時にはじめて初期化をする
+    // という方針にしたので、以下のような感じにした。重い？
+    if (object.motionControlMode === "physics") {
+      if (!this.physicsWorld) {
+        queueMicrotask(async () => { // こんなのあったのね
+          if (!this.physicsWorld) { // ここでもチェックしておくべき
+            this.physicsWorld = await A3Scene.physics.createWorld({
+              gravity: {x:0.0, y: -9.81, z:0.0},
+              timestep: this.physicsDt
+            });
+          }
+          if (!object.physics)
+            object.initPhysics(A3Scene.physics, this.physicsWorld);
+          if (object.physics) // 必ずtrueのはず
+            this.physicsWorld.add(object.physics);
+        });
       }
     }
   }
 
-  async initPhysics() {
-    // ここで初めて物理エンジンが初期化されるかも
-    // しれないのでasyncが付いてる。
-    const opt: A3PhysicsOption = {
-      gravity: {x:0.0, y: -9.81, z:0.0},
-      timestep: this.physicsDt
-    };
-    this.physicsWorld = await A3Scene.physics.createWorld(opt);
+  remove(object: A3Object) {
+    this.scene.remove(object.object);
+    {
+      // やりたいのはthis.objects.remove(object);なんだけど無い
+      // そして順番は変になるけど以下の方法はゲーム系では速くて
+      // 良いらしい。
+      const i = this.objects.indexOf(object);
+      this.objects[i] = this.objects[this.objects.length-1];
+      this.objects.pop();
+    }
+    object.scene = null;
+    if (object.motionControlMode === "physics")
+      if (this.physicsWorld)
+        if (object.physics)
+          this.physicsWorld.remove(object.physics);
   }
 
   update(dt: number) {
     if (this.physicsWorld)
       this.physicsWorld.update(dt);
     for (const obj of this.objects) {
-      if (obj.needsUpdate) {
+      if (obj.motionControlMode !== "manual" ) {
         obj.update(dt);
       }
     }

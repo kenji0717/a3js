@@ -12,7 +12,6 @@ import type { MutableQuat } from './Quat';
 
 export interface A3PhysicsOption {
   gravity: { x: number; y: number; z: number };
-  timestep: number;
 }
 
 /**
@@ -34,13 +33,43 @@ export interface A3Physics {
   createWorld<T extends A3PhysicsOption>(option: T): Promise<A3PhysicsWorld>;
 }
 
+/**
+ * 
+ */
 export interface A3PhysicsWorld {
+  add(entity: A3PhysicsEntity): void;
+  remove(entity: A3PhysicsEntity): void;
   update(dt: number): void;
-  createPhysicsEntity(obj: A3Object): A3PhysicsEntity;
 }
 
+/**
+ * RigidBodyなどの個別のA3Objectに必要な物理計算のための
+ * 色々な実体が含まれる物のインターフェース。
+ */
 export interface A3PhysicsEntity {
+  /**
+   * 物理演算の結果をA3Objectの位置や回転に反映させる。
+   */
   synchronize(obj: A3Object): void;
+
+  /**
+   * 物理演算対象であっても位置を外部から操作できるようにする。
+   */
   setLoc(v: MutableVec3): void;
+
+  /**
+   * 物理演算対象であっても回転を外部から操作できるようにする。
+   */
   setQuat(q: MutableQuat): void;
+}
+
+export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
+  private obj: A3Object;
+  constructor(obj: A3Object) {
+    this.obj = obj;
+    console.log(`A3PhysicsEntityDummy is created!(maybe wrong) This may be related to Class ${typeof this.obj}`);
+  }
+  synchronize(obj: A3Object): void { obj; };
+  setLoc(v: MutableVec3): void { v; };
+  setQuat(q: MutableQuat): void { q; };
 }
