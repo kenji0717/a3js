@@ -61,6 +61,12 @@ export interface A3PhysicsEntity {
    * 物理演算対象であっても回転を外部から操作できるようにする。
    */
   setQuat(q: MutableQuat): void;
+
+  /**
+   * 物理演算対象であっても拡大率を外部から操作できるようにする。
+   * ただ、これは普通難しいかも。
+   */
+  setScale(v: MutableVec3): void;
 }
 
 export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
@@ -72,4 +78,5 @@ export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
   synchronize(obj: A3Object): void { obj; };
   setLoc(v: MutableVec3): void { v; };
   setQuat(q: MutableQuat): void { q; };
+  setScale(v: MutableVec3): void { v; };
 }

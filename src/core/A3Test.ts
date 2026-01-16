@@ -40,6 +40,8 @@ export class A3Test extends A3Object {
   update(dt: number) {
     if (this.motionControlMode === "physics") {
       super.update(dt);
+    } else if (this.motionControlMode === "interpolated") {
+      super.update(dt);
     } else {
       this.object.rotation.x += dt;
       this.object.rotation.y += dt;
@@ -82,5 +84,10 @@ export class A3TestPhysicsEntity implements A3PhysicsEntity, RapierPhysicsEntity
   setQuat(q: MutableQuat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
+  }
+
+  setScale(v: MutableVec3): void {
+    v;
+    // 簡単ではないのでとりあえず保留
   }
 }

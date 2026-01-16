@@ -56,21 +56,83 @@ class BalloonInfo {
  * 必要な時だけA3Objectに追加される。
  */
 class Interpolation {
-  loc: Vec3;
-  rot: Quat;
-  scale: Vec3;
-  ratio: number = 0.9;
+  firstLoc: Vec3;
+  firstRot: Quat;
+  firstScale: Vec3;
+  nowLoc: Vec3;
+  nowRot: Quat;
+  nowScale: Vec3;
+  lastLoc: Vec3;
+  lastRot: Quat;
+  lastScale: Vec3;
+  nowTime: number;
+  duration: number;
 
   constructor(obj: A3Object) {
-    this.loc = new Vec3(obj.loc.x,obj.loc.y,obj.loc.z);
-    this.rot = new Quat(obj.rot.x,obj.rot.y,obj.rot.z,obj.rot.w);
-    this.scale = new Vec3(obj.scale.x,obj.scale.y,obj.scale.z);
+    this.firstLoc = new Vec3(obj.loc);
+    this.firstRot = new Quat(obj.rot);
+    this.firstScale = new Vec3(obj.scale);
+    this.nowLoc = new Vec3(obj.loc);
+    this.nowRot = new Quat(obj.rot);
+    this.nowScale = new Vec3(obj.scale);
+    this.lastLoc = new Vec3(obj.loc);
+    this.lastRot = new Quat(obj.rot);
+    this.lastScale = new Vec3(obj.scale);
+    this.nowTime = 0;
+    this.duration = 1;
+  }
+
+  setLoc(obj: A3Object, newLoc: MutableVec3) {
+    this.firstLoc.set(obj.loc);
+    this.firstRot.set(obj.rot);
+    this.firstScale.set(obj.scale);
+    this.lastLoc.set(newLoc);
+    //this.lastRot.set(obj.rot);
+    //this.lastScale.set(obj.scale);
+    this.nowTime = 0;
+  }
+
+  setQuat(obj: A3Object, newQuat: MutableQuat) {
+    this.firstLoc.set(obj.loc);
+    this.firstRot.set(obj.rot);
+    this.firstScale.set(obj.scale);
+    //this.lastLoc.set(obj.loc);
+    this.lastRot.set(newQuat);
+    //this.lastScale.set(obj.scale);
+    this.nowTime = 0;
+  }
+
+  setScale(obj: A3Object, newScale: MutableVec3) {
+    this.firstLoc.set(obj.loc);
+    this.firstRot.set(obj.rot);
+    this.firstScale.set(obj.scale);
+    //this.lastLoc.set(obj.loc);
+    //this.lastRot.set(obj.rot);
+    this.lastScale.set(newScale);
+    this.nowTime = 0;
+  }
+
+  smoothstep(t: number): number {
+    return t * t * (3 - 2 * t);
   }
 
   interpolate(obj: A3Object, dt: number) {
-    obj;
-    dt;
-    console.log('Interpolation.interpolate() is not implemented yet!');
+    this.nowTime += dt;
+    if (this.nowTime > this.duration) this.nowTime = this.duration;
+    const t0 = this.nowTime/this.duration;
+    const t = this.smoothstep(t0);
+
+    this.nowLoc.lerp(this.firstLoc,this.lastLoc,t);
+    // 以下、たぶん球面線形補間。重いけど必要な時ある。
+    this.nowRot.slerp(this.firstRot,this.lastRot,t);
+    this.nowScale.lerp(this.firstScale,this.lastScale,t);
+
+    obj.loc.set(this.nowLoc);
+    obj.object.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
+    obj.rot.set(this.nowRot);
+    obj.object.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
+    obj.scale.set(this.nowScale);
+    obj.object.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
   }
 }
 
@@ -148,12 +210,25 @@ export abstract class A3Object {
   setLoc(x: number, y: number, z: number): void;
   setLoc(v: MutableVec3): void;
   setLoc(xOrV: number | MutableVec3, y?: number, z?: number): void {
+    const newLoc = new Vec3();
     if (typeof xOrV === "number") {
-      this._loc.set(xOrV, y!, z!);
-      this.object.position.set(xOrV, y!, z!);
+      newLoc.set(xOrV, y!, z!);
     } else {
-      this._loc.set(xOrV.x, xOrV.y, xOrV.z);
-      this.object.position.set(xOrV.x,xOrV.y,xOrV.z);
+      newLoc.set(xOrV);
+    }
+    switch (this.motionControlMode) {
+      case "interpolated":
+        if (this.interpolation) // 絶対trueのはず
+          this.interpolation.setLoc(this,newLoc);
+        break;
+      case "physics":
+        if (this.physics) // 絶対trueのはず
+          this.physics.setLoc(newLoc);
+        break;
+      default:
+        this.loc.set(newLoc);
+        this.object.position.set(newLoc.x,newLoc.y,newLoc.z);
+        break;
     }
   }
   get loc(): Vec3 {
@@ -163,12 +238,25 @@ export abstract class A3Object {
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: MutableQuat): void;
   setQuat(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
+    const newQuat = new Quat();
     if (typeof xOrQ === "number") {
-      this._rot.set(xOrQ, y!, z!, w!);
-      this.object.quaternion.set(xOrQ, y!, z!, w!);
+      newQuat.set(xOrQ, y!, z!, w!);
     } else {
-      this._rot.set(xOrQ.x, xOrQ.y, xOrQ.z, xOrQ.w);
-      this.object.quaternion.set(xOrQ.x,xOrQ.y,xOrQ.z,xOrQ.w);
+      newQuat.set(xOrQ);
+    }
+    switch (this.motionControlMode) {
+      case "interpolated":
+        if (this.interpolation) // 絶対trueのはず
+          this.interpolation.setQuat(this,newQuat);
+        break;
+      case "physics":
+        if (this.physics) // 絶対trueのはず
+          this.physics.setQuat(newQuat);
+        break;
+      default:
+        this.rot.set(newQuat);
+        this.object.quaternion.set(newQuat.x,newQuat.y,newQuat.z,newQuat.w);
+        break;
     }
   }
   get rot(): Quat {
@@ -178,12 +266,21 @@ export abstract class A3Object {
   setScale(x: number, y: number, z: number): void;
   setScale(v: MutableVec3): void;
   setScale(xOrV: number | MutableVec3, y?: number, z?: number): void {
+    const newScale = new Vec3();
     if (typeof xOrV === "number") {
-      this._scale.set(xOrV, y!, z!);
-      this.object.scale.set(xOrV, y!, z!);
+      newScale.set(xOrV, y!, z!);
     } else {
-      this._scale.set(xOrV.x, xOrV.y, xOrV.z);
-      this.object.scale.set(xOrV.x,xOrV.y,xOrV.z);
+      newScale.set(xOrV);
+    }
+    switch (this.motionControlMode) {
+      case "interpolated":
+        if (this.interpolation) // 絶対trueのはず
+          this.interpolation.setScale(this,newScale);
+        break;
+      case "physics":
+        if (this.physics) // 絶対trueのはず
+          this.physics.setScale(newScale); // 普通の物理エンジンは対応させる？
+        break;
     }
   }
   get scale(): Vec3 {
