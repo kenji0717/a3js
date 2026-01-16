@@ -15,9 +15,9 @@ export class A3Test extends A3Object {
   constructor(opt?: A3TestOpt) {
     super();
     if (opt && opt.physics)
-      this.setMotionControlMode("physics");
+      this.setControlMode("physics");
     else
-      this.setMotionControlMode("user");
+      this.setControlMode("user");
   }
 
   initObject() {
@@ -33,9 +33,9 @@ export class A3Test extends A3Object {
   }
 
   update(dt: number) {
-    if (this.motionControlMode === "physics") {
+    if (this.controlMode === "physics") {
       super.update(dt);
-    } else if (this.motionControlMode === "interpolated") {
+    } else if (this.controlMode === "interpolated") {
       super.update(dt);
     } else {
       this.object.rotation.x += dt;
@@ -85,17 +85,17 @@ export class A3TestPhysicsEntity implements RapierPhysicsEntity {
       world.world.removeCollider(this.collider,false); // true? false?
   }
 
-  setLoc(v: MutableVec3): void {
+  forceSetLoc(v: MutableVec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
   }
 
-  setQuat(q: MutableQuat): void {
+  forceSetQuat(q: MutableQuat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
   }
 
-  setScale(v: MutableVec3): void {
+  forceSetScale(v: MutableVec3): void {
     v;
     // 簡単ではないのでとりあえず保留
   }

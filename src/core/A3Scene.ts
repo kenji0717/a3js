@@ -32,7 +32,7 @@ export class A3Scene {
     object.scene = this;
     // 物理計算が必要になった時にはじめて初期化をする
     // という方針にしたので、以下のような感じにした。重い？
-    if (object.motionControlMode === "physics") {
+    if (object.controlMode === "physics") {
       if (!this.physicsWorld) {
         queueMicrotask(async () => { // こんなのあったのね
           if (!this.physicsWorld) { // ここでもチェックしておくべき
@@ -61,7 +61,7 @@ export class A3Scene {
       this.objects.pop();
     }
     object.scene = null;
-    if (object.motionControlMode === "physics")
+    if (object.controlMode === "physics")
       if (this.physicsWorld)
         if (object.physics)
           this.physicsWorld.remove(object.physics);
@@ -71,7 +71,7 @@ export class A3Scene {
     if (this.physicsWorld)
       this.physicsWorld.update(dt);
     for (const obj of this.objects) {
-      if (obj.motionControlMode !== "manual" ) {
+      if (obj.controlMode !== "manual" ) {
         obj.update(dt);
       }
     }

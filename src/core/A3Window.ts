@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { A3Object } from './A3Object';
 import { A3Scene } from './A3Scene';
 import { A3Camera } from './A3Camera';
 import type { A3View } from './A3View';
@@ -72,6 +73,8 @@ export class A3Window extends HTMLElement implements A3View {
     this.renderer.domElement.width = height;
     this.appendChild(this.renderer.domElement);
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
+
+    this.addEventListener('click',this.myMouseClickedListener);
   }
 
   connectedCallback() {
@@ -117,6 +120,36 @@ export class A3Window extends HTMLElement implements A3View {
       this.renderer.render(this.scene.scene, this.camera3js);
     }
   };
+
+//----------------------------------
+
+  // このクラスはHTMLElementのスーパークラスだから
+  // EventTargetを継承してるので、this.dispatchEvent()で
+  // イベントを発生させられる。addEventListener()とか、
+  // 自分で作らなくてOK。
+  myMouseClickedListener = (e: any) => {
+    if (this.camera instanceof GeneralCamera) {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      mouse.x =  2*(x / rect.width) - 1;
+      mouse.y = -2*(y / rect.height) + 1;
+      raycaster.setFromCamera(mouse,this.camera.camera);
+      const intersects = raycaster.intersectObjects(this.scene.scene.children);
+      const objs: {o1:THREE.Object3D,o2:A3Object}[] = [];
+      intersects.forEach((o1)=>{
+        for (const o2 of this.scene.objects) {
+          if (o2.contains(o1.object)) {
+            objs.push({o1:o1.object,o2:o2});
+            break;
+          }
+        }
+      });
+      this.dispatchEvent(new CustomEvent('click3d',{detail: { value: objs }}));
+    }
+  }
 }
 
 customElements.define("a3-window", A3Window);

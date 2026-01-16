@@ -34,7 +34,9 @@ export interface A3Physics {
 }
 
 /**
- * 
+ * 物理演算が行われる空間を表すクラス。物理演算のステップを
+ * 進めるupdate、A3PhysicsEntityを追加・削除するためのadd、remove
+ * メソッドを持つ。
  */
 export interface A3PhysicsWorld {
   add(entity: A3PhysicsEntity): void;
@@ -55,18 +57,18 @@ export interface A3PhysicsEntity {
   /**
    * 物理演算対象であっても位置を外部から操作できるようにする。
    */
-  setLoc(v: MutableVec3): void;
+  forceSetLoc(v: MutableVec3): void;
 
   /**
    * 物理演算対象であっても回転を外部から操作できるようにする。
    */
-  setQuat(q: MutableQuat): void;
+  forceSetQuat(q: MutableQuat): void;
 
   /**
    * 物理演算対象であっても拡大率を外部から操作できるようにする。
    * ただ、これは普通難しいかも。
    */
-  setScale(v: MutableVec3): void;
+  forceSetScale(v: MutableVec3): void;
 }
 
 export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
@@ -76,7 +78,7 @@ export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
     console.log(`A3PhysicsEntityDummy is created!(maybe wrong) This may be related to Class ${typeof this.obj}`);
   }
   synchronize(obj: A3Object): void { obj; };
-  setLoc(v: MutableVec3): void { v; };
-  setQuat(q: MutableQuat): void { q; };
-  setScale(v: MutableVec3): void { v; };
+  forceSetLoc(v: MutableVec3): void { v; };
+  forceSetQuat(q: MutableQuat): void { q; };
+  forceSetScale(v: MutableVec3): void { v; };
 }

@@ -52,13 +52,13 @@ const obj = new ThreeJS(mesh);
 view.scene.add(obj);
 */
 
-
+/*
 import { A3Window, A3Test } from 'a3js';
 
 const view = new A3Window(600,300);
 const obj = new A3Test({physics: true});
 view.scene.add(obj);
-
+*/
 
 /*
 import { A3Canvas, A3glTF } from 'a3js';
@@ -80,7 +80,7 @@ import { A3Window, A3Test, asyncSleep } from 'a3js';
 
 const view = new A3Window(600,300);
 const obj = new A3Test();
-obj.setMotionControlMode("interpolated");
+obj.setControlMode("interpolated");
 view.scene.add(obj);
 for (let i=0; i<10;i++) {
   await asyncSleep(2000);
@@ -95,3 +95,36 @@ for (let i=0; i<10;i++) {
   }
 }
 */
+
+/*
+import { A3Window, A3Test } from 'a3js';
+
+const view = new A3Window(600,300);
+const obj1 = new A3Test();
+view.scene.add(obj1);
+const obj2 = new A3Test();
+obj2.setLocation(0.1,0,0);
+view.scene.add(obj2);
+view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
+*/
+
+
+import { A3Canvas, A3Test } from 'a3js';
+
+const view = new A3Canvas();
+document.body.appendChild(view);
+const obj1 = new A3Test();
+view.scene.add(obj1);
+const obj2 = new A3Test();
+obj2.setLocation(0.1,0,0);
+view.scene.add(obj2);
+view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
+
+
+
+
+
+
+
+
+
