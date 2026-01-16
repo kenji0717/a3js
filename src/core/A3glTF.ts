@@ -101,7 +101,7 @@ console.log(`    ${morphName}`);
     return this;
   }
 
-  change(actionName: string) {
+  action(actionName: string) {
     if (this.model) {
       this.model.mixer.stopAllAction();
       const action = this.model.actions[actionName];

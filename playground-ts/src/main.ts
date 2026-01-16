@@ -34,8 +34,8 @@ import { A3Window, A3glTF } from 'a3js';
 
 const view = new A3Window(600,300);
 const obj = await new A3glTF('RobotExpressive.glb').ready;
-obj.setLoc(0,-2,-2);
-obj.change('Walking');
+obj.setLocation(0,-2,-2);
+obj.action('Walking');
 obj.morph('Head_4.Surprised',1);
 view.scene.add(obj);
 */
@@ -52,14 +52,13 @@ const obj = new ThreeJS(mesh);
 view.scene.add(obj);
 */
 
-/*
+
 import { A3Window, A3Test } from 'a3js';
 
 const view = new A3Window(600,300);
 const obj = new A3Test({physics: true});
-console.log(obj.motionControlMode);
 view.scene.add(obj);
-*/
+
 
 /*
 import { A3Canvas, A3glTF } from 'a3js';
@@ -71,12 +70,12 @@ const view = new A3Canvas({antialias: true, transparent: true});
 view.style = "position:fixed;top:0;left:0;width:600px;height:300px;border:solid;";
 document.body.appendChild(view);
 const obj = await new A3glTF('RobotExpressive.glb').ready;
-obj.change('Walking');
+obj.action('Walking');
 view.scene.add(obj);
-view.camera.setLoc(0,2,4);
+view.camera.setLocation(0,2,4);
 */
 
-
+/*
 import { A3Window, A3Test, asyncSleep } from 'a3js';
 
 const view = new A3Window(600,300);
@@ -86,12 +85,13 @@ view.scene.add(obj);
 for (let i=0; i<10;i++) {
   await asyncSleep(2000);
   if (i%2 === 0) {
-    obj.setLoc(1,0,0);
+    obj.setLocation(1,0,0);
     obj.setQuat(0,0.707,0,0.707);
     obj.setScale(2,2,2);
   } else {
-    obj.setLoc(-1,0,0);
+    obj.setLocation(-1,0,0);
     obj.setQuat(0,0.707,0,-0.707);
     obj.setScale(0.5,0.5,0.5);
   }
 }
+*/

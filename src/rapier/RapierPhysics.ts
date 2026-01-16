@@ -40,6 +40,7 @@ export class RapierPhysics implements A3Physics {
   }
 }
 
+
 export class RapierPhysicsWorld implements A3PhysicsWorld {
   world: Rapier.World;
   timestep: number;
@@ -51,13 +52,19 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
   }
 
   add(entity: A3PhysicsEntity) {
-    entity;
-    console.log(`RapierPhysics.add() is not implemented yet!`);
+    if (isRapierPhysicsEntity(entity)) {
+      entity.addOneself(this);
+    } else {
+      ; // 何もしない
+    }
   }
 
   remove(entity: A3PhysicsEntity) {
-    entity;
-    console.log(`RapierPhysics.remove() is not implemented yet!`);
+    if (isRapierPhysicsEntity(entity)) {
+      entity.removeOneself(this);
+    } else {
+      ; // 何もしない
+    }
   }
 
   update(dt: number) {
@@ -68,10 +75,11 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
   }
 }
 
-export interface RapierPhysicsEntity {
-  bodyDesc: Rapier.RigidBodyDesc;
-  body: Rapier.RigidBody | null;
-  colliderDesc: Rapier.ColliderDesc;
-  collider: Rapier.Collider | null;
+export interface RapierPhysicsEntity extends A3PhysicsEntity {
+  addOneself(world: RapierPhysicsWorld): void;
+  removeOneself(world: RapierPhysicsWorld): void;
 }
 
+function isRapierPhysicsEntity(obj: A3PhysicsEntity): obj is RapierPhysicsEntity {
+  return "addOneself" in obj && "removeOneself" in obj;
+}

@@ -19,7 +19,7 @@ export class A3ViewBase implements A3View {
     this.scene = new A3Scene();
     this.camera = camera;
     this.scene.scene.add(this.camera.object);
-    this.camera.setLoc(0, 0, 3);
+    this.camera.setLocation(0, 0, 3);
   }
 
   replaceScene(newScene: A3Scene): A3Scene {

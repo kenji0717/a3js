@@ -10,8 +10,8 @@ export default defineConfig({
       fileName: (format) => `a3js.${format}.js`,
     },
     rollupOptions: {
-      // three をバンドルしない
-      external: ['three'],
+      // three rapier をバンドルしない
+      external: ['three','@dimforge/rapier3d-compat'],
       output: {
         globals: {
           three: 'THREE',

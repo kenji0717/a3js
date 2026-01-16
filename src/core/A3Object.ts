@@ -69,13 +69,13 @@ class Interpolation {
   duration: number;
 
   constructor(obj: A3Object) {
-    this.firstLoc = new Vec3(obj.loc);
+    this.firstLoc = new Vec3(obj.location);
     this.firstRot = new Quat(obj.rot);
     this.firstScale = new Vec3(obj.scale);
-    this.nowLoc = new Vec3(obj.loc);
+    this.nowLoc = new Vec3(obj.location);
     this.nowRot = new Quat(obj.rot);
     this.nowScale = new Vec3(obj.scale);
-    this.lastLoc = new Vec3(obj.loc);
+    this.lastLoc = new Vec3(obj.location);
     this.lastRot = new Quat(obj.rot);
     this.lastScale = new Vec3(obj.scale);
     this.nowTime = 0;
@@ -83,7 +83,7 @@ class Interpolation {
   }
 
   setLoc(obj: A3Object, newLoc: MutableVec3) {
-    this.firstLoc.set(obj.loc);
+    this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
     this.lastLoc.set(newLoc);
@@ -93,7 +93,7 @@ class Interpolation {
   }
 
   setQuat(obj: A3Object, newQuat: MutableQuat) {
-    this.firstLoc.set(obj.loc);
+    this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
@@ -103,7 +103,7 @@ class Interpolation {
   }
 
   setScale(obj: A3Object, newScale: MutableVec3) {
-    this.firstLoc.set(obj.loc);
+    this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
@@ -112,6 +112,8 @@ class Interpolation {
     this.nowTime = 0;
   }
 
+  // cssのanimation-timing-functionみたいに
+  // 切り替えられるようにしたいね。
   smoothstep(t: number): number {
     return t * t * (3 - 2 * t);
   }
@@ -127,7 +129,7 @@ class Interpolation {
     this.nowRot.slerp(this.firstRot,this.lastRot,t);
     this.nowScale.lerp(this.firstScale,this.lastScale,t);
 
-    obj.loc.set(this.nowLoc);
+    obj.location.set(this.nowLoc);
     obj.object.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
     obj.rot.set(this.nowRot);
     obj.object.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
@@ -207,9 +209,9 @@ export abstract class A3Object {
       this.balloon.message = message;
   }
 
-  setLoc(x: number, y: number, z: number): void;
-  setLoc(v: MutableVec3): void;
-  setLoc(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setLocation(x: number, y: number, z: number): void;
+  setLocation(v: MutableVec3): void;
+  setLocation(xOrV: number | MutableVec3, y?: number, z?: number): void {
     const newLoc = new Vec3();
     if (typeof xOrV === "number") {
       newLoc.set(xOrV, y!, z!);
@@ -226,12 +228,12 @@ export abstract class A3Object {
           this.physics.setLoc(newLoc);
         break;
       default:
-        this.loc.set(newLoc);
+        this.location.set(newLoc);
         this.object.position.set(newLoc.x,newLoc.y,newLoc.z);
         break;
     }
   }
-  get loc(): Vec3 {
+  get location(): Vec3 {
     return this._loc;
   }
 
