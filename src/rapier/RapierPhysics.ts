@@ -147,3 +147,69 @@ export class RapierDefaultPhysicsEntity implements RapierPhysicsEntity {
   }
 }
 
+// ------------------------------------
+
+/*
+     // glTFの最初の Mesh から Rapier TriMesh を作って与えられたparentBodyに設定
+     async function createTriMeshColliderFromGLTF(gltf, world, parentBody /* RigidBody */, RAPIER) {
+       const colliders = [];
+       gltf.scene.traverse(obj => {
+         if (obj.isMesh && obj.geometry) {
+           const mesh = obj;
+
+           // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
+           mesh.updateWorldMatrix(true, true);
+           const geom = mesh.geometry.clone();
+           geom.applyMatrix4(mesh.matrixWorld);
+
+           // 頂点（Float32Array）とインデックス（Uint32Array）を用意
+           const pos = geom.attributes.position.array; // Float32Array
+           let idx = geom.index ? geom.index.array : null;
+           if (!idx) {
+             // 非インデックスの場合は 0..N-1 を生成
+             const count = geom.attributes.position.count;
+             idx = new Uint32Array(count);
+             for (let i = 0; i < count; i++) idx[i] = i;
+           } else if (!(idx instanceof Uint32Array)) {
+             idx = new Uint32Array(idx); // Rapier 側の型に合わせる
+           }
+
+           const colliderDesc = RAPIER.ColliderDesc.trimesh(pos, idx);
+           colliderDesc.setMass(0).setFriction(0.8).setRestitution(0.8); // 適当
+           
+           const collider = world.createCollider(colliderDesc, parentBody); // body に付与
+           colliders.push(collider);
+         }
+       });
+       return colliders;
+     }
+
+
+     // glTFの最初の Mesh から Rapier ConvexHull を作って与えられたparentBodyに設定
+     async function createConvexHullColliderFromGLTF(gltf, world, parentBody /* RigidBody */, RAPIER) {
+       const colliders = [];
+       gltf.scene.traverse(obj => {
+         if (obj.isMesh && obj.geometry) {
+           const mesh = obj;
+
+           // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
+           mesh.updateWorldMatrix(true, true);
+           const geom = mesh.geometry.clone();
+           geom.applyMatrix4(mesh.matrixWorld);
+
+           // 頂点（Float32Array）とインデックス（Uint32Array）を用意
+           const pos = geom.attributes.position.array; // Float32Array
+           // 凸包を Rapier に自動生成させる
+           const colliderDesc = RAPIER.ColliderDesc.convexHull(pos);
+           colliderDesc.setMass(0).setFriction(0.8).setRestitution(0.8);// 適当
+           if (colliderDesc) {
+             const collider = world.createCollider(colliderDesc, parentBody);
+             colliders.push(collider);
+           } else if (!(idx instanceof Uint32Array)) {
+             console.warn("convexHull 生成に失敗（共線点のみ等のケース）");
+           }
+         }
+       });
+       return colliders;
+     }
+*/

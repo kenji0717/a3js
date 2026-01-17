@@ -113,8 +113,10 @@ console.log(`    ${morphName}`);
 
   morph(morphName: string, value: number) {
     if (this.model) {
-      const { array, idx }  = this.model.morphs[morphName]
-      array[idx] = value;
+      if (morphName in this.model.morphs) {
+        const { array, idx }  = this.model.morphs[morphName]
+        array[idx] = value;
+      }
     }
   }
 

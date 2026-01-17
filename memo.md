@@ -1,4 +1,14 @@
 
+three.js
+Loading VRML from Files in ZIP
+
+
+rapier
+createTriMeshColliderDesc(mesh);
+createConvexHullColliderDesc(mesh);
+
+-----
+
 a3js.ControlModeの"physics"を、さらに分類した方が良いかも
 しれない。あるいは、まったく独立した別の分類になるか？
 
