@@ -10,16 +10,12 @@ import type { MutableQuat } from './Quat';
  * Three.jsを信じて、ここのインターフェースで使ってしまおう。
  */
 
-export interface A3PhysicsOption {
-  gravity: { x: number; y: number; z: number };
-}
-
 /**
  * 物理エンジン全体を管理するインターフェース
  * A3Sceneのstaticなプロパティのphysicsに一つだけ
  * 生成される。
  */
-export interface A3Physics {
+export interface A3PhysicsEngine {
   readonly isInitialized: boolean;
   /**
     * 物理演算用のWorldを生成して返す。
@@ -30,7 +26,15 @@ export interface A3Physics {
     * 物理エンジンの初期化が複数回発生しないような工夫もして欲しい。
     * なのでコンストラクタで初期化しないようにすべし。
     */
-  createWorld<T extends A3PhysicsOption>(option: T): Promise<A3PhysicsWorld>;
+  createWorld<T extends A3PhysicsWorldOption>(option: T): Promise<A3PhysicsWorld>;
+}
+
+/**
+ * A3PhysicsWorldを生成する時に必要となる情報をまとめたもの。
+ * 物理エンジンの実装ごとに拡張可能。
+ */
+export interface A3PhysicsWorldOption {
+  gravity: { x: number; y: number; z: number };
 }
 
 /**
@@ -45,10 +49,19 @@ export interface A3PhysicsWorld {
 }
 
 /**
+ * A3PhysicsEngityを生成する時に必要な情報をまとめたもの。
+ * 物理エンジンや個別のA3PhysicsEntityごとに拡張可能。
+ */
+export interface A3PhysicsEntityOption {
+  
+}
+
+/**
  * RigidBodyなどの個別のA3Objectに必要な物理計算のための
  * 色々な実体が含まれる物のインターフェース。
  */
 export interface A3PhysicsEntity {
+  
   /**
    * 物理演算の結果をA3Objectの位置や回転に反映させる。
    */
@@ -71,14 +84,3 @@ export interface A3PhysicsEntity {
   forceSetScale(v: MutableVec3): void;
 }
 
-export class A3PhysicsEntityDummy implements A3PhysicsEntityDummy {
-  private obj: A3Object;
-  constructor(obj: A3Object) {
-    this.obj = obj;
-    console.log(`A3PhysicsEntityDummy is created!(maybe wrong) This may be related to Class ${typeof this.obj}`);
-  }
-  synchronize(obj: A3Object): void { obj; };
-  forceSetLoc(v: MutableVec3): void { v; };
-  forceSetQuat(q: MutableQuat): void { q; };
-  forceSetScale(v: MutableVec3): void { v; };
-}

@@ -82,7 +82,8 @@ const view = new A3Window(600,300);
 const obj = new A3Test();
 obj.setControlMode("interpolated");
 view.scene.add(obj);
-for (let i=0; i<10;i++) {
+let i=0;
+while (true) {
   await asyncSleep(2000);
   if (i%2 === 0) {
     obj.setLocation(1,0,0);
@@ -93,6 +94,7 @@ for (let i=0; i<10;i++) {
     obj.setQuat(0,0.707,0,-0.707);
     obj.setScale(0.5,0.5,0.5);
   }
+  i++;
 }
 */
 
@@ -103,7 +105,7 @@ const view = new A3Window(600,300);
 const obj1 = new A3Test();
 view.scene.add(obj1);
 const obj2 = new A3Test();
-obj2.setLocation(0.1,0,0);
+obj2.setLocation(0.3,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
 */
@@ -116,15 +118,7 @@ document.body.appendChild(view);
 const obj1 = new A3Test();
 view.scene.add(obj1);
 const obj2 = new A3Test();
-obj2.setLocation(0.1,0,0);
+obj2.setLocation(0.3,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
-
-
-
-
-
-
-
-
 

@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import { A3Object } from './A3Object';
-import type { A3Physics, A3PhysicsWorld } from './A3Physics';
-import { RapierPhysics } from '../rapier/RapierPhysics';
-
-
+import type { A3PhysicsEngine, A3PhysicsWorld } from './A3Physics';
+import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 
 /**
   * 3D仮想空間を表すクラス。THREE.Sceneを内包していて
@@ -12,7 +10,7 @@ import { RapierPhysics } from '../rapier/RapierPhysics';
 export class A3Scene {
   scene: THREE.Scene;
   objects: A3Object[];
-  static physics: A3Physics;
+  static physics: A3PhysicsEngine;
   physicsWorld: A3PhysicsWorld | null = null;
   physicsDt = 1/60;
 
@@ -22,7 +20,7 @@ export class A3Scene {
     if (!A3Scene.physics) {
       // 以下、オブジェクトは用意されるけど、
       // 重い初期化処理などは実行されない
-      A3Scene.physics = new RapierPhysics();
+      A3Scene.physics = new RapierPhysicsEngine();
     }
   }
 
@@ -42,7 +40,7 @@ export class A3Scene {
             });
           }
           if (!object.physics)
-            object.initPhysics(A3Scene.physics, this.physicsWorld);
+            object.physics = object.initPhysics(A3Scene.physics,this.physicsWorld);
           if (object.physics) // 必ずtrueのはず
             this.physicsWorld.add(object.physics);
         });

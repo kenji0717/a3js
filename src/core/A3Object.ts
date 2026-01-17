@@ -1,8 +1,9 @@
 
 import * as THREE from 'three';
 import { A3Scene } from './A3Scene';
-import type { A3Physics, A3PhysicsWorld, A3PhysicsEntity } from './A3Physics';
-import { A3PhysicsEntityDummy } from './A3Physics';
+import type { A3PhysicsEngine, A3PhysicsWorld, A3PhysicsEntity,
+              A3PhysicsEntityOption } from './A3Physics';
+import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
 import { Quat } from './Quat';
@@ -86,16 +87,30 @@ export abstract class A3Object {
   }
 
   /**
-   * 物理演算に必要なA3PhysicsEntityを用意する。ただ、物理演算が
-   * 必要無い場合には、わざわざ実装しなくて良いようにデフォルト
-   * 実装を作ってあるけど、その実装内容は物理エンジンの方のに
-   * まかせる形になっている。物理演算を本当に使用したい場合には
-   * スーパークラスでオーバーライドして実装するべき。
+   * このA3Object用のA3PhysicsEntity(物理計算に必要なもろもろ)
+   * を生成するために必要な情報を、このメソッドで返す。物理演算
+   * で特別なことをするような時には、このメソッドをオーバーライド
+   * しする必要があるかもしれない。ここで生成されたオプションの
+   * 情報はthis.initPhysics()に受け渡されてA3PhysicsEntityが生成
+   * される。
+   */
+  getPhysicsEntityOption(): A3PhysicsEntityOption {
+    return {
+      gaha: 10.0
+    };
+  }
+
+  /**
+   * 物理演算に必要なA3PhysicsEntityを用意する。
+   * デフォルトでRapierDefaultPhysicsEntityを生成する
+   * けど、特別な物理演算を使用したい場合には
+   * スーパークラスでオーバーライドして別のEntityを
+   * 返すようにすること。
    */ 
-  initPhysics(physics?: A3Physics, world?: A3PhysicsWorld) {
-    if (physics) console.log(`physics: ${typeof physics}`);
-    if (world) console.log(`world: ${typeof world}`);
-    this.physics = new A3PhysicsEntityDummy(this);
+  initPhysics(engine: A3PhysicsEngine,world: A3PhysicsWorld): A3PhysicsEntity {
+    engine; world;
+    const opt = this.getPhysicsEntityOption();
+    return new RapierDefaultPhysicsEntity(this,opt);
   }
 
   setBalloon(message: string) {
