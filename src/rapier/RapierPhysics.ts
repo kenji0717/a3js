@@ -151,7 +151,7 @@ export class RapierDefaultPhysicsEntity implements RapierPhysicsEntity {
 
 /*
      // glTFの最初の Mesh から Rapier TriMesh を作って与えられたparentBodyに設定
-     async function createTriMeshColliderFromGLTF(gltf, world, parentBody /* RigidBody */, RAPIER) {
+     async function createTriMeshColliderFromGLTF(gltf, world, parentBody, RAPIER) {
        const colliders = [];
        gltf.scene.traverse(obj => {
          if (obj.isMesh && obj.geometry) {
@@ -186,7 +186,7 @@ export class RapierDefaultPhysicsEntity implements RapierPhysicsEntity {
 
 
      // glTFの最初の Mesh から Rapier ConvexHull を作って与えられたparentBodyに設定
-     async function createConvexHullColliderFromGLTF(gltf, world, parentBody /* RigidBody */, RAPIER) {
+     async function createConvexHullColliderFromGLTF(gltf, world, parentBody, RAPIER) {
        const colliders = [];
        gltf.scene.traverse(obj => {
          if (obj.isMesh && obj.geometry) {
