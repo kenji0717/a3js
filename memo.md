@@ -1,11 +1,7 @@
 
-three.js
-Loading VRML from Files in ZIP
-
-
-rapier
-createTriMeshColliderDesc(mesh);
-createConvexHullColliderDesc(mesh);
+Rapierでは慣性モーメントは自動で計算されるっぽい。
+TriMeshは例外、でもConvexHullはちゃんと計算してくれる
+らしい。
 
 -----
 
