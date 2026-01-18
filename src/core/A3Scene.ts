@@ -35,8 +35,10 @@ export class A3Scene {
     object.scene = this;
     if (object.controlMode === "physics") {
       if (this.physicsWorld) {
-        if (!object.physics)
-          object.physics = object.initPhysics(A3Scene.physics,this.physicsWorld);
+        if (!object.physics) {
+          const opt = object.getPhysicsEntityOption();
+          object.initPhysics(opt);
+        }
         if (object.physics) // 必ずtrueのはず
           this.physicsWorld.add(object.physics);
       } else {

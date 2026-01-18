@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 import { A3Scene } from './A3Scene';
-import type { A3PhysicsEngine, A3PhysicsWorld, A3PhysicsEntity,
+import type { A3PhysicsEntity,
               A3PhysicsEntityOption } from './A3Physics';
 import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
@@ -101,16 +101,22 @@ export abstract class A3Object {
   }
 
   /**
-   * 物理演算に必要なA3PhysicsEntityを用意する。
-   * デフォルトでRapierDefaultPhysicsEntityを生成する
-   * けど、特別な物理演算を使用したい場合には
-   * スーパークラスでオーバーライドして別のEntityを
-   * 返すようにすること。
+   * 物理演算に必要なA3PhysicsEntity(物理実態)を生成して
+   * this.physicsに設定します。A3PhysicsEntityのデフォルト実装
+   * としてRapierDefaultPhysicsEntityを使用しますが、自分で作った
+   * 物理実態(A3PhysicsEntity)を使いたい場合は、A3Objectを継承した
+   * クラスで、このinitPhysics()メソッドを適切にオーバーライドして
+   * ください。このinitPhysics()は通常A3Scene(つまりworld)に追加
+   * される瞬間に1度だけ実行されます。その場合A3PhysicsEntityの
+   * 生成に必要なA3PhysicsEntityOptionはthis.getPhysicsEntityOption();
+   * から取得されます。このオプションを変更してカスタマイズしたい
+   * 場合は、A3ObjectをA3Sceneにaddする前に
+   * this.initPhysics(カスタマイズしたオプション);として初期化して
+   * 下さい。もしくは継承したクラスでgetPhysicsEntityOption()メソッド
+   * をオーバーライドしましょう。
    */ 
-  initPhysics(engine: A3PhysicsEngine,world: A3PhysicsWorld): A3PhysicsEntity {
-    engine; world;
-    const opt = this.getPhysicsEntityOption();
-    return new RapierDefaultPhysicsEntity(this,opt);
+  initPhysics(opt: A3PhysicsEntityOption): void {
+    this.physics = new RapierDefaultPhysicsEntity(this,opt);
   }
 
   setBalloon(message: string) {

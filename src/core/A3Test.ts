@@ -3,9 +3,10 @@ import type * as Rapier from '@dimforge/rapier3d-compat';
 import { A3Object } from './A3Object';
 import type { MutableVec3 } from './Vec3';
 import type { MutableQuat } from './Quat';
-import type { A3PhysicsEngine, A3PhysicsWorld } from './A3Physics';
-import { RapierPhysicsEngine, RapierPhysicsWorld } from '../rapier/RapierPhysics';
-import type { RapierPhysicsEntity } from '../rapier/RapierPhysics';
+import type { A3PhysicsEntityOption } from './A3Physics';
+import { RapierPhysicsEngine, RapierPhysicsWorld,
+         RapierPhysicsEntity } from '../rapier/RapierPhysics';
+import type {  } from '../rapier/RapierPhysics';
 
 export interface A3TestOpt {
   physics: boolean
@@ -27,9 +28,8 @@ export class A3Test extends A3Object {
     return mesh;
   }
 
-  initPhysics(engine: A3PhysicsEngine, world: A3PhysicsWorld) {
-    engine; world;
-    return new A3TestPhysicsEntity(this);
+  initPhysics(opt: A3PhysicsEntityOption) {
+    this.physics = new A3TestPhysicsEntity(this,opt);
   }
 
   update(dt: number) {
@@ -47,15 +47,14 @@ export class A3Test extends A3Object {
 
 
 
-export class A3TestPhysicsEntity implements RapierPhysicsEntity {
-  object: A3Object;
+export class A3TestPhysicsEntity extends RapierPhysicsEntity {
   bodyDesc: Rapier.RigidBodyDesc;
   body: Rapier.RigidBody | null = null;
   colliderDesc: Rapier.ColliderDesc;
   collider: Rapier.Collider | null = null;
 
-  constructor(obj: A3Object) {
-    this.object = obj;
+  constructor(obj: A3Object,opt: A3PhysicsEntityOption) {
+    super(obj,opt);
     this.bodyDesc = RapierPhysicsEngine.RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
     this.colliderDesc = RapierPhysicsEngine.RAPIER.ColliderDesc.cuboid(0.5,0.5,0.5);

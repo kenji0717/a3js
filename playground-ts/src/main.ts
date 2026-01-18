@@ -130,6 +130,6 @@ import { A3Scene, A3Window, Acerola3D } from 'a3js';
 await A3Scene.physics.init();
 const view = new A3Window(600,300);
 const obj = await new Acerola3D('axis.a3').ready;
-//const obj = new Acerola3D('axis.a3');
+obj.initPhysics({});
 view.scene.add(obj);
 

@@ -64,27 +64,34 @@ export interface A3PhysicsEntityOption {
  * RigidBodyなどの個別のA3Objectに必要な物理計算のための
  * 色々な実体が含まれる物のインターフェース。
  */
-export interface A3PhysicsEntity {
+export abstract class A3PhysicsEntity {
+  object: A3Object;
+  option: A3PhysicsEntityOption;
+
+  constructor(object: A3Object, option: A3PhysicsEntityOption) {
+    this.object = object;
+    this.option = option;
+  }
   
   /**
    * 物理演算の結果をA3Objectの位置や回転に反映させる。
    */
-  synchronize(obj: A3Object): void;
+  abstract synchronize(obj: A3Object): void;
 
   /**
    * 物理演算対象であっても位置を外部から操作できるようにする。
    */
-  forceSetLoc(v: MutableVec3): void;
+  abstract forceSetLoc(v: MutableVec3): void;
 
   /**
    * 物理演算対象であっても回転を外部から操作できるようにする。
    */
-  forceSetQuat(q: MutableQuat): void;
+  abstract forceSetQuat(q: MutableQuat): void;
 
   /**
    * 物理演算対象であっても拡大率を外部から操作できるようにする。
    * ただ、これは普通難しいかも。
    */
-  forceSetScale(v: MutableVec3): void;
+  abstract forceSetScale(v: MutableVec3): void;
 }
 

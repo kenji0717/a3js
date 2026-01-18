@@ -6,7 +6,9 @@ import { isMesh } from '../three/getShape';
 import { A3Object } from '../core/A3Object';
 import type { MutableVec3 } from '../core/Vec3';
 import type { MutableQuat } from '../core/Quat';
-import type { A3PhysicsEngine, A3PhysicsWorld, A3PhysicsEntity, A3PhysicsWorldOption, A3PhysicsEntityOption } from '../core/A3Physics';
+import { A3PhysicsEntity } from '../core/A3Physics';
+import type { A3PhysicsEngine, A3PhysicsWorld, A3PhysicsWorldOption,
+              A3PhysicsEntityOption } from '../core/A3Physics';
 //import { getShape } from '../three/getShape.js';
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -26,7 +28,7 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
   async init(): Promise<void> {
     if (!RapierPhysicsEngine.RAPIER) {
       const R = await import('@dimforge/rapier3d-compat');
-      await R.init();
+      await R.init(); // using deprecated parameters for the initialization function; pass a single object instead
       RapierPhysicsEngine.RAPIER = R;
       RAPIER = R;
       this.isInitialized = true;
@@ -91,25 +93,23 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
 export interface RapierPhysicsEntityOption extends A3PhysicsEntityOption {
 }
 
-export interface RapierPhysicsEntity extends A3PhysicsEntity {
-  addOneself(world: RapierPhysicsWorld): void;
-  removeOneself(world: RapierPhysicsWorld): void;
+export abstract class RapierPhysicsEntity extends A3PhysicsEntity {
+  abstract addOneself(world: RapierPhysicsWorld): void;
+  abstract removeOneself(world: RapierPhysicsWorld): void;
 }
 
 function isRapierPhysicsEntity(obj: A3PhysicsEntity): obj is RapierPhysicsEntity {
   return "addOneself" in obj && "removeOneself" in obj;
 }
 
-export class RapierDefaultPhysicsEntity implements RapierPhysicsEntity {
-  object: A3Object;
+export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   bodyDesc: Rapier.RigidBodyDesc;
   body: Rapier.RigidBody | null = null;
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
   constructor(obj: A3Object,opt: RapierPhysicsEntityOption) {
-    opt; // これから使う。
-    this.object = obj;
+    super(obj,opt);
     this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
     this.colliderDescs[0] = RAPIER.ColliderDesc.cuboid(0.5,0.5,0.5);
@@ -161,7 +161,6 @@ export function createTriMeshColliderDescs(rootObj: THREE.Object3D,mass: number)
   const colliderDescs: Rapier.ColliderDesc[] = [];
   rootObj.traverse(obj => {
     if (isMesh(obj)) {
-console.log('GAHA1');
       const mesh = obj;
 
       // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）

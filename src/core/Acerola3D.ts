@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { A3Object } from './A3Object';
 import type { AsyncInitRequired } from './AsyncInitRequired';
+import type { A3PhysicsEntityOption } from './A3Physics';
 import type { MutableVec3 } from './Vec3';
 import type { MutableQuat } from './Quat';
-import type { A3PhysicsEngine, A3PhysicsWorld } from './A3Physics';
-import { RapierPhysicsEngine, RapierPhysicsWorld } from '../rapier/RapierPhysics';
+import { RapierPhysicsEngine, RapierPhysicsWorld,
+         RapierPhysicsEntity } from '../rapier/RapierPhysics';
+import type { RapierPhysicsEntityOption } from '../rapier/RapierPhysics';
 import { createTriMeshColliderDescs } from '../rapier/RapierPhysics';
 //import { createConvexHullColliderDescs } from '../rapier/RapierPhysics';
-import type { RapierPhysicsEntity } from '../rapier/RapierPhysics';
 import type * as Rapier from '@dimforge/rapier3d-compat';
 import { unzipAsync } from '../utils/math';
 import { loadVrmlInUnzipped } from '../three/getShape';
@@ -37,26 +38,23 @@ export class Acerola3D extends A3Object implements AsyncInitRequired<Acerola3D> 
     return this;
   }
 
-  initPhysics(engine: A3PhysicsEngine, world: A3PhysicsWorld) {
-    engine; world;
-    return new TestEntity(this);
+  initPhysics(option: A3PhysicsEntityOption) {
+    this.physics = new TestEntity(this,option);
   }
 }
 
-class TestEntity implements RapierPhysicsEntity {
-  object: A3Object;
+class TestEntity extends RapierPhysicsEntity {
   bodyDesc: Rapier.RigidBodyDesc;
   body: Rapier.RigidBody | null = null;
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
-  constructor(obj: A3Object) {
-    this.object = obj;
+  constructor(obj: A3Object,opt: RapierPhysicsEntityOption) {
+    super(obj,opt);
     this.bodyDesc = RapierPhysicsEngine.RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
     this.colliderDescs = createTriMeshColliderDescs(this.object.object,1);
     //this.colliderDescs = createConvexHullColliderDescs(this.object.object,1);
-console.log(`GAHA3: `,JSON.stringify(this.colliderDescs[0],null,2));
   }
 
   synchronize(obj: Acerola3D) {
