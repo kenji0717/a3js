@@ -1,5 +1,7 @@
 //import RAPIER from '@dimforge/rapier3d-compat';
 import type * as Rapier from '@dimforge/rapier3d-compat';
+import * as THREE from 'three';
+import { isMesh } from '../three/getShape';
 
 import { A3Object } from '../core/A3Object';
 import type { MutableVec3 } from '../core/Vec3';
@@ -18,10 +20,10 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
   }
 
   /**
-    * RapierWorldを作って返す。RAPIERの初期化が済んでない時には
-    * まずその初期化から。動的インポート使う。
+    * RAPIER物理エンジンの初期化が済んでない時に初期化する
+    * 動的インポート使う。
     */
-  async createWorld<T extends A3PhysicsWorldOption>(option: T): Promise<A3PhysicsWorld> {
+  async init(): Promise<void> {
     if (!RapierPhysicsEngine.RAPIER) {
       const R = await import('@dimforge/rapier3d-compat');
       await R.init();
@@ -29,6 +31,12 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
       RAPIER = R;
       this.isInitialized = true;
     }
+  }
+
+  /**
+    * RapierWorldを作って返す。
+    */
+  createWorld(option: RapierPhysicsWorldOption): A3PhysicsWorld {
     let timestep = 1/60;
     if (this.isRapierWorldOption(option))
       timestep = option.timestep;
@@ -42,7 +50,7 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
 }
 
 interface RapierPhysicsWorldOption extends A3PhysicsWorldOption {
-  enableCCD: boolean;
+  //enableCCD: boolean;
   timestep: number;
 }
 
@@ -149,67 +157,64 @@ export class RapierDefaultPhysicsEntity implements RapierPhysicsEntity {
 
 // ------------------------------------
 
-/*
-     // glTFの最初の Mesh から Rapier TriMesh を作って与えられたparentBodyに設定
-     async function createTriMeshColliderFromGLTF(gltf, world, parentBody, RAPIER) {
-       const colliders = [];
-       gltf.scene.traverse(obj => {
-         if (obj.isMesh && obj.geometry) {
-           const mesh = obj;
+export function createTriMeshColliderDescs(rootObj: THREE.Object3D,mass: number): Rapier.ColliderDesc[] {
+  const colliderDescs: Rapier.ColliderDesc[] = [];
+  rootObj.traverse(obj => {
+    if (isMesh(obj)) {
+console.log('GAHA1');
+      const mesh = obj;
 
-           // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
-           mesh.updateWorldMatrix(true, true);
-           const geom = mesh.geometry.clone();
-           geom.applyMatrix4(mesh.matrixWorld);
+      // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
+      mesh.updateWorldMatrix(true, true);
+      const geom = mesh.geometry.clone();
+      geom.applyMatrix4(mesh.matrixWorld);
 
-           // 頂点（Float32Array）とインデックス（Uint32Array）を用意
-           const pos = geom.attributes.position.array; // Float32Array
-           let idx = geom.index ? geom.index.array : null;
-           if (!idx) {
-             // 非インデックスの場合は 0..N-1 を生成
-             const count = geom.attributes.position.count;
-             idx = new Uint32Array(count);
-             for (let i = 0; i < count; i++) idx[i] = i;
-           } else if (!(idx instanceof Uint32Array)) {
-             idx = new Uint32Array(idx); // Rapier 側の型に合わせる
-           }
+      // 頂点（Float32Array）とインデックス（Uint32Array）を用意
+      const pos = geom.attributes.position.array;
+      let idx = geom.index ? geom.index.array : null;
+      if (!idx) {
+        // 非インデックスの場合は 0..N-1 を生成
+        const count = geom.attributes.position.count;
+        idx = new Uint32Array(count);
+        for (let i = 0; i < count; i++) idx[i] = i;
+      } else if (!(idx instanceof Uint32Array)) {
+        idx = new Uint32Array(idx); // Rapier 側の型に合わせる
+      }
 
-           const colliderDesc = RAPIER.ColliderDesc.trimesh(pos, idx);
-           colliderDesc.setMass(0).setFriction(0.8).setRestitution(0.8); // 適当
-           
-           const collider = world.createCollider(colliderDesc, parentBody); // body に付与
-           colliders.push(collider);
-         }
-       });
-       return colliders;
-     }
+      if (pos instanceof Float32Array) {
+        const colliderDesc = RAPIER.ColliderDesc.trimesh(pos, idx);
+        colliderDesc.setMass(mass).setFriction(0.8).setRestitution(0.8); // 適当
+        colliderDescs.push(colliderDesc);
+      }
+    }
+  });
+  return colliderDescs;
+}
 
 
-     // glTFの最初の Mesh から Rapier ConvexHull を作って与えられたparentBodyに設定
-     async function createConvexHullColliderFromGLTF(gltf, world, parentBody, RAPIER) {
-       const colliders = [];
-       gltf.scene.traverse(obj => {
-         if (obj.isMesh && obj.geometry) {
-           const mesh = obj;
+export function createConvexHullColliderDescs(rootObj: THREE.Object3D,mass: number): Rapier.ColliderDesc[] {
+  const colliderDescs: Rapier.ColliderDesc[] = [];
+  rootObj.traverse(obj => {
+    if (isMesh(obj)) {
+      const mesh = obj;
 
-           // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
-           mesh.updateWorldMatrix(true, true);
-           const geom = mesh.geometry.clone();
-           geom.applyMatrix4(mesh.matrixWorld);
+      // ワールド変換を頂点に焼き込み（スケール/回転/位置を反映）
+      mesh.updateWorldMatrix(true, true);
+      const geom = mesh.geometry.clone();
+      geom.applyMatrix4(mesh.matrixWorld);
 
-           // 頂点（Float32Array）とインデックス（Uint32Array）を用意
-           const pos = geom.attributes.position.array; // Float32Array
-           // 凸包を Rapier に自動生成させる
-           const colliderDesc = RAPIER.ColliderDesc.convexHull(pos);
-           colliderDesc.setMass(0).setFriction(0.8).setRestitution(0.8);// 適当
-           if (colliderDesc) {
-             const collider = world.createCollider(colliderDesc, parentBody);
-             colliders.push(collider);
-           } else if (!(idx instanceof Uint32Array)) {
-             console.warn("convexHull 生成に失敗（共線点のみ等のケース）");
-           }
-         }
-       });
-       return colliders;
-     }
-*/
+      // 頂点（Float32Array）とインデックス（Uint32Array）を用意
+      const pos = geom.attributes.position.array; // Float32Array
+      if (pos instanceof Float32Array) {
+        // 凸包を Rapier に自動生成させる
+        const colliderDesc = RAPIER.ColliderDesc.convexHull(pos);
+        if (colliderDesc) {
+          colliderDesc.setMass(mass).setFriction(0.8).setRestitution(0.8);// 適当
+          colliderDescs.push(colliderDesc);
+        }
+      }
+    }
+  });
+  return colliderDescs;
+}
+

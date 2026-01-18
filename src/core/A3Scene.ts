@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { A3Object } from './A3Object';
-import type { A3PhysicsEngine, A3PhysicsWorld } from './A3Physics';
+import type { A3PhysicsWorld } from './A3Physics';
 import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 
 /**
@@ -10,17 +10,22 @@ import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 export class A3Scene {
   scene: THREE.Scene;
   objects: A3Object[];
-  static physics: A3PhysicsEngine;
+  static physics: RapierPhysicsEngine = new RapierPhysicsEngine();
   physicsWorld: A3PhysicsWorld | null = null;
   physicsDt = 1/60;
+
+  static async initPhysics() {
+    await A3Scene.physics.init();
+  }
 
   constructor() {
     this.scene = new THREE.Scene();
     this.objects = [];
-    if (!A3Scene.physics) {
-      // 以下、オブジェクトは用意されるけど、
-      // 重い初期化処理などは実行されない
-      A3Scene.physics = new RapierPhysicsEngine();
+    if (A3Scene.physics.isInitialized) {
+      this.physicsWorld = A3Scene.physics.createWorld({
+        gravity: {x:0.0, y: -9.81, z:0.0},
+        timestep: this.physicsDt
+      });
     }
   }
 
@@ -28,22 +33,14 @@ export class A3Scene {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
-    // 物理計算が必要になった時にはじめて初期化をする
-    // という方針にしたので、以下のような感じにした。重い？
     if (object.controlMode === "physics") {
-      if (!this.physicsWorld) {
-        queueMicrotask(async () => { // こんなのあったのね
-          if (!this.physicsWorld) { // ここでもチェックしておくべき
-            this.physicsWorld = await A3Scene.physics.createWorld({
-              gravity: {x:0.0, y: -9.81, z:0.0},
-              timestep: this.physicsDt
-            });
-          }
-          if (!object.physics)
-            object.physics = object.initPhysics(A3Scene.physics,this.physicsWorld);
-          if (object.physics) // 必ずtrueのはず
-            this.physicsWorld.add(object.physics);
-        });
+      if (this.physicsWorld) {
+        if (!object.physics)
+          object.physics = object.initPhysics(A3Scene.physics,this.physicsWorld);
+        if (object.physics) // 必ずtrueのはず
+          this.physicsWorld.add(object.physics);
+      } else {
+        console.log('物理エンジンを初期化してない状態で、物理エンジンを必要とするA3Objectが追加されました。');
       }
     }
   }

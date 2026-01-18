@@ -13,7 +13,8 @@ let font: Font | null = null;
  * 使ってJSONファイルにする。そのフォントファイルが
  * abcdefg.jsonだとすると、`zip abcdefg.json.zip abcdefg.json`と
  * して圧縮ファイルを作り、`abcdefg.json.zip`を引数のpathに
- * 渡して初期化して下さい。
+ * 渡して初期化して下さい。(つまり、ZIPファイルのファイル名を
+ * 書き換えると読み込めなくなります。)
  */ 
 export async function initFont(path: string) {
   const path2 = path.substring(0,path.length-4); // '.zip'を削る

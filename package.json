@@ -1,6 +1,6 @@
 {
   "name": "a3js",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "type": "module",
   "main": "dist/a3js.cjs.js",
   "module": "dist/a3js.es.js",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.3",
+    "fflate": "^0.8.2",
     "three": "^0.182.0"
   }
 }

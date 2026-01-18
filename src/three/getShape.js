@@ -1,4 +1,6 @@
 import { Vector3 } from 'three';
+import { readBlobFromUnzipped } from '../utils/math';
+import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
 
 /**
  * この関数はThree.jsのexamples/jsm/physics/RapierPhysics.jsに
@@ -77,43 +79,21 @@ export function getShape( geometry ) {
 
 // ---------------------------------
 
-/*
-import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
-// VRML
-function dummy() {
-  const zipBlobMap = new Map();
-  const res = await fetch('./axis.a3'); // テクスチャ無し
-  const arrayBuffer = await res.arrayBuffer();
-  const zip = await JSZip.loadAsync(arrayBuffer);
-  const promises = [];
-  zip.forEach((relativePath, file) => {
-    const p = file.async('arraybuffer').then(buffer => {
-      let type = 'application/octet-stream';
-      if (file.name.match(/\.(png|jpg|jpeg)$/i)) type = file.name.endsWith('.png') ? 'image/png' : 'image/jpeg';
-      if (file.name.endsWith('.wrl')) type = 'model/vrml';
-      const blob = new Blob([buffer], {type});
-      const blobUrl = URL.createObjectURL(blob);
-      zipBlobMap.set(relativePath, blobUrl);
-    });
-    promises.push(p);
-  });
-  await Promise.all(promises);
-  console.log(zipBlobMap);
-  const loader = new VRMLLoader();
+let vrmlLoader;
+export async function loadVrmlInUnzipped(unzipped, vrmlFile) {
+  if (!vrmlLoader)
+    vrmlLoader = new VRMLLoader();
   // URLModifierでVRML内のテクスチャ参照をBlob URLに置換
-  loader.manager.setURLModifier((url) => {
-  console.log(`GAHA: url=${url}`);
+  vrmlLoader.manager.setURLModifier((url) => {
     if (url.startsWith('./'))
       url = url.substring(2);
-    // VRMLで指定された相対パスをzipBlobMapから検索
-    if (zipBlobMap.has(url)) return zipBlobMap.get(url);
-    return url;
+    return URL.createObjectURL(readBlobFromUnzipped(unzipped,url));
   });
 
-  let file = "axis.wrl"; // テクスチャ無し
-  const mesh = await loader.loadAsync(file);
-  mesh.position.y = 1;
-  mesh.castShadow = true;
-  scene.add(mesh);
+  const mesh = await vrmlLoader.loadAsync(vrmlFile);
+  return mesh;
 }
-*/
+
+export function isMesh(obj) {
+  return obj.isMesh === true;
+}

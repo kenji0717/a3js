@@ -53,8 +53,9 @@ view.scene.add(obj);
 */
 
 /*
-import { A3Window, A3Test } from 'a3js';
+import { A3Scene, A3Window, A3Test } from 'a3js';
 
+await A3Scene.physics.init();
 const view = new A3Window(600,300);
 const obj = new A3Test({physics: true});
 view.scene.add(obj);
@@ -110,7 +111,7 @@ view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
 */
 
-
+/*
 import { A3Canvas, A3Test } from 'a3js';
 
 const view = new A3Canvas();
@@ -121,4 +122,14 @@ const obj2 = new A3Test();
 obj2.setLocation(0.3,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
+*/
+
+
+import { A3Scene, A3Window, Acerola3D } from 'a3js';
+
+await A3Scene.physics.init();
+const view = new A3Window(600,300);
+const obj = await new Acerola3D('axis.a3').ready;
+//const obj = new Acerola3D('axis.a3');
+view.scene.add(obj);
 

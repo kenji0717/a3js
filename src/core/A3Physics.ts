@@ -17,16 +17,20 @@ import type { MutableQuat } from './Quat';
  */
 export interface A3PhysicsEngine {
   readonly isInitialized: boolean;
+
+  /**
+    * 物理エンジンを初期化する。最初は必要な時に自動で
+    * 初期化させることを目指したけど、難しいのであきらめた。
+    * 物理演算が必要な場合は、ユーザがこれを実行することになる。
+    * 現在のところ初期化の処理は以下のようなプログラムになる。
+    * await A3Scene.physics.init();
+    */
+  init(): Promise<void>;
+
   /**
     * 物理演算用のWorldを生成して返す。
-    * 必要であれば最初に物理エンジン自体の初期化を行う。
-    * できれば物理エンジンを使わない場合もあることを考えて
-    * 物理エンジンのライブラリは動的インポートなどの非同期
-    * で読み込んで欲しいので、このメソッドはPromiseを返す。
-    * 物理エンジンの初期化が複数回発生しないような工夫もして欲しい。
-    * なのでコンストラクタで初期化しないようにすべし。
     */
-  createWorld<T extends A3PhysicsWorldOption>(option: T): Promise<A3PhysicsWorld>;
+  createWorld(option: A3PhysicsWorldOption): A3PhysicsWorld;
 }
 
 /**
