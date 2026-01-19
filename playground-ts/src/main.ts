@@ -125,12 +125,18 @@ view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.valu
 */
 
 
-import { A3Scene, A3Window, Acerola3D } from 'a3js';
+import { A3Scene, A3Window, Acerola3D, Box, asyncSleep } from 'a3js';
 
 await A3Scene.physics.init();
 const view = new A3Window(600,300);
+const ground = new Box(10,0.5,10,"red");
+ground.setLocation(0,-3,0);
+let opt = ground.getPhysicsOption();
+opt.rigidBody = "fixed";
+ground.initPhysics(opt);
+view.scene.add(ground);
 const obj = await new Acerola3D('axis.a3').ready;
-const opt = obj.getPhysicsEntityOption();
-obj.initPhysics(opt);
+obj.setControlMode("physics");
 view.scene.add(obj);
-
+await asyncSleep(100);
+obj.forceSetQuat(0.5,0.5,0,0.5); // ？？？

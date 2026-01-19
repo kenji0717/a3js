@@ -175,6 +175,7 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   }
 
   forceSetQuat(q: MutableQuat): void {
+console.log(`GAHA:`,q);
     if (this.body)
       this.body.setRotation(q,true); // true? false?
   }

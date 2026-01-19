@@ -64,7 +64,8 @@ export abstract class A3Object {
     this.controlMode = mode;
     if (mode === "interpolated" && !this.interpolation)
       this.interpolation = new Interpolation(this);
-    //このタイミングでphysicsは初期化不可能。A3Scene.addでやる。
+    if (mode === "physics" && !this.physics)
+      this.initPhysics(this.getPhysicsOption()); // GAHAこのタイミングでやるべきか？
   }
 
   update(dt: number) {
@@ -94,7 +95,7 @@ export abstract class A3Object {
    * 情報はthis.initPhysics()に受け渡されてA3PhysicsEntityが生成
    * される。
    */
-  getPhysicsEntityOption(): A3PhysicsEntityOption {
+  getPhysicsOption(): A3PhysicsEntityOption {
     return {
       rigidBody: "dynamic",
       collider: "solid",
@@ -106,17 +107,18 @@ export abstract class A3Object {
 
   /**
    * 物理演算に必要なA3PhysicsEntity(物理実態)を生成して
-   * this.physicsに設定します。A3PhysicsEntityのデフォルト実装
-   * としてRapierDefaultPhysicsEntityを使用しますが、自分で作った
+   * this.physicsに設定します。this.controlModeも"physics"に設定
+   * します。A3PhysicsEntityのデフォルト実装として
+   * RapierDefaultPhysicsEntityを使用しますが、自分で作った
    * 物理実態(A3PhysicsEntity)を使いたい場合は、A3Objectを継承した
    * クラスで、このinitPhysics()メソッドを適切にオーバーライドして
    * ください。このinitPhysics()は通常A3Scene(つまりworld)に追加
    * される瞬間に1度だけ実行されます。その場合A3PhysicsEntityの
-   * 生成に必要なA3PhysicsEntityOptionはthis.getPhysicsEntityOption();
+   * 生成に必要なA3PhysicsEntityOptionはthis.getPhysicsOption();
    * から取得されます。このオプションを変更してカスタマイズしたい
    * 場合は、A3ObjectをA3Sceneにaddする前に
    * this.initPhysics(カスタマイズしたオプション);として初期化して
-   * 下さい。もしくは継承したクラスでgetPhysicsEntityOption()メソッド
+   * 下さい。もしくは継承したクラスでgetPhysicsOption()メソッド
    * をオーバーライドしましょう。
    */ 
 

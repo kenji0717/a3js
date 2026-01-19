@@ -36,7 +36,7 @@ export class A3Scene {
     if (object.controlMode === "physics") {
       if (this.physicsWorld) {
         if (!object.physics) {
-          const opt = object.getPhysicsEntityOption();
+          const opt = object.getPhysicsOption();
           object.initPhysics(opt);
         }
         if (object.physics) // 必ずtrueのはず
