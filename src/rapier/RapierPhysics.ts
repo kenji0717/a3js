@@ -101,7 +101,7 @@ function isRapierPhysicsEntity(obj: A3PhysicsEntity): obj is RapierPhysicsEntity
 
 export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   bodyDesc: Rapier.RigidBodyDesc;
-  body: Rapier.RigidBody | null = null;
+  body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
@@ -113,7 +113,7 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
         break;
       case "kinematic":
         this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
-        //this.bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased(); // これあったか！
+        //this.bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased(); // GAHAこれあったか！
         break;
       case "fixed":
         this.bodyDesc = RAPIER.RigidBodyDesc.fixed();
@@ -123,13 +123,15 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
     this.object.object.traverse((obj)=>{
       if (isMesh(obj)) {
         let c = getShape(obj.geometry);
-        if (!c) {
+        if (c) {
+          this.colliderDescs.push(c);
+        } else {
           switch(opt.meshCollider) {
             case "tri_mesh":
-              c = createTriMeshColliderDescs(obj,1); // あmass忘れてた
+              c = createTriMeshColliderDescs(obj,1); // GAHAあmass忘れてた
               break;
             case "convex_hull":
-              c = createConvexHullColliderDescs(obj,1); // あmass忘れてた
+              c = createConvexHullColliderDescs(obj,1); // GAHAあmass忘れてた
               break;
           }
           if (c) {
@@ -154,14 +156,17 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
 
   addOneself(world: RapierPhysicsWorld) {
     this.body = world.world.createRigidBody(this.bodyDesc);
-    this.colliders[0] = world.world.createCollider(this.colliderDescs[0],this.body);
+    this.colliderDescs.forEach((colliderDesc)=>{
+      this.colliders.push(world.world.createCollider(colliderDesc,this.body));
+    });
   }
 
   removeOneself(world: RapierPhysicsWorld) {
     if (this.body)
       world.world.removeRigidBody(this.body);
-    if (this.colliders[0])
-      world.world.removeCollider(this.colliders[0],false); // true? false?
+    this.colliders.forEach((collider) => {
+      world.world.removeCollider(collider,false); // true? false?
+    });
   }
 
   forceSetLoc(v: MutableVec3): void {

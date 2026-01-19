@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 import { readBlobFromUnzipped } from '../utils/math';
 import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
 
@@ -7,7 +8,7 @@ import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
  * かかれていたものをそのままもってきて少し書き換えた物。
  */
 export function getShape( geometry ) {
-
+    const RAPIER = RapierPhysicsEngine.RAPIER
 	const parameters = geometry.parameters;
 
 	// TODO change type to is*

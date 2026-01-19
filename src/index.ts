@@ -11,6 +11,7 @@ export { A3Text3D, initFont } from './core/A3Text3D';
 export { A3glTF } from './core/A3glTF';
 export { Acerola3D } from './core/Acerola3D';
 export { ThreeJS } from './three/ThreeJS';
+export { Box } from './three/Box';
 export type { A3View } from './core/A3View';
 export type { A3PhysicsEngine } from './core/A3Physics';
 export type { A3PhysicsWorld } from './core/A3Physics';

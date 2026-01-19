@@ -119,8 +119,10 @@ export abstract class A3Object {
    * 下さい。もしくは継承したクラスでgetPhysicsEntityOption()メソッド
    * をオーバーライドしましょう。
    */ 
+
   initPhysics(opt: A3PhysicsEntityOption): void {
     this.physics = new RapierDefaultPhysicsEntity(this,opt);
+    this.controlMode = 'physics';
   }
 
   setBalloon(message: string) {
