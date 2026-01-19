@@ -4,7 +4,7 @@ import type { Unzipped } from 'fflate'; // 'three/addons/libs/fflate.module.js';
 
 export function getShape(
   geometry: THREE.BufferGeometry
-): ColliderDesk;
+): ColliderDesk | null;
 
 export function loadVrmlInUnzipped(unzipped: Unzipped, path: string): Promise<THREE.Object3D>;
 

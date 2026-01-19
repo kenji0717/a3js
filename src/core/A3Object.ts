@@ -96,7 +96,11 @@ export abstract class A3Object {
    */
   getPhysicsEntityOption(): A3PhysicsEntityOption {
     return {
-      gaha: 10.0
+      rigidBody: "dynamic",
+      collider: "solid",
+      meshCollider: "convex_hull",
+      friction: 0.5,
+      restitution: 0.5
     };
   }
 

@@ -6,7 +6,7 @@ import type { MutableVec3 } from './Vec3';
 import type { MutableQuat } from './Quat';
 import { RapierPhysicsEngine, RapierPhysicsWorld,
          RapierPhysicsEntity } from '../rapier/RapierPhysics';
-import type { RapierPhysicsEntityOption } from '../rapier/RapierPhysics';
+//import type { RapierPhysicsEntityOption } from '../rapier/RapierPhysics';
 import { createTriMeshColliderDescs } from '../rapier/RapierPhysics';
 //import { createConvexHullColliderDescs } from '../rapier/RapierPhysics';
 import type * as Rapier from '@dimforge/rapier3d-compat';
@@ -49,7 +49,7 @@ class TestEntity extends RapierPhysicsEntity {
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
-  constructor(obj: A3Object,opt: RapierPhysicsEntityOption) {
+  constructor(obj: A3Object,opt: A3PhysicsEntityOption) {
     super(obj,opt);
     this.bodyDesc = RapierPhysicsEngine.RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);

@@ -52,12 +52,19 @@ export interface A3PhysicsWorld {
   update(dt: number): void;
 }
 
+export type RigidBodyType = "dynamic" | "kinematic" | "fixed";
+export type ColliderKind = "solid" | "sensor";
+export type MeshColliderKind = "tri_mesh" | "convex_hull";
 /**
  * A3PhysicsEngityを生成する時に必要な情報をまとめたもの。
  * 物理エンジンや個別のA3PhysicsEntityごとに拡張可能。
  */
 export interface A3PhysicsEntityOption {
-  
+  rigidBody: RigidBodyType;
+  collider: ColliderKind;
+  meshCollider: MeshColliderKind;
+  friction: number;
+  restitution: number;
 }
 
 /**

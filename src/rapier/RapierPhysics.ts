@@ -1,7 +1,7 @@
 //import RAPIER from '@dimforge/rapier3d-compat';
 import type * as Rapier from '@dimforge/rapier3d-compat';
 import * as THREE from 'three';
-import { isMesh } from '../three/getShape';
+import { getShape, isMesh } from '../three/getShape';
 
 import { A3Object } from '../core/A3Object';
 import type { MutableVec3 } from '../core/Vec3';
@@ -90,9 +90,6 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
   }
 }
 
-export interface RapierPhysicsEntityOption extends A3PhysicsEntityOption {
-}
-
 export abstract class RapierPhysicsEntity extends A3PhysicsEntity {
   abstract addOneself(world: RapierPhysicsWorld): void;
   abstract removeOneself(world: RapierPhysicsWorld): void;
@@ -108,12 +105,40 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
-  constructor(obj: A3Object,opt: RapierPhysicsEntityOption) {
+  constructor(obj: A3Object,opt: A3PhysicsEntityOption) {
     super(obj,opt);
-    this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
+    switch(opt.rigidBody) {
+      case "dynamic":
+        this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
+        break;
+      case "kinematic":
+        this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
+        //this.bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased(); // これあったか！
+        break;
+      case "fixed":
+        this.bodyDesc = RAPIER.RigidBodyDesc.fixed();
+        break;
+    }
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
-    this.colliderDescs[0] = RAPIER.ColliderDesc.cuboid(0.5,0.5,0.5);
-    this.colliderDescs[0].setRestitution(0.3).setFriction(0.6);
+    this.object.object.traverse((obj)=>{
+      if (isMesh(obj)) {
+        let c = getShape(obj.geometry);
+        if (!c) {
+          switch(opt.meshCollider) {
+            case "tri_mesh":
+              c = createTriMeshColliderDescs(obj,1); // あmass忘れてた
+              break;
+            case "convex_hull":
+              c = createConvexHullColliderDescs(obj,1); // あmass忘れてた
+              break;
+          }
+          if (c) {
+            c.setRestitution(opt.restitution).setFriction(opt.friction);
+            this.colliderDescs.push(c);
+          }
+        }
+      }
+    });
   }
 
   synchronize(obj: A3Object) {
@@ -216,4 +241,3 @@ export function createConvexHullColliderDescs(rootObj: THREE.Object3D,mass: numb
   });
   return colliderDescs;
 }
-
