@@ -3,17 +3,17 @@ import type * as Rapier from '@dimforge/rapier3d-compat';
 import * as THREE from 'three';
 import { getShape, isMesh } from '../three/getShape';
 
-import { A3Object } from '../core/A3Object';
+import { ObjectA3 } from '../core/ObjectA3';
 import type { MutableVec3 } from '../core/Vec3';
 import type { MutableQuat } from '../core/Quat';
-import { A3PhysicsEntity } from '../core/A3Physics';
-import type { A3PhysicsEngine, A3PhysicsWorld, A3PhysicsWorldOption,
-              A3PhysicsEntityOption } from '../core/A3Physics';
+import { PhysicsEntity } from '../core/Physics';
+import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
+              PhysicsEntityOption } from '../core/Physics';
 //import { getShape } from '../three/getShape.js';
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
-export class RapierPhysicsEngine implements A3PhysicsEngine {
+export class RapierPhysicsEngine implements PhysicsEngine {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
   isInitialized: boolean = false;
   constructor() {
@@ -38,7 +38,7 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
   /**
     * RapierWorldを作って返す。
     */
-  createWorld(option: RapierPhysicsWorldOption): A3PhysicsWorld {
+  createWorld(option: RapierPhysicsWorldOption): PhysicsWorld {
     let timestep = 1/60;
     if (this.isRapierWorldOption(option))
       timestep = option.timestep;
@@ -46,17 +46,17 @@ export class RapierPhysicsEngine implements A3PhysicsEngine {
     return new RapierPhysicsWorld(world,timestep);
   }
 
-  private isRapierWorldOption(option: A3PhysicsWorldOption): option is RapierPhysicsWorldOption {
+  private isRapierWorldOption(option: PhysicsWorldOption): option is RapierPhysicsWorldOption {
     return ( "enableCCD" in option && "timestep" in option );
   }
 }
 
-interface RapierPhysicsWorldOption extends A3PhysicsWorldOption {
+interface RapierPhysicsWorldOption extends PhysicsWorldOption {
   //enableCCD: boolean;
   timestep: number;
 }
 
-export class RapierPhysicsWorld implements A3PhysicsWorld {
+export class RapierPhysicsWorld implements PhysicsWorld {
   world: Rapier.World;
   timestep: number;
 
@@ -66,7 +66,7 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(entity: A3PhysicsEntity) {
+  add(entity: PhysicsEntity) {
     if (isRapierPhysicsEntity(entity)) {
       entity.addOneself(this);
     } else {
@@ -74,7 +74,7 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
     }
   }
 
-  remove(entity: A3PhysicsEntity) {
+  remove(entity: PhysicsEntity) {
     if (isRapierPhysicsEntity(entity)) {
       entity.removeOneself(this);
     } else {
@@ -90,12 +90,12 @@ export class RapierPhysicsWorld implements A3PhysicsWorld {
   }
 }
 
-export abstract class RapierPhysicsEntity extends A3PhysicsEntity {
+export abstract class RapierPhysicsEntity extends PhysicsEntity {
   abstract addOneself(world: RapierPhysicsWorld): void;
   abstract removeOneself(world: RapierPhysicsWorld): void;
 }
 
-function isRapierPhysicsEntity(obj: A3PhysicsEntity): obj is RapierPhysicsEntity {
+function isRapierPhysicsEntity(obj: PhysicsEntity): obj is RapierPhysicsEntity {
   return "addOneself" in obj && "removeOneself" in obj;
 }
 
@@ -105,7 +105,7 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
-  constructor(obj: A3Object,opt: A3PhysicsEntityOption) {
+  constructor(obj: ObjectA3,opt: PhysicsEntityOption) {
     super(obj,opt);
     switch(opt.rigidBody) {
       case "dynamic":
@@ -143,7 +143,7 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
     });
   }
 
-  synchronize(obj: A3Object) {
+  synchronize(obj: ObjectA3) {
     if (this.body) {
       const t = this.body.translation();
       obj.location.set(t.x, t.y, t.z);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { A3Object } from './A3Object';
+import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
-//import type { A3PhysicsEntityOption } from './A3Physics';
+//import type { PhysicsEntityOption } from './Physics';
 //import type { MutableVec3 } from './Vec3';
 //import type { MutableQuat } from './Quat';
 //import { RapierPhysicsEngine, RapierPhysicsWorld,
@@ -16,7 +16,7 @@ import { loadVrmlInUnzipped } from '../three/getShape';
 /**
  * まだ適当。
  */
-export class Acerola3D extends A3Object implements AsyncInitRequired<Acerola3D> {
+export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
   readonly ready: Promise<Acerola3D>;
 
   constructor(url: string) {

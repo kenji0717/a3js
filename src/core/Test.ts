@@ -1,19 +1,19 @@
 import * as THREE from 'three';
 import type * as Rapier from '@dimforge/rapier3d-compat';
-import { A3Object } from './A3Object';
+import { ObjectA3 } from './ObjectA3';
 import type { MutableVec3 } from './Vec3';
 import type { MutableQuat } from './Quat';
-import type { A3PhysicsEntityOption } from './A3Physics';
+import type { PhysicsEntityOption } from './Physics';
 import { RapierPhysicsEngine, RapierPhysicsWorld,
          RapierPhysicsEntity } from '../rapier/RapierPhysics';
 import type {  } from '../rapier/RapierPhysics';
 
-export interface A3TestOpt {
+export interface TestOpt {
   physics: boolean
 }
 
-export class A3Test extends A3Object {
-  constructor(opt?: A3TestOpt) {
+export class Test extends ObjectA3 {
+  constructor(opt?: TestOpt) {
     super();
     if (opt && opt.physics)
       this.setControlMode("physics");
@@ -28,8 +28,8 @@ export class A3Test extends A3Object {
     return mesh;
   }
 
-  initPhysics(opt: A3PhysicsEntityOption) {
-    this.physics = new A3TestPhysicsEntity(this,opt);
+  initPhysics(opt: PhysicsEntityOption) {
+    this.physics = new TestPhysicsEntity(this,opt);
   }
 
   update(dt: number) {
@@ -47,13 +47,13 @@ export class A3Test extends A3Object {
 
 
 
-export class A3TestPhysicsEntity extends RapierPhysicsEntity {
+export class TestPhysicsEntity extends RapierPhysicsEntity {
   bodyDesc: Rapier.RigidBodyDesc;
   body: Rapier.RigidBody | null = null;
   colliderDesc: Rapier.ColliderDesc;
   collider: Rapier.Collider | null = null;
 
-  constructor(obj: A3Object,opt: A3PhysicsEntityOption) {
+  constructor(obj: ObjectA3,opt: PhysicsEntityOption) {
     super(obj,opt);
     this.bodyDesc = RapierPhysicsEngine.RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
@@ -61,7 +61,7 @@ export class A3TestPhysicsEntity extends RapierPhysicsEntity {
     this.colliderDesc.setRestitution(0.3).setFriction(0.6);
   }
 
-  synchronize(obj: A3Test) {
+  synchronize(obj: Test) {
     if (this.body) {
       const t = this.body.translation();
       obj.location.set(t.x, t.y, t.z);

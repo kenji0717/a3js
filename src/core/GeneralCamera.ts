@@ -1,12 +1,12 @@
 import * as THREE from 'three';
-import { A3Camera } from './A3Camera';
+import { Camera } from './Camera';
 
 /**
  * Three.jsのPerspectiveCameraとかの一般的なカメラを
  * a3jsのカメラにするためのラッパー。ヘッドライトは
  * SpotLightで実装。
  */
-export class GeneralCamera extends A3Camera {
+export class GeneralCamera extends Camera {
   camera: THREE.Camera;
   headLight: THREE.SpotLight;
 

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { A3Object } from '../core/A3Object';
+import { ObjectA3 } from '../core/ObjectA3';
 
 /**
  * Three.jsで作ったTHREE.MeshなどのObject3Dを
  * a3jsで使うためのA3Object。
  */
-export class ThreeJS extends A3Object {
+export class ThreeJS extends ObjectA3 {
   constructor(data: THREE.Object3D) {
     super(data);
   }

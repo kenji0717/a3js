@@ -1,37 +1,37 @@
 import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { A3Object } from './A3Object';
-import { A3Scene } from './A3Scene';
-import { A3Camera } from './A3Camera';
-import type { A3View } from './A3View';
-import { A3ViewBase } from './A3ViewBase';
+import { ObjectA3 } from './ObjectA3';
+import { Scene } from './Scene';
+import { Camera } from './Camera';
+import type { View } from './View';
+import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 
-export interface A3CanvasOpt {
+export interface CanvasOpt {
   camera?: THREE.Camera;
   antialias?: boolean;
   transparent?: boolean;
 }
 
 /**
- * HTMLのエレメント(a3-canvas)として使えるA3View。
+ * HTMLのエレメント(a3-canvas)として使えるView。
  */
-export class A3Canvas extends HTMLElement implements A3View {
+export class Canvas extends HTMLElement implements View {
   private ro?: ResizeObserver;
-  base: A3ViewBase;
+  base: ViewBase;
   renderer;
-  scene: A3Scene;
-  camera: A3Camera;
+  scene: Scene;
+  camera: Camera;
   camera3js: THREE.Camera;
   clock: THREE.Clock;
   
-  constructor(opt?: A3CanvasOpt) {
+  constructor(opt?: CanvasOpt) {
     super();
     if (!opt) opt = {};
     if (!opt.camera) opt.camera = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
     this.camera3js = opt.camera;
     const camera = new GeneralCamera(opt.camera);
-    this.base = new A3ViewBase(camera);
+    this.base = new ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     const o = {
@@ -64,7 +64,7 @@ export class A3Canvas extends HTMLElement implements A3View {
     this.ro?.disconnect();
   }
 
-  replaceScene(newScene: A3Scene): A3Scene {
+  replaceScene(newScene: Scene): Scene {
     return this.base.replaceScene(newScene);
   }
 
@@ -93,7 +93,7 @@ export class A3Canvas extends HTMLElement implements A3View {
       mouse.y = -2*(y / rect.height) + 1;
       raycaster.setFromCamera(mouse,this.camera.camera);
       const intersects = raycaster.intersectObjects(this.scene.scene.children);
-      const objs: {o1:THREE.Object3D,o2:A3Object}[] = [];
+      const objs: {o1:THREE.Object3D,o2:ObjectA3}[] = [];
       intersects.forEach((o1)=>{
         for (const o2 of this.scene.objects) {
           if (o2.contains(o1.object)) {
@@ -107,7 +107,7 @@ export class A3Canvas extends HTMLElement implements A3View {
   }
 }
 
-customElements.define("a3-canvas", A3Canvas);
+customElements.define("a3-canvas", Canvas);
 
 // TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
 function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {

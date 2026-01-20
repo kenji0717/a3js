@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { A3Object } from './A3Object';
+import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { isString } from '../utils/TypeGuard';
 
@@ -43,8 +43,8 @@ interface Model {
 /**
  * glTFモデルを読み込み表示するためのクラス。
  */
-export class A3glTF extends A3Object implements AsyncInitRequired<A3glTF> {
-  readonly ready: Promise<A3glTF>;
+export class GLTFA3 extends ObjectA3 implements AsyncInitRequired<GLTFA3> {
+  readonly ready: Promise<GLTFA3>;
   private model: Model | null = null;
 
   constructor(data: any) {

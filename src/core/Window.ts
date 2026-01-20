@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { A3Object } from './A3Object';
-import { A3Scene } from './A3Scene';
-import { A3Camera } from './A3Camera';
-import type { A3View } from './A3View';
-import { A3ViewBase } from './A3ViewBase';
+import { ObjectA3 } from './ObjectA3';
+import { Scene } from './Scene';
+import { Camera } from './Camera';
+import type { View } from './View';
+import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 
 // Windowのスタイル
@@ -27,12 +27,12 @@ const tStyle = `
 `;
 
 
-export class A3Window extends HTMLElement implements A3View {
+export class Window extends HTMLElement implements View {
   private ro?: ResizeObserver;
-  base: A3ViewBase;
+  base: ViewBase;
   renderer;
-  scene: A3Scene;
-  camera: A3Camera;
+  scene: Scene;
+  camera: Camera;
   camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
   isDragging: boolean = false;
@@ -43,7 +43,7 @@ export class A3Window extends HTMLElement implements A3View {
     super();
     this.camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
     const camera = new GeneralCamera(this.camera3js);
-    this.base = new A3ViewBase(camera);
+    this.base = new ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.renderer = new THREE.WebGLRenderer();
@@ -107,7 +107,7 @@ export class A3Window extends HTMLElement implements A3View {
     this.isDragging = false;
   };
 
-  replaceScene(newScene: A3Scene): A3Scene {
+  replaceScene(newScene: Scene): Scene {
     return this.base.replaceScene(newScene);
   }
 
@@ -138,7 +138,7 @@ export class A3Window extends HTMLElement implements A3View {
       mouse.y = -2*(y / rect.height) + 1;
       raycaster.setFromCamera(mouse,this.camera.camera);
       const intersects = raycaster.intersectObjects(this.scene.scene.children);
-      const objs: {o1:THREE.Object3D,o2:A3Object}[] = [];
+      const objs: {o1:THREE.Object3D,o2:ObjectA3}[] = [];
       intersects.forEach((o1)=>{
         for (const o2 of this.scene.objects) {
           if (o2.contains(o1.object)) {
@@ -152,4 +152,4 @@ export class A3Window extends HTMLElement implements A3View {
   }
 }
 
-customElements.define("a3-window", A3Window);
+customElements.define("a3-window", Window);

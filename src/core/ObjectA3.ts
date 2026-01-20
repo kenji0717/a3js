@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
-import { A3Scene } from './A3Scene';
-import type { A3PhysicsEntity,
-              A3PhysicsEntityOption } from './A3Physics';
+import { Scene } from './Scene';
+import type { PhysicsEntity,
+              PhysicsEntityOption } from './Physics';
 import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
@@ -40,14 +40,14 @@ export type Dir =
  * クラスでは、3D空間内での移動や、物理演算に関する
  * 必要なメソッドを実装する。
  */
-export abstract class A3Object {
+export abstract class ObjectA3 {
   readonly _loc: Vec3 = new Vec3(0,0,0);
   readonly _rot: Quat = new Quat(0,0,0,1);
   readonly _scale: Vec3 = new Vec3(1,1,1);
   object: THREE.Object3D;
   controlMode: ControlMode = "manual";
-  scene: A3Scene | null = null;
-  physics: A3PhysicsEntity | null = null;
+  scene: Scene | null = null;
+  physics: PhysicsEntity | null = null;
   private balloon: BalloonInfo | null = null;
   private interpolation: Interpolation | null = null;
 
@@ -95,7 +95,7 @@ export abstract class A3Object {
    * 情報はthis.initPhysics()に受け渡されてA3PhysicsEntityが生成
    * される。
    */
-  getPhysicsOption(): A3PhysicsEntityOption {
+  getPhysicsOption(): PhysicsEntityOption {
     return {
       rigidBody: "dynamic",
       collider: "solid",
@@ -122,7 +122,7 @@ export abstract class A3Object {
    * をオーバーライドしましょう。
    */ 
 
-  initPhysics(opt: A3PhysicsEntityOption): void {
+  initPhysics(opt: PhysicsEntityOption): void {
     this.physics = new RapierDefaultPhysicsEntity(this,opt);
     this.controlMode = 'physics';
   }
@@ -351,7 +351,7 @@ class Interpolation {
   nowTime: number;
   duration: number;
 
-  constructor(obj: A3Object) {
+  constructor(obj: ObjectA3) {
     this.firstLoc = new Vec3(obj.location);
     this.firstRot = new Quat(obj.rot);
     this.firstScale = new Vec3(obj.scale);
@@ -365,7 +365,7 @@ class Interpolation {
     this.duration = 1;
   }
 
-  setLoc(obj: A3Object, newLoc: MutableVec3) {
+  setLoc(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -375,7 +375,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  forceSetLoc(obj: A3Object, newLoc: MutableVec3) {
+  forceSetLoc(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -385,7 +385,7 @@ class Interpolation {
     this.nowTime = 1;
   }
 
-  setQuat(obj: A3Object, newQuat: MutableQuat) {
+  setQuat(obj: ObjectA3, newQuat: MutableQuat) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -395,7 +395,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  forceSetQuat(obj: A3Object, newQuat: MutableQuat) {
+  forceSetQuat(obj: ObjectA3, newQuat: MutableQuat) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -405,7 +405,7 @@ class Interpolation {
     this.nowTime = 1;
   }
 
-  setScale(obj: A3Object, newScale: MutableVec3) {
+  setScale(obj: ObjectA3, newScale: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -415,7 +415,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  forceSetScale(obj: A3Object, newScale: MutableVec3) {
+  forceSetScale(obj: ObjectA3, newScale: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -431,7 +431,7 @@ class Interpolation {
     return t * t * (3 - 2 * t);
   }
 
-  interpolate(obj: A3Object, dt: number) {
+  interpolate(obj: ObjectA3, dt: number) {
     this.nowTime += dt;
     if (this.nowTime > this.duration) this.nowTime = this.duration;
     const t0 = this.nowTime/this.duration;

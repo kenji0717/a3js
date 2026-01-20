@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { A3Object } from './A3Object';
+import { ObjectA3 } from './ObjectA3';
 import { isString } from '../utils/TypeGuard';
 import { unzipSync, strFromU8 } from 'three/addons/libs/fflate.module.js';
 
 let font: Font | null = null;
 /**
- * A3Text3Dを使う前にフォントを初期化しなければならないので、
+ * Text3Dを使う前にフォントを初期化しなければならないので、
  * この関数で初期化する。フォントはttfファイルから
  * TypeFace.js (https://gero3.github.io/facetype.js/) を
  * 使ってJSONファイルにする。そのフォントファイルが
@@ -29,7 +29,7 @@ export async function initFont(path: string) {
   //font = await fontLoader.loadAsync(path);
 }
 
-export class A3Text3D extends A3Object {
+export class Text3D extends ObjectA3 {
   initObject(data: any) {
     let str;
     if (isString(data)) {

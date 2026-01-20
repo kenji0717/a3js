@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { A3Object } from '../core/A3Object';
+import { ObjectA3 } from '../core/ObjectA3';
 
 /**
  * BoxGeometryとMeshStandardMaterialでBoxを作る。
  */
-export class Box extends A3Object {
+export class Box extends ObjectA3 {
   constructor(...args: (number | string)[]) {
     super(args);
   }

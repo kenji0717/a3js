@@ -1,5 +1,5 @@
 
-import type { A3Object } from './A3Object';
+import type { ObjectA3 } from './ObjectA3';
 import type { MutableVec3 } from './Vec3';
 import type { MutableQuat } from './Quat';
 
@@ -12,10 +12,10 @@ import type { MutableQuat } from './Quat';
 
 /**
  * 物理エンジン全体を管理するインターフェース
- * A3Sceneのstaticなプロパティのphysicsに一つだけ
+ * Sceneのstaticなプロパティのphysicsに一つだけ
  * 生成される。
  */
-export interface A3PhysicsEngine {
+export interface PhysicsEngine {
   readonly isInitialized: boolean;
 
   /**
@@ -23,32 +23,32 @@ export interface A3PhysicsEngine {
     * 初期化させることを目指したけど、難しいのであきらめた。
     * 物理演算が必要な場合は、ユーザがこれを実行することになる。
     * 現在のところ初期化の処理は以下のようなプログラムになる。
-    * await A3Scene.physics.init();
+    * await Scene.physics.init();
     */
   init(): Promise<void>;
 
   /**
     * 物理演算用のWorldを生成して返す。
     */
-  createWorld(option: A3PhysicsWorldOption): A3PhysicsWorld;
+  createWorld(option: PhysicsWorldOption): PhysicsWorld;
 }
 
 /**
- * A3PhysicsWorldを生成する時に必要となる情報をまとめたもの。
+ * PhysicsWorldを生成する時に必要となる情報をまとめたもの。
  * 物理エンジンの実装ごとに拡張可能。
  */
-export interface A3PhysicsWorldOption {
+export interface PhysicsWorldOption {
   gravity: { x: number; y: number; z: number };
 }
 
 /**
  * 物理演算が行われる空間を表すクラス。物理演算のステップを
- * 進めるupdate、A3PhysicsEntityを追加・削除するためのadd、remove
+ * 進めるupdate、PhysicsEntityを追加・削除するためのadd、remove
  * メソッドを持つ。
  */
-export interface A3PhysicsWorld {
-  add(entity: A3PhysicsEntity): void;
-  remove(entity: A3PhysicsEntity): void;
+export interface PhysicsWorld {
+  add(entity: PhysicsEntity): void;
+  remove(entity: PhysicsEntity): void;
   update(dt: number): void;
 }
 
@@ -56,10 +56,10 @@ export type RigidBodyType = "dynamic" | "kinematic" | "fixed";
 export type ColliderKind = "solid" | "sensor";
 export type MeshColliderKind = "tri_mesh" | "convex_hull";
 /**
- * A3PhysicsEngityを生成する時に必要な情報をまとめたもの。
- * 物理エンジンや個別のA3PhysicsEntityごとに拡張可能。
+ * PhysicsEngityを生成する時に必要な情報をまとめたもの。
+ * 物理エンジンや個別のPhysicsEntityごとに拡張可能。
  */
-export interface A3PhysicsEntityOption {
+export interface PhysicsEntityOption {
   rigidBody: RigidBodyType;
   collider: ColliderKind;
   meshCollider: MeshColliderKind;
@@ -68,22 +68,22 @@ export interface A3PhysicsEntityOption {
 }
 
 /**
- * RigidBodyなどの個別のA3Objectに必要な物理計算のための
+ * RigidBodyなどの個別のObjectA3に必要な物理計算のための
  * 色々な実体が含まれる物のインターフェース。
  */
-export abstract class A3PhysicsEntity {
-  object: A3Object;
-  option: A3PhysicsEntityOption;
+export abstract class PhysicsEntity {
+  object: ObjectA3;
+  option: PhysicsEntityOption;
 
-  constructor(object: A3Object, option: A3PhysicsEntityOption) {
+  constructor(object: ObjectA3, option: PhysicsEntityOption) {
     this.object = object;
     this.option = option;
   }
   
   /**
-   * 物理演算の結果をA3Objectの位置や回転に反映させる。
+   * 物理演算の結果をObjectA3の位置や回転に反映させる。
    */
-  abstract synchronize(obj: A3Object): void;
+  abstract synchronize(obj: ObjectA3): void;
 
   /**
    * 物理演算対象であっても位置を外部から操作できるようにする。

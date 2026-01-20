@@ -1,35 +1,35 @@
 import * as THREE from 'three';
-import { A3Object } from './A3Object';
-import type { A3PhysicsWorld } from './A3Physics';
+import { ObjectA3 } from './ObjectA3';
+import type { PhysicsWorld } from './Physics';
 import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 
 /**
   * 3D仮想空間を表すクラス。THREE.Sceneを内包していて
   * アップデート処理とかも、ここで行う。
   */
-export class A3Scene {
+export class Scene {
   scene: THREE.Scene;
-  objects: A3Object[];
+  objects: ObjectA3[];
   static physics: RapierPhysicsEngine = new RapierPhysicsEngine();
-  physicsWorld: A3PhysicsWorld | null = null;
+  physicsWorld: PhysicsWorld | null = null;
   physicsDt = 1/60;
 
   static async initPhysics() {
-    await A3Scene.physics.init();
+    await Scene.physics.init();
   }
 
   constructor() {
     this.scene = new THREE.Scene();
     this.objects = [];
-    if (A3Scene.physics.isInitialized) {
-      this.physicsWorld = A3Scene.physics.createWorld({
+    if (Scene.physics.isInitialized) {
+      this.physicsWorld = Scene.physics.createWorld({
         gravity: {x:0.0, y: -9.81, z:0.0},
         timestep: this.physicsDt
       });
     }
   }
 
-  add(object: A3Object) {
+  add(object: ObjectA3) {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
@@ -42,12 +42,12 @@ export class A3Scene {
         if (object.physics) // 必ずtrueのはず
           this.physicsWorld.add(object.physics);
       } else {
-        console.log('物理エンジンを初期化してない状態で、物理エンジンを必要とするA3Objectが追加されました。');
+        console.log('物理エンジンを初期化してない状態で、物理エンジンを必要とするObjectA3が追加されました。');
       }
     }
   }
 
-  remove(object: A3Object) {
+  remove(object: ObjectA3) {
     this.scene.remove(object.object);
     {
       // やりたいのはthis.objects.remove(object);なんだけど無い

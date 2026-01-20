@@ -1,5 +1,5 @@
 //import * as THREE from 'three';
-import { A3Object } from './A3Object';
+import { ObjectA3 } from './ObjectA3';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -7,7 +7,7 @@ import { A3Object } from './A3Object';
   * で持ってないといけないので、それもカメラに含まれる
   * ものとする。
   */
-export abstract class A3Camera extends A3Object {
+export abstract class Camera extends ObjectA3 {
   /*
    * 必ずHeadLightを準備しなければならない。
    */

@@ -1,39 +1,32 @@
-/*
 import * as a3 from 'a3js';
+/*
 window.a3 = a3;
 */
 
-/*
-import { A3Window, A3Test } from 'a3js';
 
-const view = new A3Window(600,300);
-const obj = new A3Test();
+/*
+const view = new a3.Window(600,300);
+const obj = new a3.Test();
 view.scene.add(obj);
 */
 
 /*
-import { A3Canvas, A3Test } from 'a3js';
-
-const view = new A3Canvas();
+const view = new a3.Canvas();
 document.body.appendChild(view);
-const obj = new A3Test();
+const obj = new a3.Test();
 view.scene.add(obj);
 */
 
 /*
-import { A3Window, A3Text3D, initFont } from 'a3js';
-
-await initFont('M-PLUS-1_Bold.json.zip');
-const view = new A3Window(600,300);
-const obj = new A3Text3D("日本語");
+await a3.initFont('M-PLUS-1_Bold.json.zip');
+const view = new a3.Window(600,300);
+const obj = new a3.Text3D("日本語");
 view.scene.add(obj);
 */
 
 /*
-import { A3Window, A3glTF } from 'a3js';
-
-const view = new A3Window(600,300);
-const obj = await new A3glTF('RobotExpressive.glb').ready;
+const view = new a3.Window(600,300);
+const obj = await new a3.GLTFA3('RobotExpressive.glb').ready;
 obj.setLocation(0,-2,-2);
 obj.action('Walking');
 obj.morph('Head_4.Surprised',1);
@@ -42,50 +35,43 @@ view.scene.add(obj);
 
 /*
 import * as THREE from 'three';
-import { A3Window, ThreeJS } from 'a3js';
 
-const view = new A3Window(600,300);
+const view = new a3.Window(600,300);
 const geo = new THREE.BoxGeometry();
 const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const mesh = new THREE.Mesh(geo, mat);
-const obj = new ThreeJS(mesh);
+const obj = new a3.ThreeJS(mesh);
 view.scene.add(obj);
 */
 
 /*
-import { A3Scene, A3Window, A3Test } from 'a3js';
-
-await A3Scene.physics.init();
-const view = new A3Window(600,300);
-const obj = new A3Test({physics: true});
+await a3.Scene.physics.init();
+const view = new a3.Window(600,300);
+const obj = new a3.Test({physics: true});
 view.scene.add(obj);
 */
 
 /*
-import { A3Canvas, A3glTF } from 'a3js';
-
 const p = document.createElement('p');
 p.textContent = `${"あ".repeat(1000)}`;
 document.body.appendChild(p);
-const view = new A3Canvas({antialias: true, transparent: true});
+const view = new a3.Canvas({antialias: true, transparent: true});
 view.style = "position:fixed;top:0;left:0;width:600px;height:300px;border:solid;";
 document.body.appendChild(view);
-const obj = await new A3glTF('RobotExpressive.glb').ready;
+const obj = await new a3.GLTFA3('RobotExpressive.glb').ready;
 obj.action('Walking');
 view.scene.add(obj);
 view.camera.setLocation(0,2,4);
 */
 
 /*
-import { A3Window, A3Test, asyncSleep } from 'a3js';
-
-const view = new A3Window(600,300);
-const obj = new A3Test();
+const view = new a3.Window(600,300);
+const obj = new a3.Test();
 obj.setControlMode("interpolated");
 view.scene.add(obj);
 let i=0;
 while (true) {
-  await asyncSleep(2000);
+  await a3.asyncSleep(2000);
   if (i%2 === 0) {
     obj.setLocation(1,0,0);
     obj.setQuat(0,0.707,0,0.707);
@@ -100,43 +86,38 @@ while (true) {
 */
 
 /*
-import { A3Window, A3Test } from 'a3js';
-
-const view = new A3Window(600,300);
-const obj1 = new A3Test();
+const view = new a3.Window(600,300);
+const obj1 = new a3.Test();
 view.scene.add(obj1);
-const obj2 = new A3Test();
+const obj2 = new a3.Test();
 obj2.setLocation(0.3,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
 */
 
 /*
-import { A3Canvas, A3Test } from 'a3js';
-
-const view = new A3Canvas();
+const view = new a3.Canvas();
 document.body.appendChild(view);
-const obj1 = new A3Test();
+const obj1 = new a3.Test();
 view.scene.add(obj1);
-const obj2 = new A3Test();
+const obj2 = new a3.Test();
 obj2.setLocation(0.3,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.value);});
 */
 
 
-import { A3Scene, A3Window, Acerola3D, Box, asyncSleep } from 'a3js';
-
-await A3Scene.physics.init();
-const view = new A3Window(600,300);
-const ground = new Box(10,0.5,10,"red");
+await a3.Scene.physics.init();
+const view = new a3.Window(600,300);
+const ground = new a3.Box(10,0.5,10,"red");
 ground.setLocation(0,-3,0);
 let opt = ground.getPhysicsOption();
 opt.rigidBody = "fixed";
 ground.initPhysics(opt);
 view.scene.add(ground);
-const obj = await new Acerola3D('axis.a3').ready;
+const obj = await new a3.Acerola3D('axis.a3').ready;
 obj.setControlMode("physics");
 view.scene.add(obj);
-await asyncSleep(100);
+await a3.asyncSleep(100);
 obj.forceSetQuat(0.5,0.5,0,0.5); // ？？？
+
