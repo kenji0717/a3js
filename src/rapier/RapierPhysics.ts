@@ -120,23 +120,33 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
         break;
     }
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
+    this.bodyDesc.setRotation({
+      x: obj.rot.x,
+      y: obj.rot.y,
+      z: obj.rot.z,
+      w: obj.rot.w
+    });
     this.object.object.traverse((obj)=>{
       if (isMesh(obj)) {
-        let c = getShape(obj.geometry);
+        const c = getShape(obj.geometry);
         if (c) {
           this.colliderDescs.push(c);
+          c.setRestitution(opt.restitution).setFriction(opt.friction);
         } else {
+          let cs;
           switch(opt.meshCollider) {
             case "tri_mesh":
-              c = createTriMeshColliderDescs(obj,1); // GAHAあmass忘れてた
+              cs = createTriMeshColliderDescs(obj,1); // GAHAあmass忘れてた
               break;
             case "convex_hull":
-              c = createConvexHullColliderDescs(obj,1); // GAHAあmass忘れてた
+              cs = createConvexHullColliderDescs(obj,1); // GAHAあmass忘れてた
               break;
           }
-          if (c) {
-            c.setRestitution(opt.restitution).setFriction(opt.friction);
-            this.colliderDescs.push(c);
+          if (cs) {
+            cs.forEach((c) => {
+              this.colliderDescs.push(c);
+              c.setRestitution(opt.restitution).setFriction(opt.friction);
+            });
           }
         }
       }
@@ -169,18 +179,17 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
     });
   }
 
-  forceSetLoc(v: MutableVec3): void {
+  setLocOverride(v: MutableVec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
   }
 
-  forceSetQuat(q: MutableQuat): void {
-console.log(`GAHA:`,q);
+  setQuatOverride(q: MutableQuat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
   }
 
-  forceSetScale(v: MutableVec3): void {
+  setScaleOverride(v: MutableVec3): void {
     v;
     // 簡単ではないのでとりあえず保留
   }

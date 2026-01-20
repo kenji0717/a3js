@@ -7,10 +7,10 @@
   </head>
   <body>
     <script type="module">
-     import { A3Window, A3Test } from 'https://cdn.jsdelivr.net/npm/a3js@latest/+esm';
+     import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@latest/+esm';
 
-     const view = new A3Window(600,300);
-     const obj = new A3Test();
+     const view = new a3.Window(600,300);
+     const obj = new a3.Test();
      view.scene.add(obj);
     </script>
   </body>

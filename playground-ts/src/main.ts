@@ -109,6 +109,7 @@ view.addEventListener('click3d',(e)=>{console.log((e as CustomEvent).detail.valu
 
 await a3.Scene.physics.init();
 const view = new a3.Window(600,300);
+view.camera.setLocation(0,0,10);
 const ground = new a3.Box(10,0.5,10,"red");
 ground.setLocation(0,-3,0);
 let opt = ground.getPhysicsOption();
@@ -116,8 +117,11 @@ opt.rigidBody = "fixed";
 ground.initPhysics(opt);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('axis.a3').ready;
+opt = obj.getPhysicsOption();
+opt.meshCollider = "tri_mesh"; // "convex_hull"
+obj.setQuat(0.5,0.5,0,0.5); // ？？？
 obj.setControlMode("physics");
 view.scene.add(obj);
-await a3.asyncSleep(100);
-obj.forceSetQuat(0.5,0.5,0,0.5); // ？？？
+await a3.asyncSleep(1000);
+obj.setQuatOverride(0.5,0.5,0,-0.5); // ？？？
 

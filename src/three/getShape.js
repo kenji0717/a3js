@@ -14,6 +14,7 @@ export function getShape( geometry ) {
 	// TODO change type to is*
 
 	if ( geometry.type === 'RoundedBoxGeometry' ) {
+console.log(`GAHA1`,geometry.type);
 
 		const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
 		const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
@@ -23,6 +24,7 @@ export function getShape( geometry ) {
 		return RAPIER.ColliderDesc.roundCuboid( sx - radius, sy - radius, sz - radius, radius );
 
 	} else if ( geometry.type === 'BoxGeometry' ) {
+console.log(`GAHA2`,geometry.type);
 
 		const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
 		const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
@@ -31,11 +33,13 @@ export function getShape( geometry ) {
 		return RAPIER.ColliderDesc.cuboid( sx, sy, sz );
 
 	} else if ( geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry' ) {
+console.log(`GAHA3`,geometry.type);
 
 		const radius = parameters.radius !== undefined ? parameters.radius : 1;
 		return RAPIER.ColliderDesc.ball( radius );
 
 	} else if ( geometry.type === 'CylinderGeometry' ) {
+console.log(`GAHA4`,geometry.type);
 
 		const radius = parameters.radiusBottom !== undefined ? parameters.radiusBottom : 0.5;
 		const length = parameters.height !== undefined ? parameters.height : 0.5;
@@ -43,6 +47,7 @@ export function getShape( geometry ) {
 		return RAPIER.ColliderDesc.cylinder( length / 2, radius );
 
 	} else if ( geometry.type === 'CapsuleGeometry' ) {
+console.log(`GAHA5`,geometry.type);
 
 		const radius = parameters.radius !== undefined ? parameters.radius : 0.5;
 		const length = parameters.height !== undefined ? parameters.height : 0.5;
@@ -50,7 +55,8 @@ export function getShape( geometry ) {
 		return RAPIER.ColliderDesc.capsule( length / 2, radius );
 
 	} else if ( geometry.type === 'BufferGeometry' ) {
-
+console.log(`GAHA6`,geometry.type); return null;
+/*
 		const vertices = [];
 		const vertex = new Vector3();
 		const position = geometry.getAttribute( 'position' );
@@ -68,10 +74,10 @@ export function getShape( geometry ) {
 			: geometry.getIndex().array;
 
 		return RAPIER.ColliderDesc.trimesh( vertices, indices );
-
+*/
 	}
 
-	console.error( 'RapierPhysics: Unsupported geometry type:', geometry.type );
+	console.error( 'getShape(): Unsupported geometry type:', geometry.type );
 
 	return null;
 

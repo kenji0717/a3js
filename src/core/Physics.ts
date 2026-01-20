@@ -88,17 +88,17 @@ export abstract class PhysicsEntity {
   /**
    * 物理演算対象であっても位置を外部から操作できるようにする。
    */
-  abstract forceSetLoc(v: MutableVec3): void;
+  abstract setLocOverride(v: MutableVec3): void;
 
   /**
    * 物理演算対象であっても回転を外部から操作できるようにする。
    */
-  abstract forceSetQuat(q: MutableQuat): void;
+  abstract setQuatOverride(q: MutableQuat): void;
 
   /**
    * 物理演算対象であっても拡大率を外部から操作できるようにする。
    * ただ、これは普通難しいかも。
    */
-  abstract forceSetScale(v: MutableVec3): void;
+  abstract setScaleOverride(v: MutableVec3): void;
 }
 
