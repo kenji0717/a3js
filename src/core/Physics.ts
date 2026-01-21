@@ -63,6 +63,7 @@ export interface PhysicsEntityOption {
   rigidBody: RigidBodyType;
   collider: ColliderKind;
   meshCollider: MeshColliderKind;
+  mass: number;
   friction: number;
   restitution: number;
 }

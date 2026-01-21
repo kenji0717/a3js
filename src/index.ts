@@ -12,6 +12,7 @@ export { GLTFA3 } from './core/GLTFA3';
 export { Acerola3D } from './core/Acerola3D';
 export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
+export { Sphere } from './three/Sphere';
 export type { View } from './core/View';
 export type { PhysicsEngine } from './core/Physics';
 export type { PhysicsWorld } from './core/Physics';

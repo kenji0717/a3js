@@ -119,9 +119,9 @@ view.scene.add(ground);
 const obj = await new a3.Acerola3D('axis.a3').ready;
 opt = obj.getPhysicsOption();
 opt.meshCollider = "tri_mesh"; // "convex_hull"
-obj.setQuat(0.5,0.5,0,0.5); // ？？？
+obj.setQuat(0.5,0.5,0,0.5);
 obj.setControlMode("physics");
 view.scene.add(obj);
 await a3.asyncSleep(1000);
-obj.setQuatOverride(0.5,0.5,0,-0.5); // ？？？
+obj.setQuatOverride(0.5,0.5,0,-0.5);
 

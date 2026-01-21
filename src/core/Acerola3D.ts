@@ -11,7 +11,7 @@ import type { AsyncInitRequired } from './AsyncInitRequired';
 //import { createConvexHullColliderDescs } from '../rapier/RapierPhysics';
 //import type * as Rapier from '@dimforge/rapier3d-compat';
 import { unzipAsync } from '../utils/math';
-import { loadVrmlInUnzipped } from '../three/getShape';
+import { loadVrmlInUnzipped } from '../three/threeUtils';
 
 /**
  * まだ適当。

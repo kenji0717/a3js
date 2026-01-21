@@ -100,6 +100,7 @@ export abstract class ObjectA3 {
       rigidBody: "dynamic",
       collider: "solid",
       meshCollider: "convex_hull",
+      mass: 1.0,
       friction: 0.5,
       restitution: 0.5
     };
