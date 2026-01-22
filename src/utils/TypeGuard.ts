@@ -49,3 +49,8 @@ export function isCapsuleGeometry(value: any): value is THREE.CapsuleGeometry {
   return (value as any).type === "CapsuleGeometry";
   //return (value as any).isCapsuleGeometry === true;
 }
+
+// ほね
+export function isBone(value: any): value is THREE.Bone {
+  return (value as any).isBone === true;
+}

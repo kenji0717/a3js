@@ -43,6 +43,7 @@
     <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@latest/+esm" -->
     <script type="module">
      async function init(program_file_name) {
+       localStorage.setItem('a3js_test_item',program_file_name);
        // body要素を空にする
        while(document.body.firstChild) document.body.removeChild(document.body.firstChild);
 
@@ -76,7 +77,9 @@
        script.setAttribute('src',program_file_name);
        document.body.appendChild(script);
      }
-     init('test01.js');
+     const ls = localStorage.getItem('a3js_test_item');
+     const file = ls?ls:'test01.js';
+     init(file);
     </script>
   </head>
   <body>
