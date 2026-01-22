@@ -14,11 +14,16 @@ export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
 export type { View } from './core/View';
-export type { PhysicsEngine } from './core/Physics';
-export type { PhysicsWorld } from './core/Physics';
-export type { PhysicsEntity } from './core/Physics';
-export type { PhysicsWorldOption } from './core/Physics';
-export type { PhysicsEntityOption } from './core/Physics';
+export type { PhysicsEngine,
+              PhysicsWorld,
+              PhysicsEntity,
+              PhysicsWorldOption,
+              PhysicsEntityOption,
+              ColliderKind,
+              MeshColliderKind,
+              RigidBodyType } from './core/Physics';
+export { RapierPhysicsEngine } from './rapier/RapierPhysics';
+export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { Vec3 } from './core/Vec3';
 export type { MutableVec3 } from './core/Vec3';
 export { Quat } from './core/Quat';

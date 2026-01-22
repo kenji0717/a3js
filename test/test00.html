@@ -4,14 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>test</title>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+         "a3js": "../dist/a3js.es.js"
+       }
+     }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@latest/+esm" -->
   </head>
   <body>
-    <p>CDN(latest)のテスト。例えばコンソールで以下を実行。</p>
+    <p>コンソールでテスト。例えば以下を実行。</p>
     <pre style="border: solid 1px;">let w = new a3.Window(600,300);
 let o = new a3.Test();
 w.scene.add(o);</pre>
     <script type="module">
-     import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@latest/+esm';
+     //import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@latest/+esm';
+     import * as a3 from 'a3js';
      window.a3 = a3;
     </script>
   </body>

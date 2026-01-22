@@ -4,14 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>test</title>
+    <style>
+     #program_code {
+       width: 70%;
+       background-color: #000;
+       border: 2px solid #666;
+       color: #EEE;
+       font-family: Consolas, "Courier New", Courier, Monaco, monospace;
+       line-height: 100%;
+       margin-bottom: 0.4em;
+       margin-left: auto;
+       margin-right: auto;
+       padding: 0.4em 0.4em;
+       white-space: pre;
+       overflow: auto;
+     }
+     #program_list {
+       list-style-type: none;
+       display: flex;
+     }
+     #program_list li {
+       margin: 0px 10px;
+       padding: 3px 10px;
+       background: lightgray;
+     }
+    </style>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+         "a3js": "../dist/a3js.es.js"
+       }
+     }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@latest/+esm" -->
+    <script type="module">
+     async function init(program_file_name) {
+       // body要素を空にする
+       while(document.body.firstChild) document.body.removeChild(document.body.firstChild);
+
+       let list = (await (await fetch('./list.csv')).text()).split('\n');
+       list = list.map((l)=>l.trim());
+       list = list.filter((l)=>l !== "");
+
+       const ul = document.createElement('ul');
+       ul.setAttribute('id','program_list');
+       list.forEach((file)=>{
+         const li = document.createElement('li');
+         li.textContent = file;
+         li.addEventListener('click',()=>init(file));
+         if (program_file_name === file)
+           li.style.color = 'red';
+         ul.appendChild(li);
+       });
+       document.body.appendChild(ul);
+
+       const pre = document.createElement('pre');
+       pre.setAttribute('id','program_code');
+       const code = document.createElement('code');
+       pre.appendChild(code);
+       document.body.appendChild(pre);
+       const p = await (await fetch(program_file_name)).text();
+       code.textContent = p;
+
+       const script = document.createElement('script');
+       script.setAttribute('id','program');
+       script.setAttribute('type','module');
+       script.setAttribute('src',program_file_name);
+       document.body.appendChild(script);
+     }
+     init('test01.js');
+    </script>
   </head>
   <body>
-    <script type="module">
-     import * as a3 from 'https://cdn.jsdelivr.net/npm/a3js@latest/+esm';
-
-     const view = new a3.Window(600,300);
-     const obj = new a3.Test();
-     view.scene.add(obj);
-    </script>
   </body>
 </html>

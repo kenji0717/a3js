@@ -50,7 +50,7 @@ export class RapierPhysicsEngine implements PhysicsEngine {
   }
 }
 
-interface RapierPhysicsWorldOption extends PhysicsWorldOption {
+export interface RapierPhysicsWorldOption extends PhysicsWorldOption {
   //enableCCD: boolean;
   timestep: number;
 }
