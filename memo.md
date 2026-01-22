@@ -41,6 +41,8 @@
     + (emphasize,unemphasize)
     + (polygonize,unpoligonize)
     + (setVisible(boolean))
+* 当たり判定
+    + collision
 
 ### Cameraに追加したいメソッドメモ
 
@@ -49,12 +51,17 @@ ObjectA3を追加するaddLocked()とremoveLocked()。
 ただ、これはObjectA3にadd()とremove()を付ける
 方が良いのかもしれない。
 
-### Viewに追加したいメソッドメモ
+### Sceneに追加したいメソッドメモ
 
 * アバター
     + setAvatar
+* 当たり判定
+    + addEventListener('collision',()=>{})
 * (背景)
     + (setBackground)
+
+### Viewに追加したいメソッドメモ
+
 * ピック
     + pick(rayを指定して)
 
