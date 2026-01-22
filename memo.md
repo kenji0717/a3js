@@ -1,4 +1,65 @@
 
+### ObjectA3に追加したいメソッドメモ
+
+* まずは書き換え
+    + setXxxxOverrideを
+    + setXxxxNowにしたいかも
+* 場所回転の更新
+    + addLocation
+    + mulQuat
+    + mulRotation デグリー
+    + mulScale
+* 視点
+    + lookAt
+* 一人称移動
+    + moveForward
+    + moveBack
+    + moveRight
+    + moveLeft
+    + moveUp
+    + moveDown
+* 一人称回転
+    + turnUp デグリー
+    + turnDown デグリー
+    + turnRight デグリー
+    + turnLeft デグリー
+    + rollRight デグリー
+    + rollLeft デグリー
+* 多分有用
+    + getUnitVecX
+    + getUnitVecY
+    + getUnitVecZ
+* ラベル表示
+    + setLabel
+    + setLabelOffset スクリーン座標で
+* 吹き出し表示
+    + setBalloon
+    + setBalloonOffset
+* 強調表示系
+    + setSelected
+    + (setSelected3D)
+    + (emphasize,unemphasize)
+    + (polygonize,unpoligonize)
+    + (setVisible(boolean))
+
+### Cameraに追加したいメソッドメモ
+
+カメラに対して固定された表示をするための
+ObjectA3を追加するaddLocked()とremoveLocked()。
+ただ、これはObjectA3にadd()とremove()を付ける
+方が良いのかもしれない。
+
+### Viewに追加したいメソッドメモ
+
+* アバター
+    + setAvatar
+* (背景)
+    + (setBackground)
+* ピック
+    + pick(rayを指定して)
+
+-----
+
 Rapierでは慣性モーメントは自動で計算されるっぽい。
 TriMeshは例外、でもConvexHullはちゃんと計算してくれる
 らしい。

@@ -3,6 +3,8 @@
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
+import { OrbitController } from './Controller';
+import type { Controller } from './Controller';
 
 /**
  * Viewに必須な機能だけを実装したクラス。
@@ -14,12 +16,14 @@ import type { View } from './View';
 export class ViewBase implements View {
   scene: Scene;
   camera: Camera;
+  controller: Controller | null;
   
   constructor(camera: Camera) {
     this.scene = new Scene();
     this.camera = camera;
     this.scene.scene.add(this.camera.object);
     this.camera.setLocation(0, 0, 3);
+    this.controller = new OrbitController(this);
   }
 
   replaceScene(newScene: Scene): Scene {
@@ -32,5 +36,12 @@ export class ViewBase implements View {
 
   updateScene(dt: number) {
     this.scene.update(dt);
+    this.controller?.update(dt);
+  }
+
+  setController(controller: Controller) {
+    this.controller?.deactivate();
+    this.controller = controller;
+    this.controller.activate();
   }
 }

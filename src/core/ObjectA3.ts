@@ -11,7 +11,7 @@ import type { MutableQuat } from './Quat';
 
 
 /**
- * A3Objectのモーションコントロールモード
+ * ObjectA3のモーションコントロールモード
  */
 export type ControlMode =
   | "manual" // プログラマ指定の場所に瞬時に移動するモード
@@ -30,6 +30,8 @@ export type Dir =
   | "LEFT"
   | "BOTTOM";
 
+export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
+
 // BalloonInfoとInterpolationの実装は長いので一番下に移動した。
 
 /**
@@ -41,6 +43,8 @@ export type Dir =
  * 必要なメソッドを実装する。
  */
 export abstract class ObjectA3 {
+  static defaultRotationOrder: RotationOrder = "XYZ";
+  rotationOrder: RotationOrder | null = null;
   readonly _loc: Vec3 = new Vec3(0,0,0);
   readonly _rot: Quat = new Quat(0,0,0,1);
   readonly _scale: Vec3 = new Vec3(1,1,1);
@@ -88,7 +92,7 @@ export abstract class ObjectA3 {
   }
 
   /**
-   * このA3Object用のA3PhysicsEntity(物理計算に必要なもろもろ)
+   * このObjectA3用のA3PhysicsEntity(物理計算に必要なもろもろ)
    * を生成するために必要な情報を、このメソッドで返す。物理演算
    * で特別なことをするような時には、このメソッドをオーバーライド
    * しする必要があるかもしれない。ここで生成されたオプションの
@@ -111,13 +115,13 @@ export abstract class ObjectA3 {
    * this.physicsに設定します。this.controlModeも"physics"に設定
    * します。A3PhysicsEntityのデフォルト実装として
    * RapierDefaultPhysicsEntityを使用しますが、自分で作った
-   * 物理実態(A3PhysicsEntity)を使いたい場合は、A3Objectを継承した
+   * 物理実態(A3PhysicsEntity)を使いたい場合は、ObjectA3を継承した
    * クラスで、このinitPhysics()メソッドを適切にオーバーライドして
    * ください。このinitPhysics()は通常A3Scene(つまりworld)に追加
    * される瞬間に1度だけ実行されます。その場合A3PhysicsEntityの
    * 生成に必要なA3PhysicsEntityOptionはthis.getPhysicsOption();
    * から取得されます。このオプションを変更してカスタマイズしたい
-   * 場合は、A3ObjectをA3Sceneにaddする前に
+   * 場合は、ObjectA3をA3Sceneにaddする前に
    * this.initPhysics(カスタマイズしたオプション);として初期化して
    * 下さい。もしくは継承したクラスでgetPhysicsOption()メソッド
    * をオーバーライドしましょう。
@@ -301,7 +305,68 @@ export abstract class ObjectA3 {
   }
 
   /**
-   * このA3Objectが引数で与えられたTHREE.Object3Dを含んでいるか
+   * オイラー角で回転を設定。単位はラジアンではなくデグリー
+   * (360度で1回転)とする。回転の合成の順番はthis.rotationOrderの
+   * 設定によるが、それがnullの時はObject3D.defaultRotationOrderの
+   * 順番になる。
+   */
+  setRotation(x: number, y: number, z: number): void;
+  setRotation(v: MutableVec3): void;
+  setRotation(xOrV: number | MutableVec3, y?: number, z?: number): void {
+    const rot = new Vec3();
+    if (typeof xOrV === "number")
+      rot.set(xOrV, y!, z!);
+    else
+      rot.set(xOrV);
+    rot.scale(Math.PI/180); // デグリー to ラジアン
+    const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
+    const quat = new Quat(0,0,0,1);
+    for (let i=0;i<3;i++) {
+      const c = order.charAt(i);
+      switch(c) {
+        case 'X':
+          quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
+          break;
+        case 'Y':
+          quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
+          break;
+        case 'Z':
+          quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
+          break;
+      }
+    }
+    this.setQuat(quat);
+  }
+
+  setRotationOverride(x: number, y: number, z: number): void;
+  setRotationOverride(v: MutableVec3): void;
+  setRotationOverride(xOrV: number | MutableVec3, y?: number, z?: number): void {
+    const rot = new Vec3();
+    if (typeof xOrV === "number")
+      rot.set(xOrV, y!, z!);
+    else
+      rot.set(xOrV);
+    const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
+    const quat = new Quat(0,0,0,1);
+    for (let i=0;i<3;i++) {
+      const c = order.charAt(i);
+      switch(c) {
+        case 'X':
+          quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
+          break;
+        case 'Y':
+          quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
+          break;
+        case 'Z':
+          quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
+          break;
+      }
+    }
+    this.setQuatOverride(quat);
+  }
+
+  /**
+   * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか
    * どうかを判定するメソッド。
    */
   contains(obj: THREE.Object3D): boolean {
@@ -314,7 +379,7 @@ export abstract class ObjectA3 {
 }
 
 /*
- * 吹き出しの情報。必要な時だけA3Objectに
+ * 吹き出しの情報。必要な時だけObjectA3に
  * 吹き出しの情報を入れるために使用。
  */
 class BalloonInfo {
@@ -337,7 +402,7 @@ class BalloonInfo {
 
 /*
  * 補間のための情報と処理を実装したクラス。
- * 必要な時だけA3Objectに追加される。
+ * 必要な時だけObjectA3に追加される。
  */
 class Interpolation {
   firstLoc: Vec3;

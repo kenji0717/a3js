@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
 import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
+import type { Controller } from './Controller';
 
 export interface CanvasOpt {
   camera?: THREE.Camera;
@@ -22,6 +22,7 @@ export class Canvas extends HTMLElement implements View {
   renderer;
   scene: Scene;
   camera: Camera;
+  controller: Controller | null;
   camera3js: THREE.Camera;
   clock: THREE.Clock;
   
@@ -34,6 +35,7 @@ export class Canvas extends HTMLElement implements View {
     this.base = new ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
+    this.controller = this.base.controller;
     const o = {
       antialias: (opt.antialias?opt.antialias:false),
       alpha: (opt.transparent?opt.transparent:false)
@@ -47,6 +49,21 @@ export class Canvas extends HTMLElement implements View {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
 
     this.addEventListener('click',this.myMouseClickedListener);
+
+    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
+    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
+    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
+    this.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
+    this.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
+    this.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
+    this.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
+    this.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
+    this.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
+    this.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
+    this.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
+    this.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
+    this.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
+    this.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
   }
 
   connectedCallback() {
@@ -65,7 +82,13 @@ export class Canvas extends HTMLElement implements View {
   }
 
   replaceScene(newScene: Scene): Scene {
+    this.scene = newScene; // baseのとは別だから
     return this.base.replaceScene(newScene);
+  }
+
+  setController(controller: Controller) {
+    this.controller = controller; // baseのとは別だから
+    this.base.setController(controller);
   }
 
   animationFrameId: number = -1;

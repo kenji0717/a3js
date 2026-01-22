@@ -61,6 +61,24 @@ export class Quat implements MutableQuat {
     return this;
   }
 
+  mul(x: number, y: number, z: number, w: number): Quat;
+  mul(q: MutableQuat): Quat;
+  mul(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): Quat {
+    const q1 = new Quat(this);
+    const q2 = new Quat();
+    if (typeof xOrQ === "number")
+      q2.set(xOrQ, y!, z!, w!);
+    else
+      q2.set(xOrQ);
+
+    this._x = q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y;
+    this._y = q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x;
+    this._z = q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w;
+    this._w = q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z;
+
+    return this;
+  }
+
   // 線形補間
   lerp(q1: MutableQuat, q2: MutableQuat, t: number) {
     this._x = (1-t)*q1.x + t*q2.x;

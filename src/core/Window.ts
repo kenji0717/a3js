@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
 import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
+import type { Controller } from './Controller';
 
 // Windowのスタイル
 const wStyle = `
@@ -33,6 +33,7 @@ export class Window extends HTMLElement implements View {
   renderer;
   scene: Scene;
   camera: Camera;
+  controller: Controller | null;
   camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
   isDragging: boolean = false;
@@ -46,6 +47,7 @@ export class Window extends HTMLElement implements View {
     this.base = new ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
+    this.controller = this.base.controller;
     this.renderer = new THREE.WebGLRenderer();
     this.clock = new THREE.Clock();
     this.camera3js.aspect = width / height;
@@ -75,6 +77,21 @@ export class Window extends HTMLElement implements View {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
 
     this.addEventListener('click',this.myMouseClickedListener);
+
+    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
+    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
+    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
+    this.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
+    this.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
+    this.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
+    this.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
+    this.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
+    this.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
+    this.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
+    this.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
+    this.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
+    this.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
+    this.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
   }
 
   connectedCallback() {
@@ -89,6 +106,16 @@ export class Window extends HTMLElement implements View {
   }
   disconnectedCallback() {
     this.ro?.disconnect();
+  }
+
+  replaceScene(newScene: Scene): Scene {
+    this.scene = newScene; // baseのとは別だから
+    return this.base.replaceScene(newScene);
+  }
+
+  setController(controller: Controller) {
+    this.controller = controller; // baseのとは別だから
+    this.base.setController(controller);
   }
 
   mouseDownListener = (e: MouseEvent) => {
@@ -107,18 +134,12 @@ export class Window extends HTMLElement implements View {
     this.isDragging = false;
   };
 
-  replaceScene(newScene: Scene): Scene {
-    return this.base.replaceScene(newScene);
-  }
-
   animationFrameId: number = -1;
   renderingLoop = () => {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
     const dt = this.clock.getDelta();
-    if (this.scene) {
-      this.scene.update(dt);
-      this.renderer.render(this.scene.scene, this.camera3js);
-    }
+    this.base.updateScene(dt);
+    this.renderer.render(this.scene.scene, this.camera3js);
   };
 
 //----------------------------------

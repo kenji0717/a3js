@@ -1,5 +1,6 @@
 import { Scene } from './Scene';
 import type { Camera } from './Camera';
+import type { Controller } from './Controller';
 /**
   * Canvasなどの3D表示を担当するクラスをまとめるための
   * インターフェース。基本、表示がメインのクラスだが、
@@ -18,5 +19,7 @@ import type { Camera } from './Camera';
 export interface View {
   scene: Scene;
   camera: Camera;
+  controller: Controller | null;
   replaceScene(newScene: Scene): Scene
+  setController(controller: Controller): void;
 }
