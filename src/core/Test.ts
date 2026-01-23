@@ -84,17 +84,17 @@ export class TestPhysicsEntity extends RapierPhysicsEntity {
       world.world.removeCollider(this.collider,false); // true? false?
   }
 
-  setLocOverride(v: MutableVec3): void {
+  setLocationNow(v: MutableVec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
   }
 
-  setQuatOverride(q: MutableQuat): void {
+  setQuatNow(q: MutableQuat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
   }
 
-  setScaleOverride(v: MutableVec3): void {
+  setScaleNow(v: MutableVec3): void {
     v;
     // 簡単ではないのでとりあえず保留
   }

@@ -154,7 +154,7 @@ export abstract class ObjectA3 {
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setLoc(this,newLoc);
+          this.interpolation.setLocation(this,newLoc);
         break;
       case "physics":
         // "physicsモードの時はsetLocationできないということにする。
@@ -167,9 +167,9 @@ export abstract class ObjectA3 {
     }
   }
 
-  setLocationOverride(x: number, y: number, z: number): void;
-  setLocationOverride(v: MutableVec3): void;
-  setLocationOverride(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setLocationNow(x: number, y: number, z: number): void;
+  setLocationNow(v: MutableVec3): void;
+  setLocationNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
     const newLoc = new Vec3();
     if (typeof xOrV === "number") {
       newLoc.set(xOrV, y!, z!);
@@ -179,11 +179,11 @@ export abstract class ObjectA3 {
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setLocOverride(this,newLoc);
+          this.interpolation.setLocationNow(this,newLoc);
         break;
       case "physics":
         if (this.physics) // 絶対trueのはず
-          this.physics.setLocOverride(newLoc);
+          this.physics.setLocationNow(newLoc);
         break;
       default:
         // "manual","user"の時は下の処理だけで十分
@@ -224,9 +224,9 @@ export abstract class ObjectA3 {
     }
   }
 
-  setQuatOverride(x: number, y: number, z: number, w: number): void;
-  setQuatOverride(q: MutableQuat): void;
-  setQuatOverride(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
+  setQuatNow(x: number, y: number, z: number, w: number): void;
+  setQuatNow(q: MutableQuat): void;
+  setQuatNow(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
     const newQuat = new Quat();
     if (typeof xOrQ === "number") {
       newQuat.set(xOrQ, y!, z!, w!);
@@ -236,11 +236,11 @@ export abstract class ObjectA3 {
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setQuatOverride(this,newQuat);
+          this.interpolation.setQuatNow(this,newQuat);
         break;
       case "physics":
         if (this.physics) // 絶対trueのはず
-          this.physics.setQuatOverride(newQuat);
+          this.physics.setQuatNow(newQuat);
         break;
       default:
         // "manual","user"の時は下の処理だけで十分
@@ -278,9 +278,9 @@ export abstract class ObjectA3 {
     }
   }
 
-  setScaleOverride(x: number, y: number, z: number): void;
-  setScaleOverride(v: MutableVec3): void;
-  setScaleOverride(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setScaleNow(x: number, y: number, z: number): void;
+  setScaleNow(v: MutableVec3): void;
+  setScaleNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
     const newScale = new Vec3();
     if (typeof xOrV === "number") {
       newScale.set(xOrV, y!, z!);
@@ -290,11 +290,11 @@ export abstract class ObjectA3 {
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setScaleOverride(this,newScale);
+          this.interpolation.setScaleNow(this,newScale);
         break;
       case "physics":
         if (this.physics) // 絶対trueのはず
-          this.physics.setScaleOverride(newScale); // 普通の物理エンジンは対応させる？
+          this.physics.setScaleNow(newScale); // 普通の物理エンジンは対応させる？
         break;
       default:
         // "manual","user"の時は下の処理だけで十分
@@ -338,9 +338,9 @@ export abstract class ObjectA3 {
     this.setQuat(quat);
   }
 
-  setRotationOverride(x: number, y: number, z: number): void;
-  setRotationOverride(v: MutableVec3): void;
-  setRotationOverride(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setRotationNow(x: number, y: number, z: number): void;
+  setRotationNow(v: MutableVec3): void;
+  setRotationNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
     const rot = new Vec3();
     if (typeof xOrV === "number")
       rot.set(xOrV, y!, z!);
@@ -362,7 +362,7 @@ export abstract class ObjectA3 {
           break;
       }
     }
-    this.setQuatOverride(quat);
+    this.setQuatNow(quat);
   }
 
   /**
@@ -431,7 +431,7 @@ class Interpolation {
     this.duration = 1;
   }
 
-  setLoc(obj: ObjectA3, newLoc: MutableVec3) {
+  setLocation(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -441,7 +441,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  setLocOverride(obj: ObjectA3, newLoc: MutableVec3) {
+  setLocationNow(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -461,7 +461,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  setQuatOverride(obj: ObjectA3, newQuat: MutableQuat) {
+  setQuatNow(obj: ObjectA3, newQuat: MutableQuat) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);
@@ -481,7 +481,7 @@ class Interpolation {
     this.nowTime = 0;
   }
 
-  setScaleOverride(obj: ObjectA3, newScale: MutableVec3) {
+  setScaleNow(obj: ObjectA3, newScale: MutableVec3) {
     this.firstLoc.set(obj.location);
     this.firstRot.set(obj.rot);
     this.firstScale.set(obj.scale);

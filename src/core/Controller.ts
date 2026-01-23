@@ -1,5 +1,7 @@
-import * as THREE from 'three';
 import type { View } from './View';
+import { Vec3 } from './Vec3';
+import type { MutableVec3 } from './Vec3';
+import { Quat, getQuatOfLookAt } from './Quat';
 
 /**
  * キーやマウスなどの様々なイベントを受け取り
@@ -65,18 +67,26 @@ export class ControllerBase implements Controller {
 export class OrbitController extends ControllerBase {
   preMouse: {x:number,y:number};
   leftClick: boolean = false;
-  myLoc: THREE.Vector3 = new THREE.Vector3(0,0,3);
-  myQuat: THREE.Quaternion = new THREE.Quaternion(0,0,0,1);
+  target: Vec3;
+  cameraLoc: Vec3 = new Vec3(0,0,3);
+  cameraQuat: Quat = new Quat(0,0,0,1);
 
-  constructor(view: View) {
+  constructor(view: View,target: MutableVec3);
+  constructor(view: View,tx: number, ty: number, tz: number);
+  constructor(view: View,xOrV: number | MutableVec3, y?: number, z?: number) {
     super(view);
     this.preMouse = {x:0,y:0};
+    if (typeof xOrV === "number") {
+      this.target = new Vec3(xOrV,y!,z!);
+    } else {
+      this.target = new Vec3(xOrV);
+    }
   }
 
   update(dt: number): void {
     dt;
-    this.view.camera.setLocation(this.myLoc);
-    this.view.camera.setQuat(this.myQuat);
+    this.view.camera.setLocation(this.cameraLoc);
+    this.view.camera.setQuat(this.cameraQuat);
   }
 
   mouseDown(e: MouseEvent): void {
@@ -92,12 +102,18 @@ export class OrbitController extends ControllerBase {
     const epsilon = 0.0001;
     const dx = epsilon*(e.clientX - this.preMouse.x);
     const dy = epsilon*(e.clientY - this.preMouse.y);
-    const quatX = new THREE.Quaternion(Math.sin(dy),0,0,Math.cos(dy));
-    const quatY = new THREE.Quaternion(0,Math.sin(-dx),0,Math.cos(-dx));
-    this.myLoc.applyQuaternion(quatX);
-    this.myLoc.applyQuaternion(quatY);
-    this.myQuat.multiply(quatX);
-    this.myQuat.multiply(quatY);
+    const quatX = new Quat(Math.sin(dy),0,0,Math.cos(dy));
+    const quatY = new Quat(0,Math.sin(-dx),0,Math.cos(-dx));
+console.log(`GAHA1: quatX=`,quatX);
+console.log(`GAHA2: quatY=`,quatY);
+    const newCameraLoc = new Vec3(this.cameraLoc);
+    newCameraLoc.sub(this.target);
+    newCameraLoc.apply(quatX);
+    newCameraLoc.apply(quatY);
+    newCameraLoc.add(this.target);
+    this.cameraLoc.set(newCameraLoc);
+    const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
+    this.cameraQuat.set(newCameraQuat);
   }
   mouseUp(e: MouseEvent): void {
     if (e.button === 0) {
@@ -105,10 +121,14 @@ export class OrbitController extends ControllerBase {
     }
   }
   mouseWheel(e: WheelEvent): void {
+    const f = new Vec3(this.target).sub(this.cameraLoc)
+
     if (e.deltaY > 0)
-      this.myLoc.multiplyScalar(0.95);
+      f.scale(0.95);
     else if (e.deltaY < 0)
-      this.myLoc.multiplyScalar(1.05);
+      f.scale(1.05);
+
+    this.cameraLoc.add(f);
   }
 /*
   touchStart(e: TouchEvent): void {

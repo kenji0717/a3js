@@ -23,7 +23,7 @@ export class ViewBase implements View {
     this.camera = camera;
     this.scene.scene.add(this.camera.object);
     this.camera.setLocation(0, 0, 3);
-    this.controller = new OrbitController(this);
+    this.controller = new OrbitController(this,0,0,0);
   }
 
   replaceScene(newScene: Scene): Scene {

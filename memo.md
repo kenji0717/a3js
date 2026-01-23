@@ -1,4 +1,11 @@
 
+//なんか全然違う
+let camera = new a3.Vec3(0,10,10);
+let target = new a3.Vec3(0,0,-10);
+a3.getQuatOfLookAt(camera,target,new a3.Vec3(0,1,0));
+
+-----
+
 ### ObjectA3に追加したいメソッドメモ
 
 * まずは書き換え

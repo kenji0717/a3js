@@ -28,7 +28,7 @@ export { RapierPhysicsEngine } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { Vec3 } from './core/Vec3';
 export type { MutableVec3 } from './core/Vec3';
-export { Quat } from './core/Quat';
+export { Quat, getQuatOfLookAt } from './core/Quat';
 export type { MutableQuat } from './core/Quat';
 export { ViewBase } from './core/ViewBase';
 export { GeneralCamera } from './core/GeneralCamera';

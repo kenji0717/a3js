@@ -1,3 +1,5 @@
+import { Vec3 } from './Vec3';
+
 /**
  * Readonlyな四元数のインタフェース。
  * a3.QuatもTHREE.QuaternionもRapierの{x,y,z,w}にも
@@ -42,6 +44,32 @@ export class Quat implements MutableQuat {
       this._z = xOrQ.z;
       this._w = xOrQ.w;
     }
+  }
+
+  clone() {
+    return new Quat(this);
+  }
+
+  normalize() {
+    const l0 = this._x*this._x + this._y*this._y + this._z*this._z + this._w*this._w;
+    const l1 = Math.sqrt(l0);
+    if (l1 !== 0) {
+      this._x /= l1;
+      this._y /= l1;
+      this._z /= l1;
+      this._w /= l1;
+    } else {
+      console.warn(`Quat.normalize.`);
+    }
+    return this;
+  }
+
+  conjugate() {
+    this._x *= -1;
+    this._y *= -1;
+    this._z *= -1;
+    // wはそのまま
+    return this;
   }
 
   set(q: MutableQuat): Quat;
@@ -119,7 +147,7 @@ export class Quat implements MutableQuat {
         + this._w * this._w
       );
       if (s<0.0001) { // かなりダメな時
-        console.log("Quat.slerp(); ???!");
+        console.warn("Quat.slerp(); ???!");
         this._x = q1.x;
         this._y = q1.y;
         this._z = q1.z;
@@ -130,6 +158,56 @@ export class Quat implements MutableQuat {
         this._z *= 1/s;
         this._w *= 1/s;
       }
+    }
+  }
+}
+
+export function getQuatOfLookAt(camera: Vec3,target: Vec3,up: Vec3) {
+  up.normalize();
+  const forward = target.clone().sub(camera).normalize();
+  const right = new Vec3().cross(up,forward).normalize();
+  const trueUp = new Vec3().cross(forward, right);
+  const back = new Vec3(forward).negate();
+
+  const m00 = right.x; const m01 = trueUp.x; const m02 = back.x;
+  const m10 = right.y; const m11 = trueUp.x; const m12 = back.x;
+  const m20 = right.z; const m21 = trueUp.x; const m22 = back.x;
+
+  const trace = m00 + m11 + m22;
+  if (trace > 0) {
+    const s = 2*Math.sqrt(trace+1);
+    return new Quat(
+      (m21-m12)/s,
+      (m02-m20)/s,
+      (m10-m01)/s,
+      s/4
+    );
+  } else {
+    const max = Math.max(m00,m11,m22);
+    if (max===m00) {
+      const s = 2*Math.sqrt(1+m00-m11-m22);
+      return new Quat(
+        s/4,
+        (m01+m10)/s,
+        (m02+m20)/s,
+        s/4
+      );
+    } else if (max===m11) {
+      const s = 2*Math.sqrt(1+m11-m00-m22);
+      return new Quat(
+        (m01+m10)/s,
+        s/4,
+        (m12+m21)/s,
+        (m02-m20)/s
+      );
+    } else {
+      const s = 2*Math.sqrt(1+m22-m00-m11);
+      return new Quat(
+        (m02+m20)/s,
+        (m12+m21)/s,
+        s/4,
+        (m10-m01)/s
+      );
     }
   }
 }

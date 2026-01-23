@@ -40,6 +40,34 @@ export class Vec3 implements MutableVec3 {
     }
   }
 
+  clone() {
+    return new Vec3(this);
+  }
+
+  normalize() {
+    const l0 = this._x*this._x + this._y*this._y + this._z*this._z;
+    const l1 = Math.sqrt(l0);
+    if (l1 !== 0) {
+      this._x /= l1;
+      this._y /= l1;
+      this._z /= l1;
+    } else {
+      console.warn(`Vec3.normalize.`);
+    }
+    return this;
+  }
+
+  negate() {
+    this._x *= -1;
+    this._y *= -1;
+    this._z *= -1;
+    return this;
+  }
+
+  length() {
+    return Math.sqrt(this._x*this._x + this._y*this._y + this._z*this._z);
+  }
+
   set(v: MutableVec3): Vec3;
   set(x: number, y: number, z: number): Vec3;
   set(xOrV: MutableVec3 | number, y?: number, z?: number): Vec3 {
@@ -55,10 +83,33 @@ export class Vec3 implements MutableVec3 {
     return this;
   }
 
-  add(v: MutableVec3) {
-    this._x += v.x;
-    this._y += v.y;
-    this._z += v.z;
+  add(x: number, y: number, z: number): Vec3;
+  add(v: MutableVec3): Vec3;
+  add(xOrV: number | MutableVec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      this._x += xOrV;
+      this._y += y!;
+      this._z += z!;
+    } else {
+      this._x += xOrV.x;
+      this._y += xOrV.y;
+      this._z += xOrV.z;
+    }
+    return this;
+  }
+  
+  sub(x: number, y: number, z: number): Vec3;
+  sub(v: MutableVec3): Vec3;
+  sub(xOrV: number | MutableVec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      this._x -= xOrV;
+      this._y -= y!;
+      this._z -= z!;
+    } else {
+      this._x -= xOrV.x;
+      this._y -= xOrV.y;
+      this._z -= xOrV.z;
+    }
     return this;
   }
 
@@ -66,6 +117,14 @@ export class Vec3 implements MutableVec3 {
     this._x *= s;
     this._y *= s;
     this._z *= s;
+    return this;
+  }
+
+  // 自分自身ん引数に与えるとダメな実装
+  cross(v1: MutableVec3, v2: MutableVec3) {
+    this._x = v1.y*v2.z - v1.z*v2.y;
+    this._y = v1.z*v2.x - v1.x*v2.z;
+    this._z = v1.x*v2.y - v1.y*v2.x;
     return this;
   }
 
