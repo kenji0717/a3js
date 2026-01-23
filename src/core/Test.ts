@@ -67,7 +67,7 @@ export class TestPhysicsEntity extends RapierPhysicsEntity {
       obj.location.set(t.x, t.y, t.z);
       obj.object.position.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      obj.rot.set(r.x, r.y, r.z, r.w);
+      obj.quat.set(r.x, r.y, r.z, r.w);
       obj.object.quaternion.set(r.x, r.y, r.z, r.w);
     }
   }

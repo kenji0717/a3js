@@ -170,8 +170,8 @@ export function getQuatOfLookAt(camera: Vec3,target: Vec3,up: Vec3) {
   const back = new Vec3(forward).negate();
 
   const m00 = right.x; const m01 = trueUp.x; const m02 = back.x;
-  const m10 = right.y; const m11 = trueUp.x; const m12 = back.x;
-  const m20 = right.z; const m21 = trueUp.x; const m22 = back.x;
+  const m10 = right.y; const m11 = trueUp.y; const m12 = back.y;
+  const m20 = right.z; const m21 = trueUp.z; const m22 = back.z;
 
   const trace = m00 + m11 + m22;
   if (trace > 0) {

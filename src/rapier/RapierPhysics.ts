@@ -120,10 +120,10 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
     }
     this.bodyDesc.setTranslation(obj.location.x,obj.location.y,obj.location.z);
     this.bodyDesc.setRotation({
-      x: obj.rot.x,
-      y: obj.rot.y,
-      z: obj.rot.z,
-      w: obj.rot.w
+      x: obj.quat.x,
+      y: obj.quat.y,
+      z: obj.quat.z,
+      w: obj.quat.w
     });
     const volumes: number[] = [];
     this.object.object.traverse((obj)=>{
@@ -166,7 +166,7 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
       obj.location.set(t.x, t.y, t.z);
       obj.object.position.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      obj.rot.set(r.x, r.y, r.z, r.w);
+      obj.quat.set(r.x, r.y, r.z, r.w);
       obj.object.quaternion.set(r.x, r.y, r.z, r.w);
     }
   }

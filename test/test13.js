@@ -10,7 +10,7 @@ const obj = new a3.ThreeJS(mesh);
 view.scene.add(obj);
 
 let x=0,y=0,z=0;
-while(true) {
+for (let i=0;i<=360;i++) {
   x += 1;
   obj.setRotation(x,y,z);
   await a3.asyncSleep(10);

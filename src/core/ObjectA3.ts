@@ -6,7 +6,7 @@ import type { PhysicsEntity,
 import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
-import { Quat } from './Quat';
+import { Quat, getQuatOfLookAt } from './Quat';
 import type { MutableQuat } from './Quat';
 
 
@@ -45,8 +45,10 @@ export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
 export abstract class ObjectA3 {
   static defaultRotationOrder: RotationOrder = "XYZ";
   rotationOrder: RotationOrder | null = null;
+  static defaultUpVector: Vec3 = new Vec3(0,1,0);
+  upVector: Vec3 | null = null;
   readonly _loc: Vec3 = new Vec3(0,0,0);
-  readonly _rot: Quat = new Quat(0,0,0,1);
+  readonly _quat: Quat = new Quat(0,0,0,1);
   readonly _scale: Vec3 = new Vec3(1,1,1);
   object: THREE.Object3D;
   controlMode: ControlMode = "manual";
@@ -196,8 +198,8 @@ export abstract class ObjectA3 {
 
 
 
-  get rot(): Quat {
-    return this._rot;
+  get quat(): Quat {
+    return this._quat;
   }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: MutableQuat): void;
@@ -208,6 +210,8 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
+//console.log(`GAHA: newQuat=`,newQuat);
+//console.log(`GAHA: loc=`,this.location);
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
@@ -218,7 +222,7 @@ export abstract class ObjectA3 {
         break;
       default:
         // "manual","user"の時
-        this.rot.set(newQuat);
+        this.quat.set(newQuat);
         this.object.quaternion.set(newQuat.x,newQuat.y,newQuat.z,newQuat.w);
         break;
     }
@@ -246,7 +250,7 @@ export abstract class ObjectA3 {
         // "manual","user"の時は下の処理だけで十分
         break;
     }
-    this.rot.set(newQuat);
+    this.quat.set(newQuat);
     this.object.quaternion.set(newQuat.x,newQuat.y,newQuat.z,newQuat.w);
   }
 
@@ -318,7 +322,7 @@ export abstract class ObjectA3 {
       rot.set(xOrV, y!, z!);
     else
       rot.set(xOrV);
-    rot.scale(Math.PI/180); // デグリー to ラジアン
+    rot.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
     const quat = new Quat(0,0,0,1);
     for (let i=0;i<3;i++) {
@@ -364,6 +368,41 @@ export abstract class ObjectA3 {
     }
     this.setQuatNow(quat);
   }
+
+  lookAt(x: number, y: number, z: number): void;
+  lookAt(v: MutableVec3): void;
+  lookAt(o: ObjectA3): void;
+  lookAt(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
+    const target = new Vec3();
+    if (typeof xVO === "number") {
+      target.set(xVO,y!,z!);
+    } else if (xVO instanceof ObjectA3) {
+      target.set(xVO.location);
+    } else {
+      target.set(xVO);
+    }
+    const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+    const newQuat = getQuatOfLookAt(this.location,target,up);
+    this.setQuat(newQuat);
+  }
+
+  lookAtNow(x: number, y: number, z: number): void;
+  lookAtNow(v: MutableVec3): void;
+  lookAtNow(o: ObjectA3): void;
+  lookAtNow(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
+    const target = new Vec3();
+    if (typeof xVO === "number") {
+      target.set(xVO,y!,z!);
+    } else if (xVO instanceof ObjectA3) {
+      target.set(xVO.location);
+    } else {
+      target.set(xVO);
+    }
+    const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+    const newQuat = getQuatOfLookAt(this.location,target,up);
+    this.setQuatNow(newQuat);
+  }
+
 
   /**
    * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか
@@ -419,13 +458,13 @@ class Interpolation {
 
   constructor(obj: ObjectA3) {
     this.firstLoc = new Vec3(obj.location);
-    this.firstRot = new Quat(obj.rot);
+    this.firstRot = new Quat(obj.quat);
     this.firstScale = new Vec3(obj.scale);
     this.nowLoc = new Vec3(obj.location);
-    this.nowRot = new Quat(obj.rot);
+    this.nowRot = new Quat(obj.quat);
     this.nowScale = new Vec3(obj.scale);
     this.lastLoc = new Vec3(obj.location);
-    this.lastRot = new Quat(obj.rot);
+    this.lastRot = new Quat(obj.quat);
     this.lastScale = new Vec3(obj.scale);
     this.nowTime = 0;
     this.duration = 1;
@@ -433,7 +472,7 @@ class Interpolation {
 
   setLocation(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     this.lastLoc.set(newLoc);
     //this.lastRot.set(obj.rot);
@@ -443,7 +482,7 @@ class Interpolation {
 
   setLocationNow(obj: ObjectA3, newLoc: MutableVec3) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     this.lastLoc.set(newLoc);
     //this.lastRot.set(obj.rot);
@@ -453,7 +492,7 @@ class Interpolation {
 
   setQuat(obj: ObjectA3, newQuat: MutableQuat) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
     this.lastRot.set(newQuat);
@@ -463,7 +502,7 @@ class Interpolation {
 
   setQuatNow(obj: ObjectA3, newQuat: MutableQuat) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
     this.lastRot.set(newQuat);
@@ -473,7 +512,7 @@ class Interpolation {
 
   setScale(obj: ObjectA3, newScale: MutableVec3) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
     //this.lastRot.set(obj.rot);
@@ -483,7 +522,7 @@ class Interpolation {
 
   setScaleNow(obj: ObjectA3, newScale: MutableVec3) {
     this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.rot);
+    this.firstRot.set(obj.quat);
     this.firstScale.set(obj.scale);
     //this.lastLoc.set(obj.loc);
     //this.lastRot.set(obj.rot);
@@ -510,7 +549,7 @@ class Interpolation {
 
     obj.location.set(this.nowLoc);
     obj.object.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
-    obj.rot.set(this.nowRot);
+    obj.quat.set(this.nowRot);
     obj.object.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
     obj.scale.set(this.nowScale);
     obj.object.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
