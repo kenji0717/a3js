@@ -17,4 +17,4 @@ obj.setQuat(0.5,0.5,0,0.5);
 obj.setControlMode("physics");
 view.scene.add(obj);
 await a3.asyncSleep(1000);
-obj.setQuatOverride(0.5,0.5,0,-0.5);
+obj.setQuatNow(0.5,0.5,0,-0.5);

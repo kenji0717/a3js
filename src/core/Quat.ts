@@ -112,13 +112,13 @@ export class Quat implements MutableQuat {
     this._x = (1-t)*q1.x + t*q2.x;
     this._y = (1-t)*q1.y + t*q2.y;
     this._z = (1-t)*q1.z + t*q2.z;
-    this._w = (1-t)*q1.z + t*q2.w;
+    this._w = (1-t)*q1.w + t*q2.w;
   }
 
   // 球面線形補間
   slerp(q1: MutableQuat, q2: MutableQuat, t: number) {
     if (t<0 || t>1) {
-      console.log('Quat.slerp(): t must be in [0,1]');
+      console.warn('Quat.slerp(): t must be in [0,1]');
       return;
     }
     const cosR =
@@ -165,47 +165,45 @@ export class Quat implements MutableQuat {
 export function getQuatOfLookAt(camera: Vec3,target: Vec3,up: Vec3) {
   up.normalize();
   const forward = target.clone().sub(camera).normalize();
-  const right = new Vec3().cross(up,forward).normalize();
-  const trueUp = new Vec3().cross(forward, right);
-  const back = new Vec3(forward).negate();
+  const right = new Vec3().cross(forward,up).normalize();
+  const trueUp = new Vec3().cross(right, forward);
 
-  const m00 = right.x; const m01 = trueUp.x; const m02 = back.x;
-  const m10 = right.y; const m11 = trueUp.y; const m12 = back.y;
-  const m20 = right.z; const m21 = trueUp.z; const m22 = back.z;
+  const m00 = right.x; const m01 = trueUp.x; const m02 = -forward.x;
+  const m10 = right.y; const m11 = trueUp.y; const m12 = -forward.y;
+  const m20 = right.z; const m21 = trueUp.z; const m22 = -forward.z;
 
   const trace = m00 + m11 + m22;
   if (trace > 0) {
-    const s = 2*Math.sqrt(trace+1);
+    const s = Math.sqrt(trace+1.0)*2.0;
     return new Quat(
       (m21-m12)/s,
       (m02-m20)/s,
       (m10-m01)/s,
-      s/4
+      0.25*s
     );
   } else {
-    const max = Math.max(m00,m11,m22);
-    if (max===m00) {
-      const s = 2*Math.sqrt(1+m00-m11-m22);
+    if ((m00>m11) && (m00>m22)) {
+      const s = Math.sqrt(1.0+m00-m11-m22) * 2.0;
       return new Quat(
-        s/4,
+        0.25*s,
         (m01+m10)/s,
         (m02+m20)/s,
-        s/4
+        (m21-m12)/s
       );
-    } else if (max===m11) {
-      const s = 2*Math.sqrt(1+m11-m00-m22);
+    } else if (m11>m22) {
+      const s = Math.sqrt(1.0+m11-m00-m22) * 2.0;
       return new Quat(
         (m01+m10)/s,
-        s/4,
+        0.25*s,
         (m12+m21)/s,
         (m02-m20)/s
       );
     } else {
-      const s = 2*Math.sqrt(1+m22-m00-m11);
+      const s = Math.sqrt(1.0+m22-m00-m11) * 2.0;
       return new Quat(
         (m02+m20)/s,
         (m12+m21)/s,
-        s/4,
+        0.25*s,
         (m10-m01)/s
       );
     }

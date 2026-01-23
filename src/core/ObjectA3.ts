@@ -373,6 +373,7 @@ export abstract class ObjectA3 {
   lookAt(v: MutableVec3): void;
   lookAt(o: ObjectA3): void;
   lookAt(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
+console.log('GAHA: newQuat=');//,newQuat);
     const target = new Vec3();
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);

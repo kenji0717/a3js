@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Camera } from './Camera';
+import { isPerspectiveCamera } from '../utils/TypeGuard';
 
 /**
  * Three.jsのPerspectiveCameraとかの一般的なカメラを
@@ -11,7 +12,7 @@ export class GeneralCamera extends Camera {
   headLight: THREE.SpotLight;
 
   constructor(camera: THREE.Camera) {
-    super(camera);
+    super();
     this.camera = camera;
     this.headLight = new THREE.SpotLight(0xffffff,1,0,Math.PI/3,0,0);
     this.headLight.rotation.x = 3.14/2;
@@ -40,15 +41,3 @@ export class GeneralCamera extends Camera {
   }
 }
 
-// TypeScriptにobjがSpotLightであることを教えてあげる関数。
-/* function isSpotLight(obj: THREE.Object3D): obj is THREE.SpotLight {
-  return (obj as any).isSpotLight === true;
-} */
-// TypeScriptにobjがCameraであることを教えてあげる関数。
-/* function isCamera(obj: any): obj is THREE.Camera {
-  return obj.isCamera === true;
-} */
-// TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
-function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {
-  return (obj as any).isPerspectiveCamera === true;
-}

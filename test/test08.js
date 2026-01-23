@@ -7,7 +7,6 @@ obj.setControlMode("interpolated");
 view.scene.add(obj);
 let i=0;
 while (true) {
-  await a3.asyncSleep(2000);
   if (i%2 === 0) {
     obj.setLocation(1,0,0);
     obj.setQuat(0,0.707,0,0.707);
@@ -18,4 +17,5 @@ while (true) {
     obj.setScale(0.5,0.5,0.5);
   }
   i++;
+  await a3.asyncSleep(2000);
 }

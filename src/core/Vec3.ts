@@ -137,17 +137,14 @@ export class Vec3 implements MutableVec3 {
     else
       q.set(xOrQ);
 
-    const xx = q.x * q.x, yy = q.y * q.y, zz = q.z * q.z;
-    const xy = q.x * q.y, xz = q.x * q.z, yz = q.y * q.z;
-    const wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
+    const v = new Quat(this._x,this._y,this._z,0);
+    const q_inv = new Quat(q).conjugate();
 
-    const x = this._x;
-    const y = this._y;
-    const z = this._z;
+    q.mul(v).mul(q_inv);
 
-    this._x = (1-2*(yy+zz))*x + 2*(xy-wz)*y + 2*(xz+wy)*z;
-    this._y = 2*(xy+wz)*x + (1-2*(xx+zz))*y + 2*(yz-wx)*z;
-    this._z = 2*(xz-wy)*x + 2*(yz+wx)*y + (1-2*(xx+yy))*z;
+    this._x = q.x;
+    this._y = q.y;
+    this._z = q.z;
 
     return this;
   }

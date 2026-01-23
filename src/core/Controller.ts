@@ -99,13 +99,11 @@ export class OrbitController extends ControllerBase {
   mouseMove(e: MouseEvent): void {
     if (this.leftClick === false)
       return;
-    const epsilon = 0.0001;
+    const epsilon = 0.01;
     const dx = epsilon*(e.clientX - this.preMouse.x);
     const dy = epsilon*(e.clientY - this.preMouse.y);
-    const quatX = new Quat(Math.sin(dy),0,0,Math.cos(dy));
+    const quatX = new Quat(Math.sin(-dy),0,0,Math.cos(-dy));
     const quatY = new Quat(0,Math.sin(-dx),0,Math.cos(-dx));
-console.log(`GAHA1: quatX=`,quatX);
-console.log(`GAHA2: quatY=`,quatY);
     const newCameraLoc = new Vec3(this.cameraLoc);
     newCameraLoc.sub(this.target);
     newCameraLoc.apply(quatX);
@@ -114,6 +112,8 @@ console.log(`GAHA2: quatY=`,quatY);
     this.cameraLoc.set(newCameraLoc);
     const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
     this.cameraQuat.set(newCameraQuat);
+    this.preMouse.x = e.clientX;
+    this.preMouse.y = e.clientY;
   }
   mouseUp(e: MouseEvent): void {
     if (e.button === 0) {
@@ -124,9 +124,9 @@ console.log(`GAHA2: quatY=`,quatY);
     const f = new Vec3(this.target).sub(this.cameraLoc)
 
     if (e.deltaY > 0)
-      f.scale(0.95);
+      f.scale(0.05);
     else if (e.deltaY < 0)
-      f.scale(1.05);
+      f.scale(-0.05);
 
     this.cameraLoc.add(f);
   }

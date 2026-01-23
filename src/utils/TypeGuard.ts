@@ -54,3 +54,16 @@ export function isCapsuleGeometry(value: any): value is THREE.CapsuleGeometry {
 export function isBone(value: any): value is THREE.Bone {
   return (value as any).isBone === true;
 }
+
+// TypeScriptにobjがSpotLightであることを教えてあげる関数。
+/* function isSpotLight(obj: THREE.Object3D): obj is THREE.SpotLight {
+  return (obj as any).isSpotLight === true;
+} */
+// TypeScriptにobjがCameraであることを教えてあげる関数。
+/* function isCamera(obj: any): obj is THREE.Camera {
+  return obj.isCamera === true;
+} */
+// TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
+export function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {
+  return (obj as any).isPerspectiveCamera === true;
+}
