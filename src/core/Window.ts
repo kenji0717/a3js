@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { ObjectA3 } from './ObjectA3';
+import { ObjectA3, Label, Balloon } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
 import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 import type { Controller } from './Controller';
+import type { MutableVec3 } from './Vec3';
 
 export interface WindowOption {
   width: number;
@@ -39,7 +40,7 @@ export class Window extends HTMLElement implements View {
   renderer;
   scene: Scene;
   camera: Camera;
-  controller: Controller | null;
+  controller: Controller;
   camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
 
@@ -312,8 +313,23 @@ export class Window extends HTMLElement implements View {
     const dt = this.clock.getDelta();
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
+    // gaha this.renderer2D.render(this.scene.scene, this.camera3js);
   };
 
+  worldToScreen(loc: MutableVec3) {
+    const v = new THREE.Vector3(loc.x, loc.y, loc.z);
+    v.project(this.camera3js);
+    const size = new THREE.Vector2();
+    this.renderer.getSize(size);
+    const x = (v.x + 1) / 2 * size.x;
+    const y = (1 - v.y) / 2 * size.y;
+    return { x, y };
+  }
+
+  addLabel(label: Label) { this.base.addLabel(label); }
+  removeLabel(label: Label) { this.base.removeLabel(label); }
+  addBalloon(balloon: Balloon) { this.base.addBalloon(balloon); }
+  removeBalloon(balloon: Balloon) { this.base.removeBalloon(balloon); }
 //----------------------------------
 
   // このクラスはHTMLElementのスーパークラスだから

@@ -30,6 +30,25 @@ export type Dir =
   | "LEFT"
   | "BOTTOM";
 
+export class Label {
+  label: string;
+  worldLocation: Vec3;
+
+  constructor(label: string, loc: Vec3) {
+    this.label = label;
+    this.worldLocation = loc;
+  }
+}
+
+export class Balloon {
+  message: string;
+  worldLocation: Vec3;
+  constructor(message: string, loc: Vec3) {
+    this.message = message;
+    this.worldLocation = loc;
+  }
+}
+
 // BalloonInfoとInterpolationの実装は長いので一番下に移動した。
 
 /**

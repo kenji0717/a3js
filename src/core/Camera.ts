@@ -1,5 +1,6 @@
 //import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
+import type { MutableVec3 } from './Vec3';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -8,10 +9,11 @@ import { ObjectA3 } from './ObjectA3';
   * ものとする。
   */
 export abstract class Camera extends ObjectA3 {
-  /*
-   * 必ずHeadLightを準備しなければならない。
+
+  /**
+   * ワールド座標 → 正規化デバイス座標（NDC）
    */
-  //initObject(): THREE.Object3D;
+  abstract calcNDC(loc: MutableVec3): {x: number, y: number}; 
 
   abstract setHeadLightEnable(b: boolean): void;
 }
