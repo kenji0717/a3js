@@ -42,8 +42,8 @@ export type Dir =
  */
 export abstract class ObjectA3 {
   static defaultRotationOrder: RotationOrder = "XYZ";
-  rotationOrder: RotationOrder | null = null;
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
+  rotationOrder: RotationOrder | null = null;
   upVector: Vec3 | null = null;
   readonly _loc: Vec3 = new Vec3(0,0,0);
   readonly _quat: Quat = new Quat(0,0,0,1);
@@ -54,6 +54,8 @@ export abstract class ObjectA3 {
   physics: PhysicsEntity | null = null;
   private balloon: BalloonInfo | null = null;
   private interpolation: Interpolation | null = null;
+  parent: ObjectA3 | null = null;
+  children: ObjectA3[] = [];
 
   constructor(data?: any) {
     this.object = this.initObject(data);
@@ -88,7 +90,10 @@ export abstract class ObjectA3 {
       case "user":
         console.log('"user"モードを使う場合は自分でupdateメソッドをオーバーライドして実装して下さい。');
         break;
-    }        
+    }
+    this.children.forEach((child)=>{
+      child.update(dt);
+    });
   }
 
   /**
@@ -130,6 +135,24 @@ export abstract class ObjectA3 {
   initPhysics(opt: PhysicsEntityOption): void {
     this.physics = new RapierDefaultPhysicsEntity(this,opt);
     this.controlMode = 'physics';
+  }
+
+  add(obj: ObjectA3) {
+    if (obj.scene) {console.warn('ObjectA3.add(obj) is ignored.');return;}
+    if (obj.parent) {console.warn('ObjectA3.add(obj) is ignored.');return;}
+    // if (this.children.includes(obj)) return; // ちゃんと管理されてれば必要ない
+    this.children.push(obj);
+    obj.parent = this;
+    this.object.add(obj.object);
+  }
+
+  remove(obj: ObjectA3) {
+    if (obj.parent !== this) {console.warn('ObjectA3.remove(obj) is ignored.');return;}
+    // if (!this.children.includes(obj)) return; // ちゃんと管理されてれば必要ない
+    const idx = this.children.indexOf(obj);
+    this.children.splice(idx,1);
+    obj.parent = null;
+    this.object.remove(obj.object);
   }
 
   setBalloon(message: string) {

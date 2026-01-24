@@ -37,6 +37,7 @@ export class ViewBase implements View {
   updateScene(dt: number) {
     this.scene.update(dt);
     this.controller?.update(dt);
+    this.camera.update(dt);
   }
 
   setController(controller: Controller) {
