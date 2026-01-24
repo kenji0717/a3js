@@ -1,6 +1,12 @@
 import { Vec3 } from './Vec3';
 
 /**
+ * オイラー角(ラジアン)を四元数に変換する時に、軸の回転順番を
+ * 指定するための型。
+ */
+export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
+
+/**
  * Readonlyな四元数のインタフェース。
  * a3.QuatもTHREE.QuaternionもRapierの{x,y,z,w}にも
  * あてはめられる型。
@@ -208,4 +214,28 @@ export function getQuatOfLookAt(camera: Vec3,target: Vec3,up: Vec3) {
       );
     }
   }
+}
+
+
+/**
+ * オイラー角(ラジアン)を四元数に変換する関数、2番目の引数は
+ * 軸の回転順番を指定するRotationOrder。
+ */
+export function vec3EulerToQuat(rot: Vec3, order: RotationOrder = "XYZ" ): Quat {
+  const quat = new Quat(0,0,0,1);
+  for (let i=0;i<3;i++) {
+    const c = order.charAt(i);
+    switch(c) {
+      case 'X':
+        quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
+        break;
+      case 'Y':
+        quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
+        break;
+      case 'Z':
+        quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
+        break;
+    }
+  }
+  return quat;
 }

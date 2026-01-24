@@ -27,8 +27,8 @@ interface Action {
  */
 export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
   readonly ready: Promise<Acerola3D>;
-  actions: Record<string,Action>;
-  currentAction: Action | null = null;
+  private actions: Record<string,Action>;
+  private currentAction: Action | null = null;
   comment: string | null = null; // CATALOG.XMLの<c>の中
   bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
   vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように

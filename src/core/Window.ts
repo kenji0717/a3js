@@ -115,6 +115,8 @@ export class Window extends HTMLElement implements View {
     this.appendChild(this.renderer.domElement);
     this._canvas = this.renderer.domElement;
 
+    this.renderer.domElement.addEventListener('click',this.myMouseClickedListener);
+
     // コントローラに対するイベントの登録
     window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
     window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});

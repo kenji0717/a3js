@@ -6,8 +6,8 @@ import type { PhysicsEntity,
 import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
-import { Quat, getQuatOfLookAt } from './Quat';
-import type { MutableQuat } from './Quat';
+import { Quat, getQuatOfLookAt, vec3EulerToQuat } from './Quat';
+import type { MutableQuat, RotationOrder } from './Quat';
 
 
 /**
@@ -29,8 +29,6 @@ export type Dir =
   | "RIGHT"
   | "LEFT"
   | "BOTTOM";
-
-export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
 
 // BalloonInfoとInterpolationの実装は長いので一番下に移動した。
 
@@ -322,21 +320,7 @@ export abstract class ObjectA3 {
       rot.set(xOrV);
     rot.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = new Quat(0,0,0,1);
-    for (let i=0;i<3;i++) {
-      const c = order.charAt(i);
-      switch(c) {
-        case 'X':
-          quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
-          break;
-        case 'Y':
-          quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
-          break;
-        case 'Z':
-          quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
-          break;
-      }
-    }
+    const quat = vec3EulerToQuat(rot,order);
     this.setQuat(quat);
   }
 
