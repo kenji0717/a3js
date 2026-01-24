@@ -210,8 +210,6 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-//console.log(`GAHA: newQuat=`,newQuat);
-//console.log(`GAHA: loc=`,this.location);
     switch (this.controlMode) {
       case "interpolated":
         if (this.interpolation) // 絶対trueのはず
@@ -373,7 +371,6 @@ export abstract class ObjectA3 {
   lookAt(v: MutableVec3): void;
   lookAt(o: ObjectA3): void;
   lookAt(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
-console.log('GAHA: newQuat=');//,newQuat);
     const target = new Vec3();
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
@@ -404,6 +401,18 @@ console.log('GAHA: newQuat=');//,newQuat);
     this.setQuatNow(newQuat);
   }
 
+  getUnitVecX(): Vec3 {
+    const vecX = new Vec3(1,0,0);
+    return vecX.apply(this.quat);
+  }
+  getUnitVecY(): Vec3 {
+    const vecY = new Vec3(0,1,0);
+    return vecY.apply(this.quat);
+  }
+  getUnitVecZ(): Vec3 {
+    const vecZ = new Vec3(0,0,1);
+    return vecZ.apply(this.quat);
+  }
 
   /**
    * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか

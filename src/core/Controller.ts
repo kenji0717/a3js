@@ -102,8 +102,12 @@ export class OrbitController extends ControllerBase {
     const epsilon = 0.01;
     const dx = epsilon*(e.clientX - this.preMouse.x);
     const dy = epsilon*(e.clientY - this.preMouse.y);
-    const quatX = new Quat(Math.sin(-dy),0,0,Math.cos(-dy));
-    const quatY = new Quat(0,Math.sin(-dx),0,Math.cos(-dx));
+    const sinX = Math.sin(-dx); const cosX = Math.cos(-dx);
+    const sinY = Math.sin(-dy); const cosY = Math.cos(-dy);
+    const vecX = new Vec3(1,0,0).apply(this.cameraQuat);
+    const vecY = new Vec3(0,1,0).apply(this.cameraQuat);
+    const quatX = new Quat(vecX.x*sinY,vecX.y*sinY,vecX.z*sinY,cosY);
+    const quatY = new Quat(vecY.x*sinX,vecY.y*sinX,vecY.z*sinX,cosX);
     const newCameraLoc = new Vec3(this.cameraLoc);
     newCameraLoc.sub(this.target);
     newCameraLoc.apply(quatX);

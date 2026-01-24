@@ -7,28 +7,34 @@ import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 import type { Controller } from './Controller';
 
-// Windowのスタイル
-const wStyle = `
-  position: absolute;
-  top: 100px;
-  left: 100px;
-  /* width: 300px; */
-  border: 1px solid #555;
-  background: white;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-`;
-// タイトルバーのスタイル
-const tStyle = `
-  background: #444;
-  color: white;
-  padding: 8px;
-  cursor: move;
-  user-select: none; /* 文字選択を防ぐ */
-`;
+export interface WindowOption {
+  width: number;
+  height: number;
+  top: number;
+  left: number;
+}
 
+//type ResizeDir = "" | "n" | "s" | "e" | "w" | "ne" | "sw" | "nw" | "se";
 
 export class Window extends HTMLElement implements View {
-  private ro?: ResizeObserver;
+  // ########## WebComponent関係のセットアップ ##########
+  private _resizeObserver?: ResizeObserver;
+  private _dragging = false;
+  private _resizing = false;
+  private _resizeDir = "";
+  private _startMouseX = 0;
+  private _startMouseY = 0;
+  private _startLeft = 0;
+  private _startTop = 0;
+  private _startWidth = 0;
+  private _startHeight = 0;
+  private _borderSize = 5;
+  private _canvas: HTMLCanvasElement;
+  private _titleEl: HTMLElement | null = null;
+  private _titleBar: HTMLElement | null = null;
+  private _closeBtn: HTMLElement | null = null;
+  // ########## WebComponent関係のセットアップ終り ##########
+
   base: ViewBase;
   renderer;
   scene: Scene;
@@ -36,12 +42,63 @@ export class Window extends HTMLElement implements View {
   controller: Controller | null;
   camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
-  isDragging: boolean = false;
   offsetX = 0;
   offsetY = 0;
-  
-  constructor(width: number, height: number) {
+
+  constructor(width=600, height=300) {
     super();
+
+    // ########## WebComponent関係のセットアップ ##########
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot!.innerHTML = `
+  <style>
+    :host {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid #444;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+      font-family: sans-serif;
+      user-select: none;
+    }
+
+    .titlebar {
+      flex: 0 0 28px;
+      background: #444;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      cursor: move;
+    }
+
+    .content {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 0;
+      box-sizing: border-box;
+      overflow: auto;
+      user-select: text;
+    }
+
+    .close {
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+  <div class="titlebar">
+    <span class="title"></span>
+    <span class="close">✕</span>
+  </div>
+  <div class="content">
+    <slot></slot>
+  </div>
+`;
+    // ########## WebComponent関係のセットアップ終り ##########
+
+    // ここからようやく3D関係
     this.camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
     const camera = new GeneralCamera(this.camera3js);
     this.base = new ViewBase(camera);
@@ -52,8 +109,29 @@ export class Window extends HTMLElement implements View {
     this.clock = new THREE.Clock();
     this.camera3js.aspect = width / height;
     this.renderer.setSize(width, height);
+    this.renderer.domElement.width = width;
+    this.renderer.domElement.width = height;
+    //this.renderer.domElement.style = `display: block; width: ${width}px; height: ${height}px; margin: 0; padding: 0;`;
+    this.appendChild(this.renderer.domElement);
+    this._canvas = this.renderer.domElement;
 
-    this.style = wStyle;
+    // コントローラに対するイベントの登録
+    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
+    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
+    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
+    this.renderer.domElement.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
+    this.renderer.domElement.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
+    this.renderer.domElement.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
+    this.renderer.domElement.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
+    this.renderer.domElement.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
+    this.renderer.domElement.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
+    this.renderer.domElement.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
+    this.renderer.domElement.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
+    this.renderer.domElement.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
+    this.renderer.domElement.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
+    this.renderer.domElement.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
+
+    // 生成されたら、かってにdocument.bodyにappendChildする！
     if (document.body) {
       document.body.appendChild(this);
     } else {
@@ -61,53 +139,163 @@ export class Window extends HTMLElement implements View {
         document.body.append(this);
       },{once: true});
     }
-
-    const title = document.createElement('div');
-    title.textContent = 'A3Window';
-    title.style = tStyle;
-    this.appendChild(title);
-    title.addEventListener("mousedown",this.mouseDownListener);
-    document.addEventListener("mousemove",this.mouseMoveListener);
-    document.addEventListener("mouseup",this.mouseUpListener);
-
-    this.renderer.domElement.style = `display: block; width: ${width}px; height: ${height}px; margin: 0; padding: 0;`;
-    this.renderer.domElement.width = width;
-    this.renderer.domElement.width = height;
-    this.appendChild(this.renderer.domElement);
+    // アニメーション開始させちゃう
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
+  }
+  // コンストラクタ終り
 
-    this.addEventListener('click',this.myMouseClickedListener);
+  // ########## まずはWebComponent関係のメソッドを用意する ##########
 
-    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
-    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
-    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
-    this.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
-    this.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
-    this.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
-    this.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
-    this.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
-    this.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
-    this.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
-    this.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
-    this.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
-    this.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
-    this.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
+
+  _resizeCanvasToContent() {
+    // <div class="content">のpaddingは0という前提
+    // そうでなかったら以下のコメントをはずすべし。
+    const content = this.shadowRoot!.querySelector(".content");
+    //const style = getComputedStyle(content!);
+
+    let cssWidth = content!.clientWidth;
+    //cssWidth -= parseFloat(style.paddingLeft);
+    //cssWidth -= parseFloat(style.paddingRight);
+
+    let cssHeight = content!.clientHeight;
+    //cssHeight -= parseFloat(style.paddingTop);
+    //cssHeight -= parseFloat(style.paddingBottom);
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(cssWidth * dpr);
+    const h = Math.floor(cssHeight * dpr);
+
+    if (this._canvas.width !== w || this._canvas.height !== h) {
+      this._canvas.width  = w;
+      this._canvas.height = h;
+      this.camera3js.aspect = w / h; // 効いてる？
+      this.renderer.setSize(w, h);
+    }
   }
 
   connectedCallback() {
-    this.ro = new ResizeObserver(() => {
-      const { width, height } = this.renderer.domElement.getBoundingClientRect();
-      this.camera3js.aspect = width / height;
-      this.renderer.setSize(width, height);
-      //this.renderer.domElement.width = width; // ???
-      //this.renderer.domElement.width = height; // ???
+    this._titleEl = this.shadowRoot!.querySelector(".title");
+    this._titleEl!.textContent = this.getAttribute("title") ?? "Window";
+
+    this._titleBar = this.shadowRoot!.querySelector(".titlebar");
+    this._closeBtn = this.shadowRoot!.querySelector(".close");
+
+    this._titleBar!.addEventListener("mousedown", this._onDragStart);
+    this._closeBtn!.addEventListener("click", () => this.remove());
+
+    this.addEventListener("mousemove", this._onHover);
+    this.addEventListener("mousedown", this._onResizeStart);
+
+    document.addEventListener("mousemove", this._onMouseMove);
+    document.addEventListener("mouseup", this._onMouseUp);
+
+    this._resizeObserver = new ResizeObserver(() => {
+      if (this._canvas) {
+        this._resizeCanvasToContent();
+      }
     });
-    this.ro.observe(this);
+
+    const content = this.shadowRoot!.querySelector(".content");
+    this._resizeObserver.observe(content!);
+    this._resizeCanvasToContent();
   }
   disconnectedCallback() {
-    this.ro?.disconnect();
+    document.removeEventListener("mousemove", this._onMouseMove);
+    document.removeEventListener("mouseup", this._onMouseUp);
+    this._resizeObserver?.disconnect();
   }
+  // Drag ------------------------------------
+  _onDragStart = (e: MouseEvent) => {
+    if (this._resizeDir) return;
 
+    this._dragging = true;
+    this._startMouseX = e.clientX;
+    this._startMouseY = e.clientY;
+    this._startLeft = this.offsetLeft;
+    this._startTop = this.offsetTop;
+  };
+  // Resize detection ------------------------------------
+  _onHover = (e: MouseEvent) => {
+    if (this._dragging || this._resizing) return;
+
+    const rect = this.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const b = this._borderSize;
+
+    let dir = "";
+
+    if (y < b) dir += "n";
+    else if (y > rect.height - b) dir += "s";
+
+    if (x < b) dir += "w";
+    else if (x > rect.width - b) dir += "e";
+
+    this._resizeDir = dir;
+    this.style.cursor = this._cursorFromDir(dir);
+  };
+
+  _cursorFromDir(dir: string) {
+    switch (dir) {
+      case "n": return "ns-resize";
+      case "s": return "ns-resize";
+      case "e": return "ew-resize";
+      case "w": return "ew-resize";
+      case "ne": return "nesw-resize";
+      case "sw": return "nesw-resize";
+      case "nw": return "nwse-resize";
+      case "se": return "nwse-resize";
+      default: return "default";
+    }
+  }
+  // Resize ------------------------------------
+  _onResizeStart = (e: MouseEvent) => {
+    if (!this._resizeDir) return;
+
+    this._resizing = true;
+    this._startMouseX = e.clientX;
+    this._startMouseY = e.clientY;
+    this._startLeft = this.offsetLeft;
+    this._startTop = this.offsetTop;
+    this._startWidth = this.offsetWidth;
+    this._startHeight = this.offsetHeight;
+  };
+
+  _onMouseMove = (e: MouseEvent) => {
+    if (this._dragging) {
+      this.style.left = `${this._startLeft + (e.clientX - this._startMouseX)}px`;
+      this.style.top  = `${this._startTop  + (e.clientY - this._startMouseY)}px`;
+    }
+
+    if (this._resizing) {
+      const dx = e.clientX - this._startMouseX;
+      const dy = e.clientY - this._startMouseY;
+
+      if (this._resizeDir.includes("e"))
+        this.style.width = `${this._startWidth + dx}px`;
+
+      if (this._resizeDir.includes("s"))
+        this.style.height = `${this._startHeight + dy}px`;
+
+      if (this._resizeDir.includes("w")) {
+        this.style.width = `${this._startWidth - dx}px`;
+        this.style.left = `${this._startLeft + dx}px`;
+      }
+
+      if (this._resizeDir.includes("n")) {
+        this.style.height = `${this._startHeight - dy}px`;
+        this.style.top = `${this._startTop + dy}px`;
+      }
+    }
+  };
+
+  _onMouseUp = () => {
+    this._dragging = false;
+    this._resizing = false;
+  };
+  // ########## WebComponent関係のメソッドはここで終り ##########
+
+  // 以下3D関係
   replaceScene(newScene: Scene): Scene {
     this.scene = newScene; // baseのとは別だから
     return this.base.replaceScene(newScene);
@@ -117,22 +305,6 @@ export class Window extends HTMLElement implements View {
     this.controller = controller; // baseのとは別だから
     this.base.setController(controller);
   }
-
-  mouseDownListener = (e: MouseEvent) => {
-    this.isDragging = true;
-    this.offsetX = e.clientX - this.offsetLeft;
-    this.offsetY = e.clientY - this.offsetTop;
-  };
-
-  mouseMoveListener = (e: MouseEvent) => {
-    if (!this.isDragging) return;
-    this.style.left = e.clientX - this.offsetX + 'px';
-    this.style.top = e.clientY - this.offsetY + 'px';
-  };
-
-  mouseUpListener = () => {
-    this.isDragging = false;
-  };
 
   animationFrameId: number = -1;
   renderingLoop = () => {
@@ -173,4 +345,4 @@ export class Window extends HTMLElement implements View {
   }
 }
 
-customElements.define("a3-window", Window);
+customElements.define("window-a3", Window);

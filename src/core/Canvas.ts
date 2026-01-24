@@ -7,7 +7,7 @@ import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 import type { Controller } from './Controller';
 
-export interface CanvasOpt {
+export interface CanvasOption {
   camera?: THREE.Camera;
   antialias?: boolean;
   transparent?: boolean;
@@ -26,7 +26,7 @@ export class Canvas extends HTMLElement implements View {
   camera3js: THREE.Camera;
   clock: THREE.Clock;
   
-  constructor(opt?: CanvasOpt) {
+  constructor(opt?: CanvasOption) {
     super();
     if (!opt) opt = {};
     if (!opt.camera) opt.camera = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
@@ -48,22 +48,22 @@ export class Canvas extends HTMLElement implements View {
     this.appendChild(this.renderer.domElement);
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
 
-    this.addEventListener('click',this.myMouseClickedListener);
+    this.renderer.domElement.addEventListener('click',this.myMouseClickedListener);
 
     window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
     window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
     window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
-    this.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
-    this.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
-    this.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
-    this.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
-    this.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
-    this.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
-    this.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
-    this.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
-    this.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
-    this.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
-    this.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
+    this.renderer.domElement.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
+    this.renderer.domElement.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
+    this.renderer.domElement.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
+    this.renderer.domElement.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
+    this.renderer.domElement.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
+    this.renderer.domElement.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
+    this.renderer.domElement.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
+    this.renderer.domElement.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
+    this.renderer.domElement.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
+    this.renderer.domElement.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
+    this.renderer.domElement.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
   }
 
   connectedCallback() {
@@ -130,7 +130,7 @@ export class Canvas extends HTMLElement implements View {
   }
 }
 
-customElements.define("a3-canvas", Canvas);
+customElements.define("canvas-a3", Canvas);
 
 // TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
 function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {

@@ -68,9 +68,7 @@ export class Scene {
     if (this.physicsWorld)
       this.physicsWorld.update(dt);
     for (const obj of this.objects) {
-      if (obj.controlMode !== "manual" ) {
-        obj.update(dt);
-      }
+      obj.update(dt);
     }
   }
 }

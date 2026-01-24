@@ -8,12 +8,12 @@ import { RapierPhysicsEngine, RapierPhysicsWorld,
          RapierPhysicsEntity } from '../rapier/RapierPhysics';
 import type {  } from '../rapier/RapierPhysics';
 
-export interface TestOpt {
+export interface TestOption {
   physics: boolean
 }
 
 export class Test extends ObjectA3 {
-  constructor(opt?: TestOpt) {
+  constructor(opt?: TestOption) {
     super();
     if (opt && opt.physics)
       this.setControlMode("physics");

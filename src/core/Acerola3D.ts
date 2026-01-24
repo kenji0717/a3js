@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
+import { Vec3 } from './Vec3';
 import { unzipAsync, readStringFromUnzipped } from '../utils/math';
 import { loadVrmlInUnzipped,
          loadBvhInUnzipped} from '../three/threeUtils';
@@ -17,6 +18,8 @@ interface Action {
   clipAction:  THREE.AnimationAction | null;
   parts: Record<string,Part>;
   root: THREE.Object3D | null;
+  scale: number;
+  offset: Vec3;
 }
 
 /**
@@ -59,13 +62,17 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     Array.from(as).forEach((a) => {
       const actionName = a.getAttribute('an');
       const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
+      const actionScale = a.getAttribute('scale');
+      const actionOffset = a.getAttribute('offset');
       if (actionName) {
         const action: Action = {
           bvh: null,
           mixer: null,
           clipAction: null,
           parts: {},
-          root: null
+          root: null,
+          scale: 1.0,
+          offset: new Vec3()
         };
         this.actions[actionName] = action;
         if (actionBVH) {
@@ -76,6 +83,11 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
             promises.push(p);
             p.then((bvh)=>{action.bvh = bvh;});
           }
+        }
+        action.scale = actionScale ? Number(actionScale) : 1.0;
+        if (actionOffset) {
+          const as = actionOffset.split(" ");
+          action.offset.set(Number(as[0]),Number(as[1]),Number(as[2]));
         }
         const parts = a.getElementsByTagNameNS(ns,'p');
         Array.from(parts).forEach((p) => {
@@ -97,6 +109,8 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     for (const action of Object.values(this.actions)) {
       if (action.bvh) {
         action.root = action.bvh.skeleton.bones[0];
+        action.root.scale.set(action.scale,action.scale,action.scale);
+        action.root.position.set(action.offset.x,action.offset.y,action.offset.z);
         appendPartToBone(action.root,action.parts);
         action.mixer = new THREE.AnimationMixer(action.root);
         action.clipAction = action.mixer.clipAction(action.bvh.clip);
@@ -128,6 +142,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
   }
 
   update(dt: number) {
+    super.update(dt);
     if (this.currentAction?.mixer) {
       this.currentAction?.mixer.update(dt);
     }
