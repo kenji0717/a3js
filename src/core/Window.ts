@@ -42,8 +42,6 @@ export class Window extends HTMLElement implements View {
   controller: Controller | null;
   camera3js: THREE.PerspectiveCamera;
   clock: THREE.Clock;
-  offsetX = 0;
-  offsetY = 0;
 
   constructor(width=600, height=300) {
     super();
@@ -111,7 +109,6 @@ export class Window extends HTMLElement implements View {
     this.renderer.setSize(width, height);
     this.renderer.domElement.width = width;
     this.renderer.domElement.width = height;
-    //this.renderer.domElement.style = `display: block; width: ${width}px; height: ${height}px; margin: 0; padding: 0;`;
     this.appendChild(this.renderer.domElement);
     this._canvas = this.renderer.domElement;
 
@@ -170,7 +167,8 @@ export class Window extends HTMLElement implements View {
     if (this._canvas.width !== w || this._canvas.height !== h) {
       this._canvas.width  = w;
       this._canvas.height = h;
-      this.camera3js.aspect = w / h; // 効いてる？
+      this.camera3js.aspect = w / h;
+      this.camera3js.updateProjectionMatrix();
       this.renderer.setSize(w, h);
     }
   }

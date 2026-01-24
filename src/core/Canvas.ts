@@ -28,6 +28,25 @@ export class Canvas extends HTMLElement implements View {
   
   constructor(opt?: CanvasOption) {
     super();
+
+    // ########## WebComponent関係のセットアップ ##########
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot!.innerHTML = `
+  <style>
+    :host {
+      width: 100%;
+      height: 100%;
+    }
+
+    :host canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+  <slot></slog>
+`;
+
     if (!opt) opt = {};
     if (!opt.camera) opt.camera = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
     this.camera3js = opt.camera;
@@ -43,7 +62,7 @@ export class Canvas extends HTMLElement implements View {
     this.renderer = new THREE.WebGLRenderer(o);
     if ('opaque' in opt) this.renderer.setClearAlpha(0);
     this.clock = new THREE.Clock();
-    this.style = 'display: block; background: rgba(0,0,0,0);';
+    this.style = 'display: block; padding: 0; margin: 0; position: relative; background: rgba(0,0,0,0);box-sizing: border-box;';
     this.renderer.domElement.style = 'display: block; width: 100%; height: 100%; margin: 0; padding: 0;';
     this.appendChild(this.renderer.domElement);
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
@@ -68,12 +87,19 @@ export class Canvas extends HTMLElement implements View {
 
   connectedCallback() {
     this.ro = new ResizeObserver(() => {
-      const { width, height } = this.renderer.domElement.getBoundingClientRect();
-      if (isPerspectiveCamera(this.camera3js))
-        this.camera3js.aspect = width / height;
-      this.renderer.setSize(width, height);
-      //this.renderer.domElement.width = width; // ???
-      //this.renderer.domElement.width = height; // ???
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.floor(this.clientWidth * dpr);
+      const h = Math.floor(this.clientHeight * dpr);
+      if (this.renderer.domElement.width !== w
+          || this.renderer.domElement.height !== h) {
+        this.renderer.domElement.width = w;
+        this.renderer.domElement.height = h;
+        if (isPerspectiveCamera(this.camera3js)) {
+          this.camera3js.aspect = w / h;
+          this.camera3js.updateProjectionMatrix();
+        }
+        this.renderer.setSize(w, h);
+      }
     });
     this.ro.observe(this);
   }
