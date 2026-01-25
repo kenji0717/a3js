@@ -5,7 +5,6 @@ import { Camera } from './Camera';
 import type { View } from './View';
 import { OrbitController } from './Controller';
 import type { Controller } from './Controller';
-import { Label, Balloon } from './ObjectA3';
 import type { MutableVec3 } from './Vec3';
 
 /**
@@ -19,8 +18,6 @@ export class ViewBase implements View {
   scene: Scene;
   camera: Camera;
   controller: Controller;
-  labels: Label[] = [];
-  balloons: Balloon[] = [];
   
   constructor(camera: Camera) {
     this.scene = new Scene();
@@ -59,24 +56,5 @@ export class ViewBase implements View {
     throw new Error(`ViewBaseはworldToScreen()は実装していません`);
     const ndc = this.camera.calcNDC(loc);
     return ndc;
-  }
-
-  addLabel(label: Label) {
-    if (!this.labels.includes(label))
-      this.labels.push(label);
-  }
-  removeLabel(label: Label) {
-    const idx = this.labels.indexOf(label);
-    if (idx !== -1)
-      this.labels.splice(idx,1);
-  }
-  addBalloon(balloon: Balloon) {
-    if (!this.balloons.includes(balloon))
-      this.balloons.push(balloon);
-  }
-  removeBalloon(balloon: Balloon) {
-    const idx = this.balloons.indexOf(balloon);
-    if (idx !== -1)
-      this.balloons.splice(idx,1);
   }
 }

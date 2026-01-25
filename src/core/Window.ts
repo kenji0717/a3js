@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ObjectA3, Label, Balloon } from './ObjectA3';
+import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
@@ -7,6 +7,7 @@ import { ViewBase } from './ViewBase';
 import { GeneralCamera } from './GeneralCamera';
 import type { Controller } from './Controller';
 import type { MutableVec3 } from './Vec3';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 export interface WindowOption {
   width: number;
@@ -31,6 +32,7 @@ export class Window extends HTMLElement implements View {
   private _startHeight = 0;
   private _borderSize = 5;
   private _canvas: HTMLCanvasElement;
+  private _css2DCanvas: HTMLElement;
   private _titleEl: HTMLElement | null = null;
   private _titleBar: HTMLElement | null = null;
   private _closeBtn: HTMLElement | null = null;
@@ -38,6 +40,7 @@ export class Window extends HTMLElement implements View {
 
   base: ViewBase;
   renderer;
+  css2DRenderer: CSS2DRenderer;
   scene: Scene;
   camera: Camera;
   controller: Controller;
@@ -99,37 +102,43 @@ export class Window extends HTMLElement implements View {
 
     // ここからようやく3D関係
     this.camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
+    this.camera3js.aspect = width / height;
     const camera = new GeneralCamera(this.camera3js);
     this.base = new ViewBase(camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
-    this.renderer = new THREE.WebGLRenderer();
     this.clock = new THREE.Clock();
-    this.camera3js.aspect = width / height;
+    this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(width, height);
-    this.renderer.domElement.width = width;
-    this.renderer.domElement.width = height;
-    this.appendChild(this.renderer.domElement);
     this._canvas = this.renderer.domElement;
+    this._canvas.width = width;
+    this._canvas.width = height;
+    this.appendChild(this._canvas);
+    this.css2DRenderer = new CSS2DRenderer();
+    this.css2DRenderer.setSize(width, height);
+    this._css2DCanvas = this.css2DRenderer.domElement;
+    this._css2DCanvas.style.position='absolute';
+    this._css2DCanvas.style.top='0px';
+    this.appendChild(this._css2DCanvas);
 
-    this.renderer.domElement.addEventListener('click',this.myMouseClickedListener);
+    this._css2DCanvas.addEventListener('click',this.myMouseClickedListener);
 
     // コントローラに対するイベントの登録
     window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
     window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
     window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
-    this.renderer.domElement.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
-    this.renderer.domElement.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
-    this.renderer.domElement.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
-    this.renderer.domElement.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
-    this.renderer.domElement.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
-    this.renderer.domElement.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
-    this.renderer.domElement.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
-    this.renderer.domElement.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
-    this.renderer.domElement.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
-    this.renderer.domElement.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
-    this.renderer.domElement.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
+    this._css2DCanvas.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
+    this._css2DCanvas.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
+    this._css2DCanvas.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
+    this._css2DCanvas.addEventListener('click',(e:MouseEvent)=>{this.controller?.mouseClick(e);});
+    this._css2DCanvas.addEventListener('mouseenter',(e)=>{this.controller?.mouseEnter(e);});
+    this._css2DCanvas.addEventListener('mouseleave',(e)=>{this.controller?.mouseLeave(e);});
+    this._css2DCanvas.addEventListener('wheel',(e)=>{this.controller?.mouseWheel(e);});
+    this._css2DCanvas.addEventListener('touchstart',(e)=>{this.controller?.touchStart(e);});
+    this._css2DCanvas.addEventListener('touchmove',(e)=>{this.controller?.touchMove(e);});
+    this._css2DCanvas.addEventListener('touchend',(e)=>{this.controller?.touchEnd(e);});
+    this._css2DCanvas.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
 
     // 生成されたら、かってにdocument.bodyにappendChildする！
     if (document.body) {
@@ -171,6 +180,8 @@ export class Window extends HTMLElement implements View {
       this.camera3js.aspect = w / h;
       this.camera3js.updateProjectionMatrix();
       this.renderer.setSize(w, h);
+      //-----
+      this.css2DRenderer.setSize(w, h);
     }
   }
 
@@ -313,7 +324,7 @@ export class Window extends HTMLElement implements View {
     const dt = this.clock.getDelta();
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
-    // gaha this.renderer2D.render(this.scene.scene, this.camera3js);
+    this.css2DRenderer.render(this.scene.scene, this.camera3js);
   };
 
   worldToScreen(loc: MutableVec3) {
@@ -326,10 +337,6 @@ export class Window extends HTMLElement implements View {
     return { x, y };
   }
 
-  addLabel(label: Label) { this.base.addLabel(label); }
-  removeLabel(label: Label) { this.base.removeLabel(label); }
-  addBalloon(balloon: Balloon) { this.base.addBalloon(balloon); }
-  removeBalloon(balloon: Balloon) { this.base.removeBalloon(balloon); }
 //----------------------------------
 
   // このクラスはHTMLElementのスーパークラスだから

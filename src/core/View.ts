@@ -2,7 +2,6 @@ import { Scene } from './Scene';
 import type { Camera } from './Camera';
 import type { Controller } from './Controller';
 import type { MutableVec3 } from './Vec3';
-import type { Label, Balloon } from './ObjectA3';
 /**
   * Canvasなどの3D表示を担当するクラスをまとめるための
   * インターフェース。基本、表示がメインのクラスだが、
@@ -25,8 +24,4 @@ export interface View {
   replaceScene(newScene: Scene): Scene
   setController(controller: Controller): void;
   worldToScreen(loc: MutableVec3): { x: number, y: number };
-  addLabel(label: Label): void;
-  removeLabel(label: Label): void;
-  addBalloon(balloon: Balloon): void;
-  removeBalloon(balloon: Balloon): void;
 }

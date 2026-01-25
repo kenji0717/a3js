@@ -1,8 +1,17 @@
 
-//なんか全然違う
-let camera = new a3.Vec3(0,10,10);
-let target = new a3.Vec3(0,0,-10);
-a3.getQuatOfLookAt(camera,target,new a3.Vec3(0,1,0));
+labelとballoonの機能を実現するために
+Viewのインタフェースを拡張したけど、
+CSS3DRendererの方が良さそうだったので
+拡張を取り消す。消しそこねがないように
+メモしておく。
+
+addLabel, removeLabel, addBalloon, removeBalloon
+Label, Balloon,
+ViewBase.labels, ViewBase.balloons
+
+Three.jsがかわらないかぎり、上は無くても
+いいし、最悪ViewはSceneを持ってるので、
+なんとかなるはず。
 
 -----
 

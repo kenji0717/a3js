@@ -6,7 +6,18 @@ import type { MutableQuat } from './Quat';
 import type { PhysicsEntityOption } from './Physics';
 import { RapierPhysicsEngine, RapierPhysicsWorld,
          RapierPhysicsEntity } from '../rapier/RapierPhysics';
-import type {  } from '../rapier/RapierPhysics';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const labelCSS = `
+  color: white;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #fff;
+  border-radius: 5px;
+  font-family: sans-serif;
+  font-size: 14px;
+  pointer-events: none; /* マウスイベントを透過させて背後の操作を邪魔しない */
+`;
 
 export interface TestOption {
   physics: boolean
@@ -25,6 +36,12 @@ export class Test extends ObjectA3 {
     const geo = new THREE.BoxGeometry();
     const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
     const mesh = new THREE.Mesh(geo, mat);
+    const div = document.createElement('div');
+    div.textContent = 'Hello Box!';
+    div.style.cssText = labelCSS;
+    const label = new CSS2DObject(div);
+    label.position.set(0, 0.8, 0); // 少し上に配置
+    mesh.add(label);
     return mesh;
   }
 
