@@ -119,7 +119,7 @@ export class Window extends HTMLElement implements View {
     this.css2DRenderer.setSize(width, height);
     this._css2DCanvas = this.css2DRenderer.domElement;
     this._css2DCanvas.style.position='absolute';
-    this._css2DCanvas.style.top='0px';
+    this._css2DCanvas.style.top='28px';
     this.appendChild(this._css2DCanvas);
 
     this._css2DCanvas.addEventListener('click',this.myMouseClickedListener);
