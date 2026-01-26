@@ -6,6 +6,7 @@ import type { View } from './View';
 import { OrbitController } from './Controller';
 import type { Controller } from './Controller';
 import type { MutableVec3 } from './Vec3';
+import { Sound } from '../three/Sound';
 
 /**
  * Viewに必須な機能だけを実装したクラス。
@@ -22,6 +23,7 @@ export class ViewBase implements View {
   constructor(camera: Camera) {
     this.scene = new Scene();
     this.camera = camera;
+    this.camera.setAudioListener(Sound.listener);
     this.scene.scene.add(this.camera.object);
     this.camera.setLocation(0, 0, 3);
     this.controller = new OrbitController(this,0,0,0);

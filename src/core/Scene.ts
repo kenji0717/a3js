@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
+import { physicsEngineInstance } from '../rapier/RapierPhysics';
 import type { PhysicsWorld } from './Physics';
-import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 
 /**
   * 3D仮想空間を表すクラス。THREE.Sceneを内包していて
@@ -10,19 +10,14 @@ import { RapierPhysicsEngine } from '../rapier/RapierPhysics';
 export class Scene {
   scene: THREE.Scene;
   objects: ObjectA3[];
-  static physics: RapierPhysicsEngine = new RapierPhysicsEngine();
   physicsWorld: PhysicsWorld | null = null;
   physicsDt = 1/60;
-
-  static async initPhysics() {
-    await Scene.physics.init();
-  }
 
   constructor() {
     this.scene = new THREE.Scene();
     this.objects = [];
-    if (Scene.physics.isInitialized) {
-      this.physicsWorld = Scene.physics.createWorld({
+    if (physicsEngineInstance.isInitialized) {
+      this.physicsWorld = physicsEngineInstance.createWorld({
         gravity: {x:0.0, y: -9.81, z:0.0},
         timestep: this.physicsDt
       });

@@ -66,3 +66,29 @@ export function mimeTypeFromPath(path: string): string {
       return mt;
   return 'application/octet-stream';
 }
+
+// ChatGPTに教えてもらったマージできる設定の型とマージ関数
+
+export type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object
+    ? DeepPartial<T[K]>
+    : T[K];
+};
+
+export function deepMerge<T>(base: T, override?: DeepPartial<T>): T {
+  if (!override) return base;
+
+  const result = { ...base } as any;
+  for (const key in override) {
+    if (
+      typeof base[key] === "object" &&
+      typeof override[key] === "object"
+    ) {
+      result[key] = deepMerge(base[key], override[key]!);
+    } else {
+      result[key] = override[key];
+    }
+  }
+  return result;
+}
+

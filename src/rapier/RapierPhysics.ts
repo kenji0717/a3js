@@ -12,6 +12,7 @@ import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
+
 export class RapierPhysicsEngine implements PhysicsEngine {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
   isInitialized: boolean = false;
@@ -46,7 +47,7 @@ export class RapierPhysicsEngine implements PhysicsEngine {
   }
 
   private isRapierWorldOption(option: PhysicsWorldOption): option is RapierPhysicsWorldOption {
-    return ( "enableCCD" in option && "timestep" in option );
+    return ( /* "enableCCD" in option && */ "timestep" in option );
   }
 }
 
@@ -365,5 +366,11 @@ export function getShapeAndVolumeFromPrimitive( geometry: THREE.BufferGeometry )
     };
   }
   return null;
+}
+
+export const physicsEngineInstance: RapierPhysicsEngine = new RapierPhysicsEngine();
+
+export async function initPhysics(): Promise<void> {
+  await physicsEngineInstance.init();
 }
 

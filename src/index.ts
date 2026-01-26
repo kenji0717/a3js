@@ -12,6 +12,7 @@ export type { TestOption } from './core/Test';
 export { Text3D , initFont } from './core/Text3D';
 export { GLTFA3 } from './core/GLTFA3';
 export { Acerola3D } from './core/Acerola3D';
+export { Sound } from './three/Sound';
 export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';

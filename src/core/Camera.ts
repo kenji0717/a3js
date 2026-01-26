@@ -1,4 +1,4 @@
-//import * as THREE from 'three';
+import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { MutableVec3 } from './Vec3';
 
@@ -9,6 +9,13 @@ import type { MutableVec3 } from './Vec3';
   * ものとする。
   */
 export abstract class Camera extends ObjectA3 {
+
+  /**
+   * 耳の役割を持つTHREE.AudioListenerをカメラに
+   * 取り付ける。普通にTHREE.Cameraだったら、Object3D
+   * のサブクラスなんで、それにaddすればOK。
+   */
+  abstract setAudioListener(listener: THREE.AudioListener): void;
 
   /**
    * ワールド座標 → 正規化デバイス座標（NDC）

@@ -25,6 +25,10 @@ export class GeneralCamera extends Camera {
     return new THREE.Object3D();
   }
 
+  setAudioListener(listener: THREE.AudioListener) {
+    this.camera.add(listener);
+  }
+
   getHeadLight() { return this.headLight; }
 
   setAspect(aspect: number) {

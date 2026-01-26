@@ -3,6 +3,7 @@ import path from 'path';
 
 export default defineConfig({
   build: {
+    sourcemap: true,
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       name: 'a3js',
