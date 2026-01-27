@@ -12,7 +12,7 @@ export type { TestOption } from './core/Test';
 export { Text3D , initFont } from './core/Text3D';
 export { GLTFA3 } from './core/GLTFA3';
 export { Acerola3D } from './core/Acerola3D';
-export { Sound } from './three/Sound';
+export { Sound, initSound } from './three/Sound';
 export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
@@ -25,7 +25,7 @@ export type { PhysicsEngine,
               ColliderKind,
               MeshColliderKind,
               RigidBodyType } from './core/Physics';
-export { RapierPhysicsEngine } from './rapier/RapierPhysics';
+export { initPhysics, RapierPhysicsEngine } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { Vec3 } from './core/Vec3';
 export type { MutableVec3 } from './core/Vec3';

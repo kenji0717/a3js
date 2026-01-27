@@ -47,23 +47,23 @@ const defaultSoundOptions: SoundOptions = {
 
 export type SoundOptionInput = DeepPartial<SoundOptions>;
 
+/**
+ * サウンドの初期化を行います。必ずユーザジェスチャを起点とする
+ * スレッドから呼び出される必要があります。この初期化が完了しな
+ * なければ音声が再生されない可能性が高いです。
+ */
+export async function initSound() {
+  try {
+    if (Sound.listener.context.state !== "running")
+      await Sound.listener.context.resume();
+  } catch(e) {
+    console.warn("AudioContext resume failed. Did you call on user gesture?");
+  }
+}
+
 export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   static listener: THREE.AudioListener = new THREE.AudioListener();
   static audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
-
-  /**
-   * サウンドの初期化を行います。必ずユーザジェスチャを起点とする
-   * スレッドから呼び出される必要があります。この初期化が完了しな
-   * なければ音声が再生されない可能性が高いです。
-   */
-  static async init() {
-    try {
-      if (Sound.listener.context.state !== "running")
-        await Sound.listener.context.resume();
-    } catch(e) {
-      console.warn("AudioContext resume failed. Did you call on user gesture?");
-    }
-  }
 
   readonly ready: Promise<Sound>;
   config: SoundOptions;

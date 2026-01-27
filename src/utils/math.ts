@@ -67,7 +67,13 @@ export function mimeTypeFromPath(path: string): string {
   return 'application/octet-stream';
 }
 
-// ChatGPTに教えてもらったマージできる設定の型とマージ関数
+// ChatGPTに教えてもらったマージできる設定の型とマージ関数。
+// 抜けのない完璧な設定の型(例えばXOption)を定義した後、
+// 完璧なデフォルトの設定を用意(例えばdefaultXOption)。
+// ユーザにはその型のDeepPartial<XOption>を要求することで
+// 全ての設定を指定しなくて良くなって、
+// deepMarge<XOption>(defaultXOption,userOption);で完璧な
+// 設定が用意できるという仕組み。
 
 export type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object

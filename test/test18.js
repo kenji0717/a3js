@@ -1,7 +1,5 @@
-// 使ったことなかったのでthree.jsのPositionalAudioのテスト
-// こんどはコーンモデルで音の出る方向を限定
+// Soundのテスト。ここではtype: 'positional'なやつのテスト。
 import * as a3 from 'a3js';
-import * as THREE from 'three';
 
 const button = document.createElement('button');
 button.textContent = "プログラムスタート(音が出ます)"
@@ -9,33 +7,22 @@ button.addEventListener('click',start);
 document.body.appendChild(button);
 
 async function start() {
+  await a3.initSound();
   const view = new a3.Window(600,300);
-  const listener = new THREE.AudioListener();
-  view.camera.camera.add(listener);
 
-  const geo = new THREE.BoxGeometry();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-  const mesh = new THREE.Mesh(geo, mat);
-
-  const sound = new THREE.PositionalAudio(listener);
-  const audioLoader = new THREE.AudioLoader();
-  //audioLoader.load('./assets/maou_se_system23.wav', (buffer) => {
-  audioLoader.load('./assets/maou_bgm_8bit29.ogg', (buffer) => {
-    sound.setBuffer(buffer);
-    sound.setRefDistance(1);
-    sound.setLoop(true);
-    sound.setDirectionalCone(30,90,0.1);
-    sound.play();
-  });
-  mesh.add(sound);
-
-  const obj = new a3.ThreeJS(mesh);
+  const obj = new a3.Test();
   view.scene.add(obj);
+
+  const opt = { type: 'positional', loop: true };
+  //const sound = await new a3.Sound('./assets/maou_se_system23.wav',opt).ready;
+  const sound = await new a3.Sound('./assets/maou_bgm_8bit29.ogg',opt).ready;
+  obj.add(sound);
+  sound.play();
 
   let t=0;
   while (true) {
     await a3.asyncSleep(10);
-    obj.setRotation(0,t,0);
-    t+=0.5;
+    obj.setLocation(10*Math.cos(t),0,10*Math.sin(t)+3);
+    t+=0.01;
   }
 }

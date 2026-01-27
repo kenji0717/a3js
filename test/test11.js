@@ -1,7 +1,7 @@
 // 物理演算の色々テスト
 import * as a3 from 'a3js';
 
-await a3.Scene.physics.init();
+await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.camera.setLocation(0,0,10);
 const ground = new a3.Box(10,0.5,10,"red");
