@@ -3,7 +3,7 @@ import * as a3 from 'a3js';
 
 await a3.initPhysics();
 const view = new a3.Window(600,300);
-view.camera.setLocation(0,0,10);
+//view.camera.setLocation(0,0,10); // なんとかしないと。
 const ground = new a3.Box(10,0.5,10,"red");
 ground.setLocation(0,-3,0);
 ground.initPhysics({rigidBody: 'fixed'});

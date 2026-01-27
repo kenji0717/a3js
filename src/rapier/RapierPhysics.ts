@@ -8,7 +8,7 @@ import type { MutableVec3 } from '../core/Vec3';
 import type { MutableQuat } from '../core/Quat';
 import { PhysicsEntity } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
-              PhysicsEntityOption } from '../core/Physics';
+              PhysicsEntityOption, Collision } from '../core/Physics';
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
@@ -59,10 +59,12 @@ export interface RapierPhysicsWorldOption extends PhysicsWorldOption {
 export class RapierPhysicsWorld implements PhysicsWorld {
   world: Rapier.World;
   timestep: number;
+  collisionEventQueue: Rapier.EventQueue;
 
   constructor(world:Rapier.World, timestep:number) {
     this.world = world;
     this.timestep = timestep;
+    this.collisionEventQueue = new RAPIER.EventQueue(true);
     this.world.integrationParameters.dt = this.timestep;
   }
 
@@ -86,11 +88,30 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     // ここの実装は良く考えた方が良い。今は適当
     const n = Math.ceil(dt / this.timestep);
     for (let i=0;i<n;i++)
-      this.world.step()
+      this.world.step(this.collisionEventQueue);
+  }
+
+  getCollisions(): Collision[] {
+    const collisions: Collision[] = [];
+    this.collisionEventQueue.drainCollisionEvents((handle1, handle2, started) => {
+      const objA = RapierPhysicsEntity.collisionMap.get(handle1);
+      const objB = RapierPhysicsEntity.collisionMap.get(handle2);
+      if ( objA && objB) {
+        collisions.push({
+          objectA: objA,
+          partOfA: handle1,
+          objectB: objB,
+          partOfB: handle2,
+          started
+        });
+      }
+    });
+    return collisions;
   }
 }
 
 export abstract class RapierPhysicsEntity extends PhysicsEntity {
+  static collisionMap: Map<number,ObjectA3> = new Map();
   abstract addOneself(world: RapierPhysicsWorld): void;
   abstract removeOneself(world: RapierPhysicsWorld): void;
 }
@@ -130,7 +151,11 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
     this.object.object.traverse((obj)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
+        const collisionGroups = (opt.membership << 16) | opt.filter;
         if (cv) {
+          cv.colliderDesc.setCollisionGroups(collisionGroups);
+          if (opt.collisionDetection)
+            cv.colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
           this.colliderDescs.push(cv.colliderDesc);
           cv.colliderDesc.setRestitution(opt.restitution).setFriction(opt.friction);
           volumes.push(cv.volume);
@@ -147,6 +172,9 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
               break;
           }
           if (c) {
+            c.setCollisionGroups(collisionGroups);
+            if (opt.collisionDetection)
+              c.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
             this.colliderDescs.push(c);
             volumes.push(v);
           }
@@ -175,7 +203,9 @@ export class RapierDefaultPhysicsEntity extends RapierPhysicsEntity {
   addOneself(world: RapierPhysicsWorld) {
     this.body = world.world.createRigidBody(this.bodyDesc);
     this.colliderDescs.forEach((colliderDesc)=>{
-      this.colliders.push(world.world.createCollider(colliderDesc,this.body));
+      const collider = world.world.createCollider(colliderDesc,this.body);
+      this.colliders.push(collider);
+      RapierPhysicsEntity.collisionMap.set(collider.handle,this.object);
     });
   }
 

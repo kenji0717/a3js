@@ -56,9 +56,13 @@ export abstract class ObjectA3 {
   private interpolation: Interpolation | null = null;
   parent: ObjectA3 | null = null;
   children: ObjectA3[] = [];
+  clickListener?: (o: ObjectA3)=>void;
 
   constructor(data?: any) {
     this.object = this.initObject(data);
+    this.object.traverse((o)=>{
+      o.userData['a3js'] = { objectA3: this };
+    });
   }
 
   // 非同期でないと無理な場合などはとりあえず
@@ -111,7 +115,10 @@ export abstract class ObjectA3 {
       meshCollider: "convex_hull",
       mass: 1.0,
       friction: 0.5,
-      restitution: 0.5
+      restitution: 0.5,
+      membership: 0b0000000000000001,
+      filter: 0b0000000000000001,
+      collisionDetection: false
     };
   }
 
@@ -164,6 +171,31 @@ export abstract class ObjectA3 {
       this.balloon = new BalloonInfo(message);
     else
       this.balloon.message = message;
+  }
+
+  /**
+   * リスナーは1個しか登録されません。2つ
+   * 登録しようとすると、最初のリスナーは
+   * 捨てられます。
+   */
+  setClickListener(func: (o: ObjectA3)=>void) {
+    this.clickListener = func;
+  }
+
+  /**
+   * 物理エンジンにより衝突が検知されたら呼び出される。
+   * @param obj 衝突相手
+   * @param started 衝突開始の時true、衝突終了の時false
+   * @param myPartNo ぶつかったパーツのColliderの番号
+   * @param yourPartNo 相手のぶつかったパーツのClliderの番号
+   */
+  handleCollision(obj: ObjectA3, started: boolean, myPartNo: number, yourPartNo: number) {
+    obj; started; myPartNo; yourPartNo;
+  }
+
+  async clicked() {
+    if (this.clickListener)
+      await this.clickListener(this);
   }
 
   get location(): Vec3 {
@@ -425,17 +457,18 @@ export abstract class ObjectA3 {
     return vecZ.apply(this.quat);
   }
 
-  /**
-   * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか
-   * どうかを判定するメソッド。
-   */
-  contains(obj: THREE.Object3D): boolean {
-    let contain = false;
-    this.object.traverse((o) => {
-      if (o==obj) contain = true;
-    });
-    return contain;
-  }
+
+//  /**
+//   * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか
+//   * どうかを判定するメソッド。
+//   */
+//  contains(obj: THREE.Object3D): boolean {
+//    let contain = false;
+//    this.object.traverse((o) => {
+//      if (o==obj) contain = true;
+//    });
+//    return contain;
+//  }
 }
 
 /*

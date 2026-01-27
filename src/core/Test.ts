@@ -92,6 +92,7 @@ export class TestPhysicsEntity extends RapierPhysicsEntity {
   addOneself(world: RapierPhysicsWorld) {
     this.body = world.world.createRigidBody(this.bodyDesc);
     this.collider = world.world.createCollider(this.colliderDesc,this.body);
+    RapierPhysicsEntity.collisionMap.set(this.collider.handle,this.object);
   }
 
   removeOneself(world: RapierPhysicsWorld) {

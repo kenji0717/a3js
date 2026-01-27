@@ -50,6 +50,7 @@ export interface PhysicsWorld {
   add(entity: PhysicsEntity): void;
   remove(entity: PhysicsEntity): void;
   update(dt: number): void;
+  getCollisions(): Collision[];
 }
 
 export type RigidBodyType = "dynamic" | "kinematic" | "fixed";
@@ -66,6 +67,9 @@ export interface PhysicsEntityOption {
   mass: number;
   friction: number;
   restitution: number;
+  membership: number;
+  filter: number;
+  collisionDetection: boolean
 }
 
 /**
@@ -103,3 +107,15 @@ export abstract class PhysicsEntity {
   abstract setScaleNow(v: MutableVec3): void;
 }
 
+/**
+ * 衝突の情報を保持するオブジェクトのインタフェース。
+ * もうRapierと独立に設計するのが難しいのでRapierベースで
+ * 設計する。
+ */
+export interface Collision {
+  objectA: ObjectA3;
+  partOfA: number;
+  objectB: ObjectA3;
+  partOfB: number;
+  started: boolean;
+}

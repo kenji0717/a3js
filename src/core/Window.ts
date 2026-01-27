@@ -377,15 +377,13 @@ export class Window extends HTMLElement implements View {
       mouse.y = -2*(y / rect.height) + 1;
       raycaster.setFromCamera(mouse,this.camera.camera);
       const intersects = raycaster.intersectObjects(this.scene.scene.children);
-      const objs: {o1:THREE.Object3D,o2:ObjectA3}[] = [];
+      const objs: {three:THREE.Object3D,a3js:ObjectA3}[] = [];
       intersects.forEach((o1)=>{
-        for (const o2 of this.scene.objects) {
-          if (o2.contains(o1.object)) {
-            objs.push({o1:o1.object,o2:o2});
-            break;
-          }
-        }
+        const a3js: ObjectA3 = o1.object.userData['a3js']?.objectA3;
+        objs.push({three:o1.object,a3js});
       });
+      if (objs.length>0)
+        objs[0].a3js.clicked();
       this.dispatchEvent(new CustomEvent('click3d',{detail: { value: objs }}));
     }
   }
