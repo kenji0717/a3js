@@ -16,7 +16,7 @@ sound.play();
 
 let t=0;
 while (true) {
-  await a3.asyncSleep(10);
+  await a3.asyncSleep(1000/60);
   obj.setLocation(10*Math.cos(t),0,10*Math.sin(t)+3);
   t+=0.01;
 }

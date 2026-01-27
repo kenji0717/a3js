@@ -132,8 +132,12 @@ export abstract class ObjectA3 {
    * をオーバーライドしましょう。
    */ 
 
-  initPhysics(opt: PhysicsEntityOption): void {
-    this.physics = new RapierDefaultPhysicsEntity(this,opt);
+  initPhysics(opt: Partial<PhysicsEntityOption>): void {
+    const option = {
+      ...this.getPhysicsOption(),
+      ...opt
+    };
+    this.physics = new RapierDefaultPhysicsEntity(this,option);
     this.controlMode = 'physics';
   }
 

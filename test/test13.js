@@ -13,5 +13,5 @@ let x=0,y=0,z=0;
 for (let i=0;i<=360;i++) {
   x += 1;
   obj.setRotation(x,y,z);
-  await a3.asyncSleep(10);
+  await a3.asyncSleep(1000/60);
 }
