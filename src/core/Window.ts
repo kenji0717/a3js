@@ -327,7 +327,7 @@ export class Window extends HTMLElement implements View {
     this.css2DRenderer.render(this.scene.scene, this.camera3js);
   };
 
-  worldToScreen(loc: MutableVec3) {
+  worldToScreen(loc: MutableVec3): { x: number, y: number } {
     const v = new THREE.Vector3(loc.x, loc.y, loc.z);
     v.project(this.camera3js);
     const size = new THREE.Vector2();
@@ -335,6 +335,29 @@ export class Window extends HTMLElement implements View {
     const x = (v.x + 1) / 2 * size.x;
     const y = (1 - v.y) / 2 * size.y;
     return { x, y };
+  }
+
+  screenToWorld(x: number, y: number, depth: number): MutableVec3 {
+    const ndc = new THREE.Vector3(
+      (x / this._canvas.clientWidth) * 2 -1,
+      -(y / this._canvas.clientHeight) * 2 + 1,
+      0.5
+    );
+    ndc.unproject(this.camera3js);
+    const dir = ndc.sub(this.camera3js.position).normalize();
+    return this.camera3js.position.clone().add(dir.multiplyScalar(depth));
+  }
+
+  cameraToScreen(loc: MutableVec3): { x: number, y: number } {
+    const v = new THREE.Vector3(loc.x,loc.y,loc.z);
+    const worldPos = v.applyMatrix4(this.camera3js.matrixWorld);
+    return this.worldToScreen(worldPos);
+  }
+
+  screenToCamera(x: number, y: number, depth: number): MutableVec3 {
+    const vec = this.screenToWorld(x,y,depth);
+    const worldPos = new THREE.Vector3(vec.x,vec.y,vec.z);
+    return worldPos.applyMatrix4(this.camera3js.matrixWorldInverse);
   }
 
 //----------------------------------

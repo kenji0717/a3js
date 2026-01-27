@@ -54,9 +54,39 @@ export class ViewBase implements View {
    * サブクラスで必ずオーバーライドして自分で実装して下さい。
    * ViewBaseをラップして使っている場合も同様です。
    */
-  worldToScreen(loc: MutableVec3) {
+  worldToScreen(loc: MutableVec3): { x: number, y: number } {
     throw new Error(`ViewBaseはworldToScreen()は実装していません`);
-    const ndc = this.camera.calcNDC(loc);
-    return ndc;
+    loc;
+    return {x:0, y:0};
+  }
+  /**
+   * ViewBaseはscreenToWorld()を実装することは不可能なので、
+   * サブクラスで必ずオーバーライドして自分で実装して下さい。
+   * ViewBaseをラップして使っている場合も同様です。
+   */
+  screenToWorld(x: number, y: number, depth: number): MutableVec3 {
+    throw new Error(`ViewBaseはscreenToWorld()は実装していません`);
+    x; y; depth;
+    return {x:0,y:0,z:0};
+  }
+  /**
+   * ViewBaseはcameraToScreen()を実装することは不可能なので、
+   * サブクラスで必ずオーバーライドして自分で実装して下さい。
+   * ViewBaseをラップして使っている場合も同様です。
+   */
+  cameraToScreen(loc: MutableVec3): { x: number, y: number } {
+    throw new Error(`ViewBaseはcameraToScreen()は実装していません`);
+    loc;
+    return {x:0,y:0};
+  }
+  /**
+   * ViewBaseはscreenToCamera()を実装することは不可能なので、
+   * サブクラスで必ずオーバーライドして自分で実装して下さい。
+   * ViewBaseをラップして使っている場合も同様です。
+   */
+  screenToCamera(x: number, y: number, depth: number): MutableVec3 {
+    throw new Error(`ViewBaseはscreenToCamera()は実装していません`);
+    x; y; depth;
+    return {x:0,y:0,z:0};
   }
 }

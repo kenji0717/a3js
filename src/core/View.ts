@@ -24,4 +24,7 @@ export interface View {
   replaceScene(newScene: Scene): Scene
   setController(controller: Controller): void;
   worldToScreen(loc: MutableVec3): { x: number, y: number };
+  screenToWorld(x: number, y: number, depth: number): MutableVec3;
+  cameraToScreen(loc: MutableVec3): { x: number, y: number };
+  screenToCamera(x: number, y: number, depth: number): MutableVec3;
 }
