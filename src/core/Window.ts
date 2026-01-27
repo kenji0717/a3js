@@ -366,6 +366,28 @@ export class Window extends HTMLElement implements View {
       this.dispatchEvent(new CustomEvent('click3d',{detail: { value: objs }}));
     }
   }
+
+  alert(message: string, func?: ()=>void): Promise<void> {
+    return new Promise((resolve) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position: absolute; top: 28px; width: 100%; height: 100%; display: flex; flex-direction: column;';
+      const p = document.createElement('p');
+      p.style.cssText = 'width: 80%; margin: 0 auto; color: red; text-align: center; border: 3px solid red;';
+      p.textContent = message;
+      div.appendChild(p);
+      const btn = document.createElement('button');
+      btn.textContent = 'OK!';
+      div.appendChild(btn);
+      this.appendChild(div);
+      
+      btn.addEventListener('click',async ()=>{
+        if (func)
+          await func();
+        this.removeChild(div);
+        resolve();
+      });
+    });
+  }
 }
 
 customElements.define("window-a3", Window);
