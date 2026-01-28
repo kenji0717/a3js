@@ -66,8 +66,8 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   static audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
 
   readonly ready: Promise<Sound>;
-  config: SoundOptions;
-  sound?: THREE.PositionalAudio | THREE.Audio<GainNode | PannerNode>;
+  private config: SoundOptions;
+  private sound?: THREE.PositionalAudio | THREE.Audio<GainNode | PannerNode>;
   constructor(soundFile: string, options: SoundOptionInput = {}) {
     super();
     this.config = deepMerge(defaultSoundOptions, options);

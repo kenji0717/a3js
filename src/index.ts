@@ -13,9 +13,11 @@ export { Text3D , initFont } from './core/Text3D';
 export { GLTFA3 } from './core/GLTFA3';
 export { Acerola3D } from './core/Acerola3D';
 export { Sound, initSound } from './three/Sound';
+export type { SoundOptions, PositionalOptions, SoundType, SoundOptionInput } from './three/Sound';
 export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
+export { HTML } from './three/HTML';
 export type { View } from './core/View';
 export type { PhysicsEngine,
               PhysicsWorld,
@@ -24,7 +26,8 @@ export type { PhysicsEngine,
               PhysicsEntityOption,
               ColliderKind,
               MeshColliderKind,
-              RigidBodyType } from './core/Physics';
+              RigidBodyType,
+              Collision } from './core/Physics';
 export { initPhysics, RapierPhysicsEngine } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { Vec3 } from './core/Vec3';
@@ -34,5 +37,6 @@ export type { MutableQuat, RotationOrder } from './core/Quat';
 export { ViewBase } from './core/ViewBase';
 export { GeneralCamera } from './core/GeneralCamera';
 export type { AsyncInitRequired } from './core/AsyncInitRequired';
-export { times2, asyncSleep } from './utils/math';
+export { times2, asyncSleep, deepMerge } from './utils/math';
+export type { DeepPartial  } from './utils/math';
 //export { getShape, loadVrmlInUnzipped } from './three/getShape';
