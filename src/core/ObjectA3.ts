@@ -1,9 +1,9 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
+import { DefaultRootMotion, type Motion } from './Motion';
 import type { PhysicsEntity,
               PhysicsEntityOption } from './Physics';
-import { RapierDefaultPhysicsEntity } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
 import { Quat, getQuatOfLookAt, vec3EulerToQuat } from './Quat';
@@ -45,15 +45,11 @@ export abstract class ObjectA3 {
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
   rotationOrder: RotationOrder | null = null;
   upVector: Vec3 | null = null;
-  readonly _loc: Vec3 = new Vec3(0,0,0);
-  readonly _quat: Quat = new Quat(0,0,0,1);
-  readonly _scale: Vec3 = new Vec3(1,1,1);
   object: THREE.Object3D;
-  controlMode: ControlMode = "manual";
   scene: Scene | null = null;
   physics: PhysicsEntity | null = null;
   private balloon: BalloonInfo | null = null;
-  private interpolation: Interpolation | null = null;
+  private motion: Motion;
   parent: ObjectA3 | null = null;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
@@ -63,6 +59,7 @@ export abstract class ObjectA3 {
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
+    this.motion = this.initMotion();
   }
 
   // 非同期でないと無理な場合などはとりあえず
@@ -70,82 +67,26 @@ export abstract class ObjectA3 {
   // そのObject3DにaddすればOK。
   abstract initObject(data?: any): THREE.Object3D;
 
-  setControlMode(mode: ControlMode) {
-    this.controlMode = mode;
-    if (mode === "interpolated" && !this.interpolation)
-      this.interpolation = new Interpolation(this);
-    if (mode === "physics" && !this.physics)
-      this.initPhysics(this.getPhysicsOption()); // GAHAこのタイミングでやるべきか？
+  /**
+   * このObjectA3で使用されるMotionを返す。
+   * デフォルトではDefaultRootMotionなのだが、
+   * このメソッドをオーバーライドすることで
+   * 変更可能。
+   * @returns このObjectA3で使用されるMotion
+   */
+  initMotion() {
+    return new DefaultRootMotion(this);
+  }
+  setMotion(motion: Motion) {
+    motion.setObject(this);
+    this.motion = motion;
   }
 
   update(dt: number) {
-    switch(this.controlMode) {
-      case "manual":
-        // "manual"モードの時は何もしない
-        break;
-      case "interpolated":
-        if (this.interpolation) // 必ずtrueのはず
-          this.interpolation.interpolate(this,dt);
-        break;
-      case "physics":
-        if (this.physics) // 必ずtrueのはず
-          this.physics.synchronize(this);
-        break;
-      case "user":
-        console.log('"user"モードを使う場合は自分でupdateメソッドをオーバーライドして実装して下さい。');
-        break;
-    }
+    this.motion.update(dt);
     this.children.forEach((child)=>{
       child.update(dt);
     });
-  }
-
-  /**
-   * このObjectA3用のA3PhysicsEntity(物理計算に必要なもろもろ)
-   * を生成するために必要な情報を、このメソッドで返す。物理演算
-   * で特別なことをするような時には、このメソッドをオーバーライド
-   * しする必要があるかもしれない。ここで生成されたオプションの
-   * 情報はthis.initPhysics()に受け渡されてA3PhysicsEntityが生成
-   * される。
-   */
-  getPhysicsOption(): PhysicsEntityOption {
-    return {
-      rigidBody: "dynamic",
-      collider: "solid",
-      meshCollider: "convex_hull",
-      mass: 1.0,
-      friction: 0.5,
-      restitution: 0.5,
-      membership: 0b0000000000000001,
-      filter: 0b0000000000000001,
-      collisionDetection: false
-    };
-  }
-
-  /**
-   * 物理演算に必要なA3PhysicsEntity(物理実態)を生成して
-   * this.physicsに設定します。this.controlModeも"physics"に設定
-   * します。A3PhysicsEntityのデフォルト実装として
-   * RapierDefaultPhysicsEntityを使用しますが、自分で作った
-   * 物理実態(A3PhysicsEntity)を使いたい場合は、ObjectA3を継承した
-   * クラスで、このinitPhysics()メソッドを適切にオーバーライドして
-   * ください。このinitPhysics()は通常A3Scene(つまりworld)に追加
-   * される瞬間に1度だけ実行されます。その場合A3PhysicsEntityの
-   * 生成に必要なA3PhysicsEntityOptionはthis.getPhysicsOption();
-   * から取得されます。このオプションを変更してカスタマイズしたい
-   * 場合は、ObjectA3をA3Sceneにaddする前に
-   * this.initPhysics(カスタマイズしたオプション);として初期化して
-   * 下さい。もしくは継承したクラスでgetPhysicsOption()メソッド
-   * をオーバーライドしましょう。
-   */ 
-
-  initPhysics(opt: Partial<PhysicsEntityOption>): void {
-    const option = {
-      ...this.getPhysicsOption(),
-      ...opt
-    };
-    this.physics = new RapierDefaultPhysicsEntity(this,option);
-    this.controlMode = 'physics';
   }
 
   add(obj: ObjectA3) {
@@ -198,9 +139,9 @@ export abstract class ObjectA3 {
       await this.clickListener(this);
   }
 
-  get location(): Vec3 {
-    return this._loc;
-  }
+  get locX(): number { return this.object.position.x; }
+  get locY(): number { return this.object.position.y; }
+  get locZ(): number { return this.object.position.z; }
   setLocation(x: number, y: number, z: number): void;
   setLocation(v: MutableVec3): void;
   setLocation(xOrV: number | MutableVec3, y?: number, z?: number): void {
@@ -210,20 +151,7 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setLocation(this,newLoc);
-        break;
-      case "physics":
-        // "physicsモードの時はsetLocationできないということにする。
-        break;
-      default:
-        // "manual","user"の時
-        this.location.set(newLoc);
-        this.object.position.set(newLoc.x,newLoc.y,newLoc.z);
-        break;
-    }
+    this.motion.setLocation(newLoc);
   }
 
   setLocationNow(x: number, y: number, z: number): void;
@@ -235,29 +163,17 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setLocationNow(this,newLoc);
-        break;
-      case "physics":
-        if (this.physics) // 絶対trueのはず
-          this.physics.setLocationNow(newLoc);
-        break;
-      default:
-        // "manual","user"の時は下の処理だけで十分
-        break;
-    }
-    this.location.set(newLoc);
+    this.motion.setLocationNow(newLoc);
     this.object.position.set(newLoc.x,newLoc.y,newLoc.z);
   }
 
 
 
 
-  get quat(): Quat {
-    return this._quat;
-  }
+  get quatX(): number { return this.object.quaternion.x; }
+  get quatY(): number { return this.object.quaternion.y; }
+  get quatZ(): number { return this.object.quaternion.z; }
+  get quatW(): number { return this.object.quaternion.w; }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: MutableQuat): void;
   setQuat(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
@@ -267,20 +183,7 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setQuat(this,newQuat);
-        break;
-      case "physics":
-        // "physicsモードの時はsetQuatできないということにする。
-        break;
-      default:
-        // "manual","user"の時
-        this.quat.set(newQuat);
-        this.object.quaternion.set(newQuat.x,newQuat.y,newQuat.z,newQuat.w);
-        break;
-    }
+    this.motion.setQuat(newQuat);
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
@@ -292,26 +195,12 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setQuatNow(this,newQuat);
-        break;
-      case "physics":
-        if (this.physics) // 絶対trueのはず
-          this.physics.setQuatNow(newQuat);
-        break;
-      default:
-        // "manual","user"の時は下の処理だけで十分
-        break;
-    }
-    this.quat.set(newQuat);
-    this.object.quaternion.set(newQuat.x,newQuat.y,newQuat.z,newQuat.w);
+    this.motion.setQuatNow(newQuat);
   }
 
-  get scale(): Vec3 {
-    return this._scale;
-  }
+  get scaleX(): number { return this.object.scale.x; }
+  get scaleY(): number { return this.object.scale.y; }
+  get scaleZ(): number { return this.object.scale.z; }
   setScale(x: number, y: number, z: number): void;
   setScale(v: MutableVec3): void;
   setScale(xOrV: number | MutableVec3, y?: number, z?: number): void {
@@ -321,20 +210,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setScale(this,newScale);
-        break;
-      case "physics":
-        // "physicsモードの時はsetScaleできないということにする。
-        break;
-      default:
-        // "manual","user"の時
-        this.scale.set(newScale);
-        this.object.scale.set(newScale.x,newScale.y,newScale.z);
-        break;
-    }
+    this.motion.setScale(newScale);
   }
 
   setScaleNow(x: number, y: number, z: number): void;
@@ -346,21 +222,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    switch (this.controlMode) {
-      case "interpolated":
-        if (this.interpolation) // 絶対trueのはず
-          this.interpolation.setScaleNow(this,newScale);
-        break;
-      case "physics":
-        if (this.physics) // 絶対trueのはず
-          this.physics.setScaleNow(newScale); // 普通の物理エンジンは対応させる？
-        break;
-      default:
-        // "manual","user"の時は下の処理だけで十分
-        break;
-    }
-    this.scale.set(newScale);
-    this.object.scale.set(newScale.x,newScale.y,newScale.z);
+    this.motion.setScaleNow(newScale);
   }
 
   /**
@@ -418,12 +280,12 @@ export abstract class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.location);
+      target.set(xVO.locX,xVO.locY,xVO.locZ);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.location,target,up);
+    const newQuat = getQuatOfLookAt(new Vec3(this.object.position),target,up);
     this.setQuat(newQuat);
   }
 
@@ -435,40 +297,27 @@ export abstract class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.location);
+      target.set(xVO.locX,xVO.locY,xVO.locZ);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.location,target,up);
+    const newQuat = getQuatOfLookAt(new Vec3(this.object.position),target,up);
     this.setQuatNow(newQuat);
   }
 
   getUnitVecX(): Vec3 {
     const vecX = new Vec3(1,0,0);
-    return vecX.apply(this.quat);
+    return vecX.apply(this.object.quaternion);
   }
   getUnitVecY(): Vec3 {
     const vecY = new Vec3(0,1,0);
-    return vecY.apply(this.quat);
+    return vecY.apply(this.object.quaternion);
   }
   getUnitVecZ(): Vec3 {
     const vecZ = new Vec3(0,0,1);
-    return vecZ.apply(this.quat);
+    return vecZ.apply(this.object.quaternion);
   }
-
-
-//  /**
-//   * このObjectA3が引数で与えられたTHREE.Object3Dを含んでいるか
-//   * どうかを判定するメソッド。
-//   */
-//  contains(obj: THREE.Object3D): boolean {
-//    let contain = false;
-//    this.object.traverse((o) => {
-//      if (o==obj) contain = true;
-//    });
-//    return contain;
-//  }
 }
 
 /*
@@ -492,121 +341,3 @@ class BalloonInfo {
     this.offsetBottom = {x:0,y:0};
   }
 }
-
-/*
- * 補間のための情報と処理を実装したクラス。
- * 必要な時だけObjectA3に追加される。
- */
-class Interpolation {
-  firstLoc: Vec3;
-  firstRot: Quat;
-  firstScale: Vec3;
-  nowLoc: Vec3;
-  nowRot: Quat;
-  nowScale: Vec3;
-  lastLoc: Vec3;
-  lastRot: Quat;
-  lastScale: Vec3;
-  nowTime: number;
-  duration: number;
-
-  constructor(obj: ObjectA3) {
-    this.firstLoc = new Vec3(obj.location);
-    this.firstRot = new Quat(obj.quat);
-    this.firstScale = new Vec3(obj.scale);
-    this.nowLoc = new Vec3(obj.location);
-    this.nowRot = new Quat(obj.quat);
-    this.nowScale = new Vec3(obj.scale);
-    this.lastLoc = new Vec3(obj.location);
-    this.lastRot = new Quat(obj.quat);
-    this.lastScale = new Vec3(obj.scale);
-    this.nowTime = 0;
-    this.duration = 1;
-  }
-
-  setLocation(obj: ObjectA3, newLoc: MutableVec3) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    this.lastLoc.set(newLoc);
-    //this.lastRot.set(obj.rot);
-    //this.lastScale.set(obj.scale);
-    this.nowTime = 0;
-  }
-
-  setLocationNow(obj: ObjectA3, newLoc: MutableVec3) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    this.lastLoc.set(newLoc);
-    //this.lastRot.set(obj.rot);
-    //this.lastScale.set(obj.scale);
-    this.nowTime = 1;
-  }
-
-  setQuat(obj: ObjectA3, newQuat: MutableQuat) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    //this.lastLoc.set(obj.loc);
-    this.lastRot.set(newQuat);
-    //this.lastScale.set(obj.scale);
-    this.nowTime = 0;
-  }
-
-  setQuatNow(obj: ObjectA3, newQuat: MutableQuat) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    //this.lastLoc.set(obj.loc);
-    this.lastRot.set(newQuat);
-    //this.lastScale.set(obj.scale);
-    this.nowTime = 1;
-  }
-
-  setScale(obj: ObjectA3, newScale: MutableVec3) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    //this.lastLoc.set(obj.loc);
-    //this.lastRot.set(obj.rot);
-    this.lastScale.set(newScale);
-    this.nowTime = 0;
-  }
-
-  setScaleNow(obj: ObjectA3, newScale: MutableVec3) {
-    this.firstLoc.set(obj.location);
-    this.firstRot.set(obj.quat);
-    this.firstScale.set(obj.scale);
-    //this.lastLoc.set(obj.loc);
-    //this.lastRot.set(obj.rot);
-    this.lastScale.set(newScale);
-    this.nowTime = 1;
-  }
-
-  // cssのanimation-timing-functionみたいに
-  // 切り替えられるようにしたいね。
-  smoothstep(t: number): number {
-    return t * t * (3 - 2 * t);
-  }
-
-  interpolate(obj: ObjectA3, dt: number) {
-    this.nowTime += dt;
-    if (this.nowTime > this.duration) this.nowTime = this.duration;
-    const t0 = this.nowTime/this.duration;
-    const t = this.smoothstep(t0);
-
-    this.nowLoc.lerp(this.firstLoc,this.lastLoc,t);
-    // 以下、たぶん球面線形補間。重いけど必要な時ある。
-    this.nowRot.slerp(this.firstRot,this.lastRot,t);
-    this.nowScale.lerp(this.firstScale,this.lastScale,t);
-
-    obj.location.set(this.nowLoc);
-    obj.object.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
-    obj.quat.set(this.nowRot);
-    obj.object.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
-    obj.scale.set(this.nowScale);
-    obj.object.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
-  }
-}
-

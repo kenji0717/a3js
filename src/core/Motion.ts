@@ -86,10 +86,6 @@ export class DefaultRootMotion implements Motion {
     this.obj = objectA3.object;
   }
 
-  setObject3D(object3D: THREE.Object3D) {
-    this.obj = object3D;
-  }
-
   update(_: number) {}
   setPause(_: boolean) {}
   setTime(_:number) {}

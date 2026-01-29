@@ -1,4 +1,4 @@
-import { Quat } from './Quat';
+import { Quat, type MutableQuat } from './Quat';
 
 /**
  * Readonlyな3次元ベクトルのインタフェース。
@@ -129,8 +129,8 @@ export class Vec3 implements MutableVec3 {
   }
 
   apply(x: number, y: number, z: number, w: number): Vec3;
-  apply(q: Quat): Vec3;
-  apply(xOrQ: number | Quat, argY?: number, argZ?: number, argW?: number): Vec3 {
+  apply(q: MutableQuat): Vec3;
+  apply(xOrQ: number | MutableQuat, argY?: number, argZ?: number, argW?: number): Vec3 {
     const q = new Quat();
     if (typeof xOrQ === "number")
       q.set(xOrQ,argY!,argZ!,argW!);

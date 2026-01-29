@@ -72,6 +72,18 @@ export interface PhysicsEntityOption {
   collisionDetection: boolean
 }
 
+export const defaultPhysicsEntityOption: PhysicsEntityOption = {
+  rigidBody: "dynamic",
+  collider: "solid",
+  meshCollider: "convex_hull",
+  mass: 1.0,
+  friction: 0.5,
+  restitution: 0.5,
+  membership: 0b0000000000000001,
+  filter: 0b0000000000000001,
+  collisionDetection: false
+};
+
 /**
  * RigidBodyなどの個別のObjectA3に必要な物理計算のための
  * 色々な実体が含まれる物のインターフェース。
