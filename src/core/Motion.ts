@@ -22,6 +22,11 @@ import type { ObjectA3 } from "./ObjectA3";
  * ために移動・回転・拡大などのためのメソッドを実装する必要が
  * ある。
  * 
+ * なるべく多くのMotionが、補間移動モードをサポートして欲しい
+ * のだが、この機能のON,OFFを切り替えるenableInterpolation()
+ * メソッドを持つことを必須とする。ただ物理エンジンで動く場合
+ * など意味を持たない場合はこのメソッドは空にしておけば良い。
+ * 
  * 主に複数のモーションキャプチャデータを切り替えて使う
  * ことを想定して、そのモーションを切り替えることができるように
  * changeMotionメソッドを実装しなければならないが、そのような
@@ -39,6 +44,8 @@ import type { ObjectA3 } from "./ObjectA3";
  * 組み合わせて実装すると、楽な場合があるのでメモしておく。
  */
 export interface Motion {
+  objectA3: ObjectA3;
+  object3D: THREE.Object3D;
   /**
    * Motionが生成された後に動きをコントロールする対象となる
    * a3.ObjectA3(THREE.Object3Dが入ってる)を設定・変更する。
@@ -52,6 +59,8 @@ export interface Motion {
    */
   update(dt: number): void;
 
+  enableInterpolation(i: boolean): void;
+  changeMotion(motionName: string): void;
   setPause(p: boolean): void;
   setTime(time: number): void;
 
@@ -74,48 +83,57 @@ export interface Motion {
  */
 export class DefaultRootMotion implements Motion {
   objectA3: ObjectA3;
-  obj: THREE.Object3D;
+  object3D: THREE.Object3D;
 
   constructor(objectA3: ObjectA3) {
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
+    this.object3D = objectA3.object;
   }
 
   setObject(objectA3: ObjectA3) {
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
+    this.object3D = objectA3.object;
   }
-
+  enableInterpolation(_: boolean) {}
+  changeMotion(_: string) {}
   update(_: number) {}
   setPause(_: boolean) {}
   setTime(_:number) {}
 
   setLocation(loc: MutableVec3) {
-    this.obj.position.set(loc.x,loc.y,loc.z);
+    this.object3D.position.set(loc.x,loc.y,loc.z);
   }
   setLocationNow(loc: MutableVec3) {
-    this.obj.position.set(loc.x,loc.y,loc.z);
+    this.object3D.position.set(loc.x,loc.y,loc.z);
   }
   setQuat(quat: MutableQuat) {
-    this.obj.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+    this.object3D.quaternion.set(quat.x,quat.y,quat.z,quat.w);
   }
   setQuatNow(quat: MutableQuat) {
-    this.obj.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+    this.object3D.quaternion.set(quat.x,quat.y,quat.z,quat.w);
   }
   setScale(scale: MutableVec3) {
-    this.obj.scale.set(scale.x,scale.y,scale.z);
+    this.object3D.scale.set(scale.x,scale.y,scale.z);
   }
   setScaleNow(scale: MutableVec3) {
-    this.obj.scale.set(scale.x,scale.y,scale.z);
+    this.object3D.scale.set(scale.x,scale.y,scale.z);
   }
 
   addOnselfToPhysics(_: RapierPhysicsWorld): void {}
   removeOnselfFromPhysics(_: RapierPhysicsWorld) {}
 }
 
+/**
+ * 移動などの動きを一瞬ではなく、CSSアニメーションで良く
+ * やる感じで1秒ほどの時間でぬるりと補間しながら変化させる
+ * ためのモーション。ただ、デフォルトでは、その機能はOFF
+ * なのでsetInterpolation(true)で有効にしてはじめて効果が
+ * 出る。
+ */
 export class InterpolationRootMotion implements Motion {
+  isInterpolate: boolean;
   objectA3: ObjectA3;
-  obj: THREE.Object3D;
+  object3D: THREE.Object3D;
   firstLoc: Vec3;
   firstRot: Quat;
   firstScale: Vec3;
@@ -129,31 +147,37 @@ export class InterpolationRootMotion implements Motion {
   duration: number;
 
   constructor(objectA3: ObjectA3) {
+    this.isInterpolate = false;
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
-    this.firstLoc = new Vec3(this.obj.position);
-    this.firstRot = new Quat(this.obj.quaternion);
-    this.firstScale = new Vec3(this.obj.scale);
-    this.nowLoc = new Vec3(this.obj.position);
-    this.nowRot = new Quat(this.obj.quaternion);
-    this.nowScale = new Vec3(this.obj.scale);
-    this.lastLoc = new Vec3(this.obj.position);
-    this.lastRot = new Quat(this.obj.quaternion);
-    this.lastScale = new Vec3(this.obj.scale);
+    this.object3D = objectA3.object;
+    this.firstLoc = new Vec3(this.object3D.position);
+    this.firstRot = new Quat(this.object3D.quaternion);
+    this.firstScale = new Vec3(this.object3D.scale);
+    this.nowLoc = new Vec3(this.object3D.position);
+    this.nowRot = new Quat(this.object3D.quaternion);
+    this.nowScale = new Vec3(this.object3D.scale);
+    this.lastLoc = new Vec3(this.object3D.position);
+    this.lastRot = new Quat(this.object3D.quaternion);
+    this.lastScale = new Vec3(this.object3D.scale);
     this.nowTime = 0;
     this.duration = 1;
   }
   setObject(objectA3: ObjectA3): void {
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
+    this.object3D = objectA3.object;
   }
+  enableInterpolation(b: boolean) {
+    this.isInterpolate = b;
+  }
+  changeMotion(_: string) {}
   setPause(_: boolean): void {}
   setTime(_: number): void {}
 
   setLocation(loc: MutableVec3) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    if (!this.isInterpolate){this.setLocationNow(loc);return;}
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     this.lastLoc.set(loc);
     //this.lastRot.set(this.object3D.quaternion);
     //this.lastScale.set(this.object3D.scale);
@@ -161,9 +185,9 @@ export class InterpolationRootMotion implements Motion {
   }
 
   setLocationNow(loc: MutableVec3) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     this.lastLoc.set(loc);
     //this.lastRot.set(this.object3D.quaternion);
     //this.lastScale.set(this.object3D.scale);
@@ -171,9 +195,10 @@ export class InterpolationRootMotion implements Motion {
   }
 
   setQuat(quat: MutableQuat) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    if (!this.isInterpolate){this.setQuatNow(quat);return;}
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     //this.lastLoc.set(this.object3D.position);
     this.lastRot.set(quat);
     //this.lastScale.set(this.object3D.scale);
@@ -181,9 +206,9 @@ export class InterpolationRootMotion implements Motion {
   }
 
   setQuatNow(quat: MutableQuat) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     //this.lastLoc.set(this.object3D.position);
     this.lastRot.set(quat);
     //this.lastScale.set(this.object3D.scale);
@@ -191,9 +216,10 @@ export class InterpolationRootMotion implements Motion {
   }
 
   setScale(scale: MutableVec3) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    if (!this.isInterpolate){this.setScaleNow(scale);return;}
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     //this.lastLoc.set(this.object3D.position);
     //this.lastRot.set(this.object3D.quaternion);
     this.lastScale.set(scale);
@@ -201,9 +227,9 @@ export class InterpolationRootMotion implements Motion {
   }
 
   setScaleNow(scale: MutableVec3) {
-    this.firstLoc.set(this.obj.position);
-    this.firstRot.set(this.obj.quaternion);
-    this.firstScale.set(this.obj.scale);
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
     //this.lastLoc.set(this.object3D.position);
     //this.lastRot.set(this.object3D.quaternion);
     this.lastScale.set(scale);
@@ -227,9 +253,9 @@ export class InterpolationRootMotion implements Motion {
     this.nowRot.slerp(this.firstRot,this.lastRot,t);
     this.nowScale.lerp(this.firstScale,this.lastScale,t);
 
-    this.obj.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
-    this.obj.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
-    this.obj.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
+    this.object3D.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
+    this.object3D.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
+    this.object3D.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
   }
 
   addOnselfToPhysics(_: RapierPhysicsWorld): void {}

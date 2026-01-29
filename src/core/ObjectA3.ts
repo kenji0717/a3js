@@ -1,23 +1,14 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
-import { DefaultRootMotion, type Motion } from './Motion';
-import type { PhysicsEntity,
-              PhysicsEntityOption } from './Physics';
+import { DefaultRootMotion, InterpolationRootMotion, type Motion } from './Motion';
+import { defaultPhysicsEntityOption } from './Physics';
+import type { PhysicsEntityOption } from './Physics';
+import { RapierDefaultMotion } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
 import { Quat, getQuatOfLookAt, vec3EulerToQuat } from './Quat';
 import type { MutableQuat, RotationOrder } from './Quat';
-
-
-/**
- * ObjectA3のモーションコントロールモード
- */
-export type ControlMode =
-  | "manual" // プログラマ指定の場所に瞬時に移動するモード
-  | "interpolated" // プログラマ指定の場所に1秒とかで補完で移動するモード
-  | "physics" // 物理エンジンを使うモード
-  | "user"; // 自分で動きを実装するモード
 
 /**
  * スクリーン上における方向を表します。
@@ -47,9 +38,8 @@ export abstract class ObjectA3 {
   upVector: Vec3 | null = null;
   object: THREE.Object3D;
   scene: Scene | null = null;
-  physics: PhysicsEntity | null = null;
   private balloon: BalloonInfo | null = null;
-  private motion: Motion;
+  motion: Motion;
   parent: ObjectA3 | null = null;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
@@ -72,14 +62,32 @@ export abstract class ObjectA3 {
    * デフォルトではDefaultRootMotionなのだが、
    * このメソッドをオーバーライドすることで
    * 変更可能。
+   * @param data コンストラクタから渡された情報
    * @returns このObjectA3で使用されるMotion
    */
-  initMotion() {
+  initMotion(data?: any): Motion {
+    data;
     return new DefaultRootMotion(this);
   }
   setMotion(motion: Motion) {
     motion.setObject(this);
     this.motion = motion;
+  }
+  action(actionName: string) {
+    this.motion.changeMotion(actionName);
+  }
+  enableInterpolation(i: boolean) {
+    if (this.motion instanceof DefaultRootMotion) {
+      this.motion = new InterpolationRootMotion(this);
+    }
+    this.motion.enableInterpolation(i);
+  }
+  initDefaultPhysics(option: PhysicsEntityOption) {
+    const opt = {
+      ...defaultPhysicsEntityOption,
+      ...option
+    };
+    this.motion = new RapierDefaultMotion(this,opt);
   }
 
   update(dt: number) {

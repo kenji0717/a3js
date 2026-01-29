@@ -4,7 +4,7 @@ export { Window } from './core/Window';
 export { Scene } from './core/Scene';
 export { Camera } from './core/Camera';
 export { ObjectA3 } from './core/ObjectA3';
-export type { ControlMode, Dir } from './core/ObjectA3';
+export type { Dir } from './core/ObjectA3';
 export { ControllerBase, OrbitController } from './core/Controller';
 export type { Controller } from './core/Controller';
 export { Test } from './core/Test';

@@ -2,8 +2,8 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
-const obj = new a3.Test();
-obj.setControlMode("interpolated");
+const obj = new a3.Box("blue");
+obj.enableInterpolation(true);
 view.scene.add(obj);
 let i=0;
 while (true) {

@@ -4,6 +4,7 @@ import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
+import { InterpolationRootMotion } from './Motion';
 import { isString } from '../utils/TypeGuard';
 
 type MorphTargetObject =
@@ -45,18 +46,21 @@ interface Model {
  */
 export class GLTFA3 extends ObjectA3 implements AsyncInitRequired<GLTFA3> {
   readonly ready: Promise<GLTFA3>;
-  private model: Model | null = null;
+  model?: Model;
 
   constructor(data: any) {
     super();
     this.ready = this.asyncInit(data);
-    this.setControlMode("user");
   }
 
   initObject() {
     // ルートとなるObject3Dだけ用意して後でその中に
     // ロードしたglTFのscene(モデル)をaddする。
     return new THREE.Object3D();
+  }
+
+  initMotion() {
+    return new GLTFMotion(this);
   }
 
   async asyncInit(data: any) {
@@ -91,7 +95,12 @@ console.log(`    ${morphName}`);
         actions: actions,
         morphs: morphs
       };
+      this.model.gltf.scene.traverse((o)=>{
+        o.userData['a3js'] = { objectA3: this };
+      });
       this.object.add(this.model.gltf.scene);
+      if (this.motion instanceof GLTFMotion)
+        this.motion.setModel(this.model);
     } else {
       const geo = new THREE.BoxGeometry();
       const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -99,16 +108,6 @@ console.log(`    ${morphName}`);
       this.object.add(mesh);
     }
     return this;
-  }
-
-  action(actionName: string) {
-    if (this.model) {
-      this.model.mixer.stopAllAction();
-      const action = this.model.actions[actionName];
-      if (action) {
-        action.play();
-      }
-    }
   }
 
   morph(morphName: string, value: number) {
@@ -119,10 +118,49 @@ console.log(`    ${morphName}`);
       }
     }
   }
+}
+
+class GLTFMotion extends InterpolationRootMotion {
+  model?: Model;
+  isPaused: boolean;
+
+  constructor(objectA3: ObjectA3) {
+    super(objectA3);
+    this.isPaused = false;
+  }
+
+  setModel(model: Model) {
+    this.model = model;
+  }
+
+  setObject(objectA3: ObjectA3) {
+    if (objectA3 instanceof GLTFA3) {
+      super.setObject(objectA3);
+      this.model = objectA3.model;
+    } else {
+      console.warn('GLTFMotion can set only GLTFA3 object.');
+    }
+  }
 
   update(dt: number) {
-    if (this.model) {
+    super.update(dt);
+    if (!this.isPaused && this.model)
       this.model.mixer.update(dt);
+  }
+
+  changeMotion(actionName: string) {
+    this.model?.mixer.stopAllAction();
+    const action = this.model?.actions[actionName];
+    if (action) {
+      action.play();
     }
+  }
+
+  setPause(p: boolean) {
+    this.isPaused = p;
+  }
+
+  setTime(time: number) {
+    this.model?.mixer.setTime(time);
   }
 }

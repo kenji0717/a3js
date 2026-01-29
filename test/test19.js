@@ -5,8 +5,7 @@ import * as a3 from 'a3js';
 const view = new a3.Window(600,300);
 await view.alert("ボタンを押すとスタートします",a3.initSound);
 
-const obj = new a3.Test();
-obj.setControlMode('manual'); // 一応
+const obj = new a3.Box("green");
 view.scene.add(obj);
 
 const directional = { coneInnerAngle:30, coneOuterAngle: 90, coneOuterGain: 0.1 };

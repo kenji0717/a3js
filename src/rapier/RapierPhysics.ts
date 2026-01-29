@@ -123,7 +123,7 @@ function isRapierPhysicsEntity(obj: PhysicsEntity): obj is RapierPhysicsEntity {
 
 export class RapierDefaultMotion implements Motion {
   objectA3: ObjectA3;
-  obj: THREE.Object3D;
+  object3D: THREE.Object3D;
   bodyDesc: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[] = [];
@@ -131,7 +131,7 @@ export class RapierDefaultMotion implements Motion {
 
   constructor(objectA3: ObjectA3,option: Partial<PhysicsEntityOption>) {
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
+    this.object3D = objectA3.object;
     const opt: PhysicsEntityOption = {
       ...defaultPhysicsEntityOption,
       ...option
@@ -149,18 +149,18 @@ export class RapierDefaultMotion implements Motion {
         break;
     }
     this.bodyDesc.setTranslation(
-      this.obj.position.x,
-      this.obj.position.y,
-      this.obj.position.z
+      this.object3D.position.x,
+      this.object3D.position.y,
+      this.object3D.position.z
     );
     this.bodyDesc.setRotation({
-      x: this.obj.quaternion.x,
-      y: this.obj.quaternion.y,
-      z: this.obj.quaternion.z,
-      w: this.obj.quaternion.w
+      x: this.object3D.quaternion.x,
+      y: this.object3D.quaternion.y,
+      z: this.object3D.quaternion.z,
+      w: this.object3D.quaternion.w
     });
     const volumes: number[] = [];
-    this.obj.traverse((obj)=>{
+    this.object3D.traverse((obj)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
         const collisionGroups = (opt.membership << 16) | opt.filter;
@@ -202,34 +202,22 @@ export class RapierDefaultMotion implements Motion {
   }
   setObject(objectA3: ObjectA3): void {
     this.objectA3 = objectA3;
-    this.obj = objectA3.object;
+    this.object3D = objectA3.object;
   }
-  addOnselfToPhysics(world: RapierPhysicsWorld): void {
-    this.body = world.world.createRigidBody(this.bodyDesc);
-    this.colliderDescs.forEach((colliderDesc)=>{
-      const collider = world.world.createCollider(colliderDesc,this.body);
-      this.colliders.push(collider);
-      RapierPhysicsEntity.collisionMap.set(collider.handle,this.objectA3);
-    });
-  }
-  removeOnselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.body)
-      world.world.removeRigidBody(this.body);
-    this.colliders.forEach((collider) => {
-      world.world.removeCollider(collider,false); // true? false?
-    });
-  }
-  setPause(_: boolean): void {}
-  setTime(_: number): void {}
 
   update(_: number) {
     if (this.body) {
       const t = this.body.translation();
-      this.obj.position.set(t.x, t.y, t.z);
+      this.object3D.position.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      this.obj.quaternion.set(r.x, r.y, r.z, r.w);
+      this.object3D.quaternion.set(r.x, r.y, r.z, r.w);
     }
   }
+
+  enableInterpolation(_: boolean) {}
+  changeMotion(_: string) {}
+  setPause(_: boolean): void {}
+  setTime(_: number): void {}
 
   setLocation(_: MutableVec3): void {
     // これはできない物とする
@@ -252,6 +240,22 @@ export class RapierDefaultMotion implements Motion {
   }
   setScaleNow(_: MutableVec3): void {
     // 簡単ではないのでとりあえず保留
+  }
+
+  addOnselfToPhysics(world: RapierPhysicsWorld): void {
+    this.body = world.world.createRigidBody(this.bodyDesc);
+    this.colliderDescs.forEach((colliderDesc)=>{
+      const collider = world.world.createCollider(colliderDesc,this.body);
+      this.colliders.push(collider);
+      RapierPhysicsEntity.collisionMap.set(collider.handle,this.objectA3);
+    });
+  }
+  removeOnselfFromPhysics(world: RapierPhysicsWorld): void {
+    if (this.body)
+      world.world.removeRigidBody(this.body);
+    this.colliders.forEach((collider) => {
+      world.world.removeCollider(collider,false); // true? false?
+    });
   }
 }
 

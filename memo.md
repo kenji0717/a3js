@@ -1,4 +1,14 @@
 
+* GLTFA3のA3を取ってGLTFにしよう。
+* AsyncInitRequiredを実装したObject3Dのオブジェクトに
+  traverseでuserData['a3js'] = { objectA3: this };するの忘れそう。
+* 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
+* Object3D.initDefaultPhysics()のメソッド名はもっと良いのがある気がする。
+* 動くようにはなったけど、最後に見直しが必要な気がする。
+* 前の実装と、Motion使った実装のパフォーマンス計測して比較してみたい。
+
+-----
+
 labelとballoonの機能を実現するために
 Viewのインタフェースを拡張したけど、
 CSS3DRendererの方が良さそうだったので

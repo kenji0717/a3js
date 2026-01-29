@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { physicsEngineInstance } from '../rapier/RapierPhysics';
+import { physicsEngineInstance, RapierPhysicsWorld } from '../rapier/RapierPhysics';
 import type { PhysicsWorld, Collision } from './Physics';
 
 /**
@@ -29,18 +29,8 @@ export class Scene {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
-    if (object.controlMode === "physics") {
-      if (this.physicsWorld) {
-        if (!object.physics) {
-          const opt = object.getPhysicsOption();
-          object.initPhysics(opt);
-        }
-        if (object.physics) // 必ずtrueのはず
-          this.physicsWorld.add(object.physics);
-      } else {
-        console.log('物理エンジンを初期化してない状態で、物理エンジンを必要とするObjectA3が追加されました。');
-      }
-    }
+    if (this.physicsWorld instanceof RapierPhysicsWorld)
+      object.motion.addOnselfToPhysics(this.physicsWorld);
   }
 
   remove(object: ObjectA3) {
@@ -54,10 +44,8 @@ export class Scene {
       this.objects.pop();
     }
     object.scene = null;
-    if (object.controlMode === "physics")
-      if (this.physicsWorld)
-        if (object.physics)
-          this.physicsWorld.remove(object.physics);
+    if (this.physicsWorld instanceof RapierPhysicsWorld)
+      object.motion.removeOnselfFromPhysics(this.physicsWorld);
   }
 
   setCollisionListener(func: (cs: Collision[]) => void) {

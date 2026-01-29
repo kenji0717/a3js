@@ -114,6 +114,9 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
         appendPartToBone(action.root,action.parts);
         action.mixer = new THREE.AnimationMixer(action.root);
         action.clipAction = action.mixer.clipAction(action.bvh.clip);
+        action.root.traverse((o)=>{
+          o.userData['a3js'] = { objectA3: this };
+        });
       }
     }
 
