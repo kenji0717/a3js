@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { DefaultRootMotion } from './Motion';
-import type { Motion } from './Motion';
+import { Motion } from './Motion';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { deepMerge } from '../utils/math';
 import type { DeepPartial } from '../utils/math';
@@ -49,7 +48,7 @@ export class Test extends ObjectA3 {
   }
 }
 
-class TestMotion extends DefaultRootMotion {
+class TestMotion extends Motion {
   testMode: boolean = true;
   constructor(obj: ObjectA3,opt: TestOption) {
     super(obj);

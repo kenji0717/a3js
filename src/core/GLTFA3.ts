@@ -4,7 +4,7 @@ import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
-import { InterpolationRootMotion } from './Motion';
+import { Motion } from './Motion';
 import { isString } from '../utils/TypeGuard';
 
 type MorphTargetObject =
@@ -120,7 +120,7 @@ console.log(`    ${morphName}`);
   }
 }
 
-class GLTFMotion extends InterpolationRootMotion {
+class GLTFMotion extends Motion {
   model?: Model;
   isPaused: boolean;
 

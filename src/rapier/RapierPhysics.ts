@@ -9,7 +9,7 @@ import type { MutableQuat } from '../core/Quat';
 import { PhysicsEntity, defaultPhysicsEntityOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsEntityOption, Collision } from '../core/Physics';
-import type { Motion } from '../core/Motion';
+import { Motion } from '../core/Motion';
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
@@ -121,17 +121,14 @@ function isRapierPhysicsEntity(obj: PhysicsEntity): obj is RapierPhysicsEntity {
   return "addOneself" in obj && "removeOneself" in obj;
 }
 
-export class RapierDefaultMotion implements Motion {
-  objectA3: ObjectA3;
-  object3D: THREE.Object3D;
+export class RapierDefaultMotion extends Motion {
   bodyDesc: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[] = [];
   colliders: Rapier.Collider[] = [];
 
   constructor(objectA3: ObjectA3,option: Partial<PhysicsEntityOption>) {
-    this.objectA3 = objectA3;
-    this.object3D = objectA3.object;
+    super(objectA3);
     const opt: PhysicsEntityOption = {
       ...defaultPhysicsEntityOption,
       ...option

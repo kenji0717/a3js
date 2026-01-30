@@ -1,7 +1,7 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
-import { DefaultRootMotion, InterpolationRootMotion, type Motion } from './Motion';
+import { Motion } from './Motion';
 import { defaultPhysicsEntityOption } from './Physics';
 import type { PhysicsEntityOption } from './Physics';
 import { RapierDefaultMotion } from '../rapier/RapierPhysics';
@@ -59,15 +59,14 @@ export abstract class ObjectA3 {
 
   /**
    * このObjectA3で使用されるMotionを返す。
-   * デフォルトではDefaultRootMotionなのだが、
+   * デフォルトではMotionなのだが、
    * このメソッドをオーバーライドすることで
-   * 変更可能。
+   * Motionを継承した物に変更可能。
    * @param data コンストラクタから渡された情報
    * @returns このObjectA3で使用されるMotion
    */
-  initMotion(data?: any): Motion {
-    data;
-    return new DefaultRootMotion(this);
+  initMotion(_data?: any): Motion {
+    return new Motion(this);
   }
   setMotion(motion: Motion) {
     motion.setObject(this);
@@ -77,9 +76,6 @@ export abstract class ObjectA3 {
     this.motion.changeMotion(actionName);
   }
   enableInterpolation(i: boolean) {
-    if (this.motion instanceof DefaultRootMotion) {
-      this.motion = new InterpolationRootMotion(this);
-    }
     this.motion.enableInterpolation(i);
   }
   initDefaultPhysics(option: PhysicsEntityOption) {
