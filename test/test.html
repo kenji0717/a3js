@@ -30,6 +30,34 @@
        margin: 0px 10px;
        padding: 3px 10px;
        background: lightgray;
+       position: relative;
+     }
+     span.tooltips {
+      position: absolute;
+      width: 300px;
+      top: 3em; left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      color: white;
+      background: #333333;
+      z-index: 1;
+      text-align: center;
+     }
+     span.tooltips:before {
+      content: '';
+      position: absolute;
+      top: -2.0em;
+      left: 50%;
+      display: none;
+      border: 1em solid transparent;
+      border-bottom: 1em solid #333333;
+      margin-left: -1em;
+     }
+     li:hover span.tooltips {
+      display: inline-block;
+     }
+     li:hover span.tooltips:before {
+      display: inline-block;
      }
     </style>
     <script type="importmap">
@@ -56,12 +84,17 @@
 
        const ul = document.createElement('ul');
        ul.setAttribute('id','program_list');
-       list.forEach((file)=>{
+       list.forEach(async (file)=>{
          const li = document.createElement('li');
          li.textContent = file;
          li.addEventListener('click',()=>init(file));
          if (program_file_name === file)
            li.style.color = 'red';
+         const description = (await (await fetch(file)).text()).split('\n')[0];
+         const span = document.createElement('span');
+         span.setAttribute('class','tooltips');
+         span.textContent = description;
+         li.appendChild(span);
          ul.appendChild(li);
        });
        document.body.appendChild(ul);
