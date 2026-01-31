@@ -58,8 +58,8 @@ import { ObjectA3 } from "./ObjectA3";
 export class Motion {
   objectA3: ObjectA3;
   object3D: THREE.Object3D;
-  interpolation?: Interpolation;
-  billboard?: Billboard;
+  private interpolation?: Interpolation;
+  private billboard?: Billboard;
 
   constructor(objectA3: ObjectA3) {
     this.objectA3 = objectA3;

@@ -2,6 +2,7 @@ import type { View } from './View';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
 import { Quat, getQuatOfLookAt } from './Quat';
+import type { MutableQuat } from './Quat';
 
 /**
  * キーやマウスなどの様々なイベントを受け取り
@@ -29,6 +30,13 @@ export interface Controller {
   touchEnd(event: TouchEvent): void;
   touchMove(event: TouchEvent): void;
   touchCancel(event: TouchEvent): void;
+
+  setCameraLocation(loc: MutableVec3): void;
+  setCameraLocationNow(loc: MutableVec3): void;
+  setCameraQuat(quat: MutableQuat): void;
+  setCameraQuatNow(quat: MutableQuat): void;
+  setCameraScale(scale: MutableVec3): void;
+  setCameraScaleNow(scale: MutableVec3): void;
 }
 
 /**
@@ -45,20 +53,26 @@ export class ControllerBase implements Controller {
   update(dt: number): void {dt;}
   activate(): void {}
   deactivate(): void {}
-  keyDown(event: KeyboardEvent): void {event;}
-  keyUp(event: KeyboardEvent): void {event;}
-  keyPress(event: KeyboardEvent): void {event;}
-  mouseDown(event: MouseEvent): void {event;}
-  mouseUp(event: MouseEvent): void {event;}
-  mouseMove(event: MouseEvent): void {event;}
-  mouseClick(event: MouseEvent): void {event;}
-  mouseEnter(event: MouseEvent): void {event;}
-  mouseLeave(event: MouseEvent): void {event;}
-  mouseWheel(event: WheelEvent): void {event;}
-  touchStart(event: TouchEvent): void {event;}
-  touchEnd(event: TouchEvent): void {event;}
-  touchMove(event: TouchEvent): void {event;}
-  touchCancel(event: TouchEvent): void {event;}
+  keyDown(_event: KeyboardEvent): void {}
+  keyUp(_event: KeyboardEvent): void {}
+  keyPress(_event: KeyboardEvent): void {}
+  mouseDown(_event: MouseEvent): void {}
+  mouseUp(_event: MouseEvent): void {}
+  mouseMove(_event: MouseEvent): void {}
+  mouseClick(_event: MouseEvent): void {}
+  mouseEnter(_event: MouseEvent): void {}
+  mouseLeave(_event: MouseEvent): void {}
+  mouseWheel(_event: WheelEvent): void {}
+  touchStart(_event: TouchEvent): void {}
+  touchEnd(_event: TouchEvent): void {}
+  touchMove(_event: TouchEvent): void {}
+  touchCancel(_event: TouchEvent): void {}
+  setCameraLocation(_loc: MutableVec3): void {}
+  setCameraLocationNow(_loc: MutableVec3): void {}
+  setCameraQuat(_quat: MutableQuat): void {}
+  setCameraQuatNow(_quat: MutableQuat): void {}
+  setCameraScale(_scale: MutableVec3): void {}
+  setCameraScaleNow(_scale: MutableVec3): void {}
 }
 
 /**
@@ -142,6 +156,14 @@ console.log(`GAHA: touchStart()`,event);
     this.view.camera.setLocation(loc);
   }
 */
+  setCameraLocation(loc: MutableVec3): void {
+    this.cameraLoc.set(loc);
+  }
+  setCameraLocationNow(loc: MutableVec3): void {
+    this.cameraLoc.set(loc);
+  }
+  //setCameraQuat(quat: MutableQuat): void {}
+  //setCameraQuatNow(quat: MutableQuat): void {}
 }
 
 

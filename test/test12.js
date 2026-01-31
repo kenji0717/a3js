@@ -2,9 +2,8 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
-view.camera.setLocation(0,0,50);
 const obj = await new a3.Acerola3D('./assets/vesma9.a3').ready;
 obj.action('walk');
 view.scene.add(obj);
-await a3.asyncSleep(10000);
+await a3.asyncSleep(5000);
 obj.action('run');

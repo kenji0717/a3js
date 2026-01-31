@@ -6,7 +6,9 @@ import { unzipAsync, readStringFromUnzipped } from '../utils/math';
 import { loadVrmlInUnzipped,
          loadBvhInUnzipped} from '../three/threeUtils';
 import type { BVH } from 'three/addons/loaders/BVHLoader.js';
+//import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
+//import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 interface Part {
   wrl: THREE.Object3D;
@@ -30,7 +32,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
   private actions: Record<string,Action>;
   private currentAction: Action | null = null;
   comment: string | null = null; // CATALOG.XMLの<c>の中
-  bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
+  // bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように(cloneが無理かも)
   vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
 
   constructor(url: string) {
@@ -58,8 +60,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     const cs = xmlDoc.getElementsByTagNameNS(ns,'c');
     if (cs[0]) this.comment = cs[0].textContent;
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
-    const promises: Promise<any>[] = [];
-    Array.from(as).forEach((a) => {
+    for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
       const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
       const actionScale = a.getAttribute('scale');
@@ -76,13 +77,18 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
         };
         this.actions[actionName] = action;
         if (actionBVH) {
-          if (this.bvhs[actionBVH]) {
-            action.bvh = this.bvhs[actionBVH];
-          } else {
-            const p = loadBvhInUnzipped(unzipped, actionBVH);
-            promises.push(p);
-            p.then((bvh)=>{action.bvh = bvh;});
-          }
+          //if (this.bvhs[actionBVH]) {
+          //  const bvh = this.bvhs[actionBVH];
+          //  const clone = {
+          //    clip: bvh.clip.clone(),
+          //    skeleton: SkeletonUtils.clone(bvh.skeleton)
+          //  };
+          //  action.bvh = clone;
+          //} else {
+            const bvh = await loadBvhInUnzipped(unzipped, actionBVH);
+            action.bvh = bvh;
+            //this.bvhs[actionBVH] = bvh;
+          //}
         }
         action.scale = actionScale ? Number(actionScale) : 1.0;
         if (actionOffset) {
@@ -90,25 +96,26 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           action.offset.set(Number(as[0]),Number(as[1]),Number(as[2]));
         }
         const parts = a.getElementsByTagNameNS(ns,'p');
-        Array.from(parts).forEach((p) => {
+        for (const p of Array.from(parts)) {
           const partName = p.getAttribute('name');
           const wrl = p.getAttribute('wrl');
           if (partName && wrl) {
             if (this.vrmls[wrl]) {
-              action.parts[partName] = { wrl: this.vrmls[wrl] };
+              const vrmlClone = this.vrmls[wrl].clone();
+              action.parts[partName] = { wrl: vrmlClone };
             } else {
-              const p = loadVrmlInUnzipped(unzipped,wrl);
-              promises.push(p)
-              p.then((wrl)=>{action.parts[partName] = { wrl };});
+              const vrml = await loadVrmlInUnzipped(unzipped,wrl);
+              action.parts[partName] = { wrl:vrml };
+              this.vrmls[wrl] = vrml;
             }
           }
-        });
+        }
       }
-    });
-    await Promise.all(promises);
+    }
     for (const action of Object.values(this.actions)) {
       if (action.bvh) {
-        action.root = action.bvh.skeleton.bones[0];
+        action.root = new THREE.Object3D();
+        action.root.add(action.bvh.skeleton.bones[0]);
         action.root.scale.set(action.scale,action.scale,action.scale);
         action.root.position.set(action.offset.x,action.offset.y,action.offset.z);
         appendPartToBone(action.root,action.parts);
@@ -154,7 +161,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
 
 function appendPartToBone(obj: THREE.Object3D, parts: Record<string,Part>) {
   if (TG.isBone(obj)) {
-    const part = parts[obj.name];
+    const part = parts[obj.name]; 
     if (part)
       obj.add(part.wrl);
   }

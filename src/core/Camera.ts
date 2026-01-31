@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
+import type { Controller } from './Controller';
 import type { MutableVec3 } from './Vec3';
 
 /**
@@ -9,6 +10,7 @@ import type { MutableVec3 } from './Vec3';
   * ものとする。
   */
 export abstract class Camera extends ObjectA3 {
+  controller?: Controller;
 
   /**
    * 耳の役割を持つTHREE.AudioListenerをカメラに
@@ -23,4 +25,18 @@ export abstract class Camera extends ObjectA3 {
   abstract calcNDC(loc: MutableVec3): {x: number, y: number}; 
 
   abstract setHeadLightEnable(b: boolean): void;
+
+  setController(controller: Controller) {
+    this.controller = controller;
+  }
+
+  setLocation(x: number, y: number, z: number): void;
+  setLocation(v: MutableVec3): void;
+  setLocation(xOrV: number | MutableVec3, y?: number, z?: number): void {
+    if (typeof xOrV === 'number')
+      super.setLocation(xOrV,y!,z!);
+    else
+      super.setLocation(xOrV);
+    this.controller?.setCameraLocation(this.object.position);
+  }
 }

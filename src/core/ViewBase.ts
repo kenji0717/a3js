@@ -27,6 +27,7 @@ export class ViewBase implements View {
     this.scene.scene.add(this.camera.object);
     this.camera.setLocation(0, 0, 3);
     this.controller = new OrbitController(this,0,0,0);
+    this.camera.setController(this.controller);
   }
 
   replaceScene(newScene: Scene): Scene {
@@ -47,6 +48,7 @@ export class ViewBase implements View {
     this.controller?.deactivate();
     this.controller = controller;
     this.controller.activate();
+    this.camera.setController(controller);
   }
 
   /**

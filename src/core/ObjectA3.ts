@@ -62,7 +62,7 @@ export abstract class ObjectA3 {
    * デフォルトではMotionなのだが、
    * このメソッドをオーバーライドすることで
    * Motionを継承した物に変更可能。
-   * @param data コンストラクタから渡された情報
+   * @param _data コンストラクタから渡された情報
    * @returns このObjectA3で使用されるMotion
    */
   initMotion(_data?: any): Motion {
