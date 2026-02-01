@@ -86,6 +86,8 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           //  action.bvh = clone;
           //} else {
             const bvh = await loadBvhInUnzipped(unzipped, actionBVH);
+            //以下の1行はBVHの動きの補間をOFFにする。Acerola3DのBVHの使い方では必要だけど・・・
+            bvh.clip.tracks.forEach(track=>{track.setInterpolation(THREE.InterpolateDiscrete);});
             action.bvh = bvh;
             //this.bvhs[actionBVH] = bvh;
           //}
@@ -121,10 +123,15 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
         appendPartToBone(action.root,action.parts);
         action.mixer = new THREE.AnimationMixer(action.root);
         action.clipAction = action.mixer.clipAction(action.bvh.clip);
-        action.root.traverse((o)=>{
-          o.userData['a3js'] = { objectA3: this };
+      } else {
+        action.root = new THREE.Object3D();
+        Object.values(action.parts).forEach((p)=>{
+          action.root?.add(p.wrl);
         });
       }
+      action.root.traverse((o)=>{
+        o.userData['a3js'] = { objectA3: this };
+      });
     }
 
     for (const action of Object.values(this.actions)) {
