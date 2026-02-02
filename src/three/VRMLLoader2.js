@@ -1178,6 +1178,10 @@ class VRMLLoader2 extends Loader {
 
 								material.map = getNode( textureNode );
 
+							} else if (textureNode.USE) {
+
+								material.map = getNode( textureNode );
+
 							} else {
 
 								// MovieTexture not supported yet
