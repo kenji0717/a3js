@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
+import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
@@ -35,7 +35,7 @@ dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
 gltfLoader.setDRACOLoader(dracoLoader);
 
 interface Model {
-  gltf: GLTF;
+  gltf: THREE_GLTF;
   mixer: THREE.AnimationMixer;
   actions: Record<string, THREE.AnimationAction>;
   morphs: Record<string, {array: Array<number>, idx: number}>;
@@ -44,8 +44,8 @@ interface Model {
 /**
  * glTFモデルを読み込み表示するためのクラス。
  */
-export class GLTFA3 extends ObjectA3 implements AsyncInitRequired<GLTFA3> {
-  readonly ready: Promise<GLTFA3>;
+export class GLTF extends ObjectA3 implements AsyncInitRequired<GLTF> {
+  readonly ready: Promise<GLTF>;
   model?: Model;
 
   constructor(data: any) {
@@ -134,7 +134,7 @@ class GLTFMotion extends Motion {
   }
 
   setObject(objectA3: ObjectA3) {
-    if (objectA3 instanceof GLTFA3) {
+    if (objectA3 instanceof GLTF) {
       super.setObject(objectA3);
       this.model = objectA3.model;
     } else {

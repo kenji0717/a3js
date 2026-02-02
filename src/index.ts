@@ -11,7 +11,7 @@ export type { Controller } from './core/Controller';
 export { Test } from './core/Test';
 export type { TestOption } from './core/Test';
 export { Text3D , initFont } from './core/Text3D';
-export { GLTFA3 } from './core/GLTFA3';
+export { GLTF as GLTF } from './core/GLTF';
 export { Acerola3D } from './core/Acerola3D';
 export { Sound, initSound } from './three/Sound';
 export type { SoundOptions, PositionalOptions, SoundType, SoundOptionInput } from './three/Sound';
