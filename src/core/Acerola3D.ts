@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
+import { Motion } from './Motion';
 import { Vec3 } from './Vec3';
 import { unzipAsync, readStringFromUnzipped } from '../utils/math';
 import { loadVrmlInUnzipped,
@@ -29,8 +30,7 @@ interface Action {
  */
 export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
   readonly ready: Promise<Acerola3D>;
-  private actions: Record<string,Action>;
-  private currentAction: Action | null = null;
+  actions: Record<string,Action>;
   comment: string | null = null; // CATALOG.XMLの<c>の中
   // bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように(cloneが無理かも)
   vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
@@ -45,6 +45,10 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     // ルートとなるObject3Dだけ用意して後でその中に
     // ロードしたモデルをaddする。
     return new THREE.Object3D();
+  }
+
+  initMotion() {
+    return new Acerola3DMotion(this);
   }
 
   async asyncInit(url: string) {
@@ -134,35 +138,8 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
       });
     }
 
-    for (const action of Object.values(this.actions)) {
-      if (action.root) {
-        this.object.add(action.root);
-        action.clipAction?.play();
-        this.currentAction = action;
-        break;
-      }
-    }
+    this.motion.setObject(this);
     return this;
-  }
-
-  action(actionName: string) {
-    const a = this.actions[actionName];
-    if (a) {
-      this.currentAction?.clipAction?.stop();
-      if (this.currentAction?.root)
-        this.object.remove(this.currentAction?.root);
-      this.currentAction = a;
-      if (this.currentAction?.root)
-        this.object.add(this.currentAction.root);
-      this.currentAction?.clipAction?.play();
-    }
-  }
-
-  update(dt: number) {
-    super.update(dt);
-    if (this.currentAction?.mixer) {
-      this.currentAction?.mixer.update(dt);
-    }
   }
 }
 
@@ -179,3 +156,58 @@ function appendPartToBone(obj: THREE.Object3D, parts: Record<string,Part>) {
   }
 }
 
+class Acerola3DMotion extends Motion {
+  actions?: Record<string,Action>;
+  currentAction?: Action;
+  isPaused: boolean;
+
+  constructor(objectA3: ObjectA3) {
+    super(objectA3);
+    this.isPaused = false;
+  }
+
+  setObject(objectA3: ObjectA3) {
+    if (objectA3 instanceof Acerola3D) {
+      super.setObject(objectA3);
+      this.actions = objectA3.actions;
+      for (const action of Object.values(this.actions)) {
+        if (action.root) {
+          this.object3D.add(action.root);
+          action.clipAction?.play();
+          this.currentAction = action;
+          break;
+        }
+      }
+    } else {
+      console.warn('Acerola3DMotion can set only Acerola3D object.');
+    }
+  }
+
+  update(dt: number) {
+    super.update(dt);
+    if (!this.isPaused && this.currentAction?.mixer)
+      this.currentAction?.mixer.update(dt);
+  }
+
+  controlMotion(actionName: string) {
+    if (!this.actions) return;
+    const a = this.actions[actionName];
+    if (a) {
+      this.currentAction?.clipAction?.stop();
+      if (this.currentAction?.root)
+        this.object3D.remove(this.currentAction?.root);
+      this.currentAction = a;
+      if (this.currentAction?.root)
+        this.object3D.add(this.currentAction.root);
+      this.currentAction?.clipAction?.play();
+    }
+  }
+
+  setPause(p: boolean) {
+    this.isPaused = p;
+  }
+
+  setTime(time: number) {
+    this.currentAction?.mixer?.setTime(time);
+  }
+}

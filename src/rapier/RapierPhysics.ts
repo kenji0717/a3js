@@ -212,7 +212,7 @@ export class RapierDefaultMotion extends Motion {
   }
 
   enableInterpolation(_: boolean) {}
-  changeMotion(_: string) {}
+  controlMotion(_: string) {}
   setPause(_: boolean): void {}
   setTime(_: number): void {}
 

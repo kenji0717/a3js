@@ -72,8 +72,8 @@ export abstract class ObjectA3 {
     motion.setObject(this);
     this.motion = motion;
   }
-  action(actionName: string) {
-    this.motion.changeMotion(actionName);
+  controlMotion(...args: string[]) {
+    this.motion.controlMotion(...args);
   }
   enableInterpolation(i: boolean) {
     this.motion.enableInterpolation(i);

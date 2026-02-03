@@ -84,7 +84,7 @@
 
        const ul = document.createElement('ul');
        ul.setAttribute('id','program_list');
-       list.forEach(async (file)=>{
+       for (const file of list) {
          const li = document.createElement('li');
          li.textContent = file;
          li.addEventListener('click',()=>init(file));
@@ -96,7 +96,7 @@
          span.textContent = description;
          li.appendChild(span);
          ul.appendChild(li);
-       });
+       }
        document.body.appendChild(ul);
 
        const pre = document.createElement('pre');

@@ -25,7 +25,7 @@ import { ObjectA3 } from "./ObjectA3";
  * 実装はMotionを継承したクラスが担当する。
  * 
  * また、モーションキャプチャデータにもとづく動きのようなものを
- * 実装することを想定して、それを扱うためのメソッド(changeMotion()
+ * 実装することを想定して、それを扱うためのメソッド(controlMotion()
  * メソッドなど)が最初から用意されているが、このMotionクラスでは
  * 実装は空であり、継承したクラスで必要としないかぎり、実装
  * しなくても良い。
@@ -160,7 +160,7 @@ export class Motion {
       this.object3D.scale.set(scale.x,scale.y,scale.z);
   }
 
-  changeMotion(_motionName: string) {}
+  controlMotion(..._args: string[]) {}
   setPause(_p: boolean) {}
   setTime(_time: number) {}
 

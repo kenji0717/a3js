@@ -1,42 +1,23 @@
 
-* GLTFA3のA3を取ってGLTFにしよう。
+* 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
+* Motion
+    + 独立して生成して気軽に取り替えられるようにする
+    + controlMotion()
+        - メソッド名がしっくりこない。
+        - 引数をどうにかしたい
 * AsyncInitRequiredを実装したObject3Dのオブジェクトに
   traverseでuserData['a3js'] = { objectA3: this };するの忘れそう。
-* 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
 * Object3D.initDefaultPhysics()のメソッド名はもっと良いのがある気がする。
-* 動くようにはなったけど、最後に見直しが必要な気がする。
-* 前の実装と、Motion使った実装のパフォーマンス計測して比較してみたい。
-
------
-
-labelとballoonの機能を実現するために
-Viewのインタフェースを拡張したけど、
-CSS3DRendererの方が良さそうだったので
-拡張を取り消す。消しそこねがないように
-メモしておく。
-
-addLabel, removeLabel, addBalloon, removeBalloon
-Label, Balloon,
-ViewBase.labels, ViewBase.balloons
-
-Three.jsがかわらないかぎり、上は無くても
-いいし、最悪ViewはSceneを持ってるので、
-なんとかなるはず。
 
 -----
 
 ### ObjectA3に追加したいメソッドメモ
 
-* まずは書き換え
-    + setXxxxOverrideを
-    + setXxxxNowにしたいかも
 * 場所回転の更新
     + addLocation
     + mulQuat
     + mulRotation デグリー
     + mulScale
-* 視点
-    + lookAt
 * 一人称移動
     + moveForward
     + moveBack
@@ -51,10 +32,6 @@ Three.jsがかわらないかぎり、上は無くても
     + turnLeft デグリー
     + rollRight デグリー
     + rollLeft デグリー
-* 多分有用
-    + getUnitVecX
-    + getUnitVecY
-    + getUnitVecZ
 * ラベル表示
     + setLabel
     + setLabelOffset スクリーン座標で
@@ -67,22 +44,11 @@ Three.jsがかわらないかぎり、上は無くても
     + (emphasize,unemphasize)
     + (polygonize,unpoligonize)
     + (setVisible(boolean))
-* 当たり判定
-    + collision
-
-### Cameraに追加したいメソッドメモ
-
-カメラに対して固定された表示をするための
-ObjectA3を追加するaddLocked()とremoveLocked()。
-ただ、これはObjectA3にadd()とremove()を付ける
-方が良いのかもしれない。
 
 ### Sceneに追加したいメソッドメモ
 
 * アバター
     + setAvatar
-* 当たり判定
-    + addEventListener('collision',()=>{})
 * (背景)
     + (setBackground)
 

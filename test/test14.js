@@ -13,10 +13,10 @@ for (let t=0;t<2*Math.PI;t+=Math.PI/4) {
   view.scene.add(obj);
 }
 
-view.camera.setLocation(0,10,10);
-view.camera.lookAt(0,0,0);
+view.camera.setLocationNow(0,10,10);
+view.camera.lookAtNow(0,0,0);
 
 view.addEventListener('click3d',(e)=>{
   if (e.detail.value[0] && e.detail.value[0].a3js)
-    view.camera.lookAt(e.detail.value[0].a3js);
+    view.camera.lookAtNow(e.detail.value[0].a3js);
 });

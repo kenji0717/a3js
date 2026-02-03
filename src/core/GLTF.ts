@@ -99,24 +99,14 @@ console.log(`    ${morphName}`);
         o.userData['a3js'] = { objectA3: this };
       });
       this.object.add(this.model.gltf.scene);
-      if (this.motion instanceof GLTFMotion)
-        this.motion.setModel(this.model);
     } else {
       const geo = new THREE.BoxGeometry();
       const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
       const mesh = new THREE.Mesh(geo, mat);
       this.object.add(mesh);
     }
+    this.motion.setObject(this);
     return this;
-  }
-
-  morph(morphName: string, value: number) {
-    if (this.model) {
-      if (morphName in this.model.morphs) {
-        const { array, idx }  = this.model.morphs[morphName]
-        array[idx] = value;
-      }
-    }
   }
 }
 
@@ -129,16 +119,12 @@ class GLTFMotion extends Motion {
     this.isPaused = false;
   }
 
-  setModel(model: Model) {
-    this.model = model;
-  }
-
   setObject(objectA3: ObjectA3) {
     if (objectA3 instanceof GLTF) {
       super.setObject(objectA3);
       this.model = objectA3.model;
     } else {
-      console.warn('GLTFMotion can set only GLTFA3 object.');
+      console.warn('GLTFMotion can set only GLTF object.');
     }
   }
 
@@ -148,11 +134,30 @@ class GLTFMotion extends Motion {
       this.model.mixer.update(dt);
   }
 
-  changeMotion(actionName: string) {
-    this.model?.mixer.stopAllAction();
-    const action = this.model?.actions[actionName];
-    if (action) {
-      action.play();
+  /**
+   * args[0]: アクション名
+   * args[1]: モーフィング名
+   * args[2]: モーフィングの数値
+   */
+  controlMotion(...args: string[]) {
+    if (args[0]) {
+      this.model?.mixer.stopAllAction();
+      const action = this.model?.actions[args[0]];
+      if (action) {
+        action.play();
+      }
+    }
+    if (args[1]) {
+      const morphName = args[1];
+      if (args[2]) {
+        const morphValue = Number(args[2]);
+        if (this.model) {
+          if (morphName in this.model.morphs) {
+            const { array, idx } = this.model.morphs[args[1]];
+            array[idx] = morphValue;
+          }
+        }
+      }
     }
   }
 
