@@ -7,6 +7,8 @@
         - 引数をどうにかしたい
 * AsyncInitRequiredを実装したObject3Dのオブジェクトに
   traverseでuserData['a3js'] = { objectA3: this };するの忘れそう。
+  それとthis.motion.setObject(this);も同じく忘れそう。さらに、
+  AsyncInitRequiredでない時の上の処理が無駄になる。
 * Object3D.initDefaultPhysics()のメソッド名はもっと良いのがある気がする。
 
 -----

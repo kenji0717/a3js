@@ -122,17 +122,42 @@ function isRapierPhysicsEntity(obj: PhysicsEntity): obj is RapierPhysicsEntity {
 }
 
 export class RapierDefaultMotion extends Motion {
-  bodyDesc: Rapier.RigidBodyDesc;
+  bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
-  colliderDescs: Rapier.ColliderDesc[] = [];
-  colliders: Rapier.Collider[] = [];
+  colliderDescs: Rapier.ColliderDesc[];
+  colliders: Rapier.Collider[];
+  completeOption: PhysicsEntityOption;
 
-  constructor(objectA3: ObjectA3,option: Partial<PhysicsEntityOption>) {
+  constructor(objectA3?: ObjectA3,option: Partial<PhysicsEntityOption> = {}) {
     super(objectA3);
-    const opt: PhysicsEntityOption = {
+    this.colliderDescs = [];
+    this.colliders = [];
+    this.completeOption = {
       ...defaultPhysicsEntityOption,
       ...option
     };
+console.log(`GAHA1: 1`);
+  }
+  setObject(objectA3: ObjectA3): void {
+    super.setObject(objectA3);
+console.log(`GAHA2: `);
+    this.bodyDesc = undefined;
+    this.body = undefined;
+    this.colliderDescs = [];
+    this.colliders = [];
+    this.myInitialize(objectA3);
+  }
+
+  detachObject(_objectA3: ObjectA3) {
+    this.bodyDesc = undefined;
+    this.body = undefined;
+    this.colliderDescs = [];
+    this.colliders = [];
+  }
+
+  myInitialize(objectA3: ObjectA3) {
+console.log(`GAHA3: `);
+    const opt = this.completeOption;
     switch(opt.rigidBody) {
       case "dynamic":
         this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
@@ -146,18 +171,18 @@ export class RapierDefaultMotion extends Motion {
         break;
     }
     this.bodyDesc.setTranslation(
-      this.object3D.position.x,
-      this.object3D.position.y,
-      this.object3D.position.z
+      objectA3.object.position.x,
+      objectA3.object.position.y,
+      objectA3.object.position.z
     );
     this.bodyDesc.setRotation({
-      x: this.object3D.quaternion.x,
-      y: this.object3D.quaternion.y,
-      z: this.object3D.quaternion.z,
-      w: this.object3D.quaternion.w
+      x: objectA3.object.quaternion.x,
+      y: objectA3.object.quaternion.y,
+      z: objectA3.object.quaternion.z,
+      w: objectA3.object.quaternion.w
     });
     const volumes: number[] = [];
-    this.object3D.traverse((obj)=>{
+    objectA3.object.traverse((obj)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
         const collisionGroups = (opt.membership << 16) | opt.filter;
@@ -197,24 +222,15 @@ export class RapierDefaultMotion extends Motion {
       this.colliderDescs[i].setMass(opt.mass*(volumes[i]/volumeSum));
     }
   }
-  setObject(objectA3: ObjectA3): void {
-    this.objectA3 = objectA3;
-    this.object3D = objectA3.object;
-  }
 
   update(_: number) {
     if (this.body) {
       const t = this.body.translation();
-      this.object3D.position.set(t.x, t.y, t.z);
+      this.object3D?.position.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      this.object3D.quaternion.set(r.x, r.y, r.z, r.w);
+      this.object3D?.quaternion.set(r.x, r.y, r.z, r.w);
     }
   }
-
-  enableInterpolation(_: boolean) {}
-  controlMotion(_: string) {}
-  setPause(_: boolean): void {}
-  setTime(_: number): void {}
 
   setLocation(_: MutableVec3): void {
     // これはできない物とする
@@ -240,11 +256,13 @@ export class RapierDefaultMotion extends Motion {
   }
 
   addOnselfToPhysics(world: RapierPhysicsWorld): void {
-    this.body = world.world.createRigidBody(this.bodyDesc);
+    if (this.bodyDesc)
+      this.body = world.world.createRigidBody(this.bodyDesc);
     this.colliderDescs.forEach((colliderDesc)=>{
       const collider = world.world.createCollider(colliderDesc,this.body);
       this.colliders.push(collider);
-      RapierPhysicsEntity.collisionMap.set(collider.handle,this.objectA3);
+      if (this.objectA3)
+        RapierPhysicsEntity.collisionMap.set(collider.handle,this.objectA3);
     });
   }
   removeOnselfFromPhysics(world: RapierPhysicsWorld): void {

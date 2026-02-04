@@ -187,7 +187,7 @@ export class Canvas extends HTMLElement implements View {
   // EventTargetを継承してるので、this.dispatchEvent()で
   // イベントを発生させられる。addEventListener()とか、
   // 自分で作らなくてOK。
-  myMouseClickedListener = (e: any) => {
+  myMouseClickedListener = async (e: any) => {
     if (this.camera instanceof GeneralCamera) {
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
@@ -204,7 +204,7 @@ export class Canvas extends HTMLElement implements View {
         objs.push({three:o1.object,a3js});
       });
       if (objs.length>0)
-        objs[0].a3js.clicked();
+        await objs[0].a3js.clicked();
       this.dispatchEvent(new CustomEvent('click3d',{detail: { value: objs }}));
     }
   }

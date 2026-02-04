@@ -56,14 +56,14 @@ import { ObjectA3 } from "./ObjectA3";
  * 組み合わせて実装すると、楽な場合があるのでメモしておく。
  */
 export class Motion {
-  objectA3: ObjectA3;
-  object3D: THREE.Object3D;
+  objectA3?: ObjectA3;
+  object3D?: THREE.Object3D;
   private interpolation?: Interpolation;
   private billboard?: Billboard;
 
-  constructor(objectA3: ObjectA3) {
+  constructor(objectA3?: ObjectA3) {
     this.objectA3 = objectA3;
-    this.object3D = objectA3.object;
+    this.object3D = objectA3?.object;
   }
 
   /**
@@ -77,10 +77,20 @@ export class Motion {
   }
 
   /**
+   * このMotionを操作しても、接続されている
+   * ObjectA3に影響したりしないように完全に切り離す。
+   * @param _objectA3 切り離すObjectA3
+   */
+  detachObject(_objectA3: ObjectA3) {
+    this.objectA3 = undefined;
+    this.object3D = undefined;
+  }
+
+  /**
    * 補間モードのON,OFFを切り替えます。
    */
   enableInterpolation(on_off: boolean) {
-    if (on_off && !this.interpolation)
+    if (on_off && !this.interpolation && this.object3D)
       this.interpolation = new Interpolation(this.object3D);
     else if (!on_off && this.interpolation)
       this.interpolation = undefined;
@@ -97,7 +107,7 @@ export class Motion {
   enableBillboard(target?: ObjectA3) {
     if (target && this.billboard)
       this.billboard.setTarget(target.object);
-    else if (target && !this.billboard)
+    else if (target && !this.billboard && this.objectA3)
       this.billboard = new Billboard(this.objectA3,target.object);
     else
       this.billboard = undefined;
@@ -119,7 +129,7 @@ export class Motion {
     if (this.interpolation)
       this.interpolation.setLocation(loc);
     else
-      this.object3D.position.set(loc.x,loc.y,loc.z);
+      this.object3D?.position.set(loc.x,loc.y,loc.z);
     if (this.billboard)
       this.billboard.update();
   }
@@ -127,7 +137,7 @@ export class Motion {
     if (this.interpolation)
       this.interpolation.setLocationNow(loc);
     else
-      this.object3D.position.set(loc.x,loc.y,loc.z);
+      this.object3D?.position.set(loc.x,loc.y,loc.z);
     if (this.billboard)
       this.billboard.update();
   }
@@ -137,7 +147,7 @@ export class Motion {
     if (this.interpolation)
       this.interpolation.setQuat(quat);
     else
-      this.object3D.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+      this.object3D?.quaternion.set(quat.x,quat.y,quat.z,quat.w);
   }
   setQuatNow(quat: MutableQuat) {
     if (this.billboard)
@@ -145,19 +155,19 @@ export class Motion {
     if (this.interpolation)
       this.interpolation.setQuatNow(quat);
     else
-      this.object3D.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+      this.object3D?.quaternion.set(quat.x,quat.y,quat.z,quat.w);
   }
   setScale(scale: MutableVec3) {
     if (this.interpolation)
       this.interpolation.setScale(scale);
     else
-      this.object3D.scale.set(scale.x,scale.y,scale.z);
+      this.object3D?.scale.set(scale.x,scale.y,scale.z);
   }
   setScaleNow(scale: MutableVec3) {
     if (this.interpolation)
       this.interpolation.setScaleNow(scale);
     else
-      this.object3D.scale.set(scale.x,scale.y,scale.z);
+      this.object3D?.scale.set(scale.x,scale.y,scale.z);
   }
 
   controlMotion(..._args: string[]) {}

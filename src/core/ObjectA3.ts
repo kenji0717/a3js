@@ -50,6 +50,7 @@ export abstract class ObjectA3 {
       o.userData['a3js'] = { objectA3: this };
     });
     this.motion = this.initMotion();
+    this.motion.setObject(this);
   }
 
   // 非同期でないと無理な場合などはとりあえず
@@ -72,6 +73,21 @@ export abstract class ObjectA3 {
     motion.setObject(this);
     this.motion = motion;
   }
+  detachMotion(): Motion {
+    const newMotion = new Motion(this);
+    const oldMotion = this.motion;
+    oldMotion.detachObject(this);
+    this.motion = newMotion;
+    newMotion.setObject(this);
+    return oldMotion;
+  }
+  replaceMotion(newMotion: Motion): Motion {
+    const oldMotion = this.motion;
+    oldMotion.detachObject(this);
+    this.motion = newMotion;
+    newMotion.setObject(this);
+    return oldMotion;
+  }
   controlMotion(...args: string[]) {
     this.motion.controlMotion(...args);
   }
@@ -84,6 +100,7 @@ export abstract class ObjectA3 {
       ...option
     };
     this.motion = new RapierDefaultMotion(this,opt);
+    this.motion.setObject(this);
   }
 
   update(dt: number) {

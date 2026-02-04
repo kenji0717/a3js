@@ -56,7 +56,7 @@ class TestMotion extends Motion {
   }
 
   update(dt: number) {
-    if (this.testMode) {
+    if (this.testMode && this.object3D) {
       this.object3D.rotation.x += dt;
       this.object3D.rotation.y += dt;
       this.object3D.rotation.z += dt;
