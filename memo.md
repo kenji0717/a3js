@@ -2,6 +2,10 @@
 * 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
 * Motion
     + 独立して生成して気軽に取り替えられるようにする
+    + AnimationClipのみをMotionに持たせて、それ以外は
+      GLTFやAcerola3Dの方に持たせるというのが良さそう。
+      そのためには、GLTFやAcerola3Dの方にskeleton由来の
+      情報を持たせることになる。
     + controlMotion()
         - メソッド名がしっくりこない。
         - 引数をどうにかしたい

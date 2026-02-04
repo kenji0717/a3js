@@ -136,11 +136,9 @@ export class RapierDefaultMotion extends Motion {
       ...defaultPhysicsEntityOption,
       ...option
     };
-console.log(`GAHA1: 1`);
   }
   setObject(objectA3: ObjectA3): void {
     super.setObject(objectA3);
-console.log(`GAHA2: `);
     this.bodyDesc = undefined;
     this.body = undefined;
     this.colliderDescs = [];
@@ -156,7 +154,6 @@ console.log(`GAHA2: `);
   }
 
   myInitialize(objectA3: ObjectA3) {
-console.log(`GAHA3: `);
     const opt = this.completeOption;
     switch(opt.rigidBody) {
       case "dynamic":
