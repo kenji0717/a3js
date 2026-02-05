@@ -96,7 +96,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           if (bvh)
             bvh.clip.tracks.forEach(track=>{track.setInterpolation(THREE.InterpolateDiscrete);});
         } else {
-          bvh = cloneBVH(new DummyBVH);
+          bvh = new DummyBVH();
         }
         const actionScale = a.getAttribute('scale');
         const scale = actionScale ? Number(actionScale) : 1.0;
@@ -150,10 +150,10 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           actionRoot.add(part);
         this.viewActions[seed.name] = {
           actionRoot,
-          boneRoot: seed.bvh.skeleton.bones[0].clone()
+          boneRoot: seed.bvh.skeleton.bones[0].clone(true)
         }
       } else {
-        const boneRoot = seed.bvh.skeleton.bones[0].clone();
+        const boneRoot = seed.bvh.skeleton.bones[0].clone(true);
         actionRoot.add(boneRoot);
         appendPartToBone(boneRoot,seed.parts);
         this.viewActions[seed.name] = {
@@ -163,7 +163,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
       }
       // クリックなどへの対応
       actionRoot.traverse((o)=>{
-        o.userData['a3js']={object3D:this};
+        o.userData['a3js']={objectA3:this};
       });
     }
   }
@@ -191,8 +191,8 @@ function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object
 
 interface MotionAction {
   bvh: BVH;
-  mixer: THREE.AnimationMixer;
-  clipAction:  THREE.AnimationAction;
+  mixer?: THREE.AnimationMixer;
+  clipAction?:  THREE.AnimationAction;
 }
 
 export class Acerola3DMotion extends Motion {
@@ -236,6 +236,12 @@ export class Acerola3DMotion extends Motion {
     this.actionSeeds = newActionSeeds;
     this.motionActions = {};
     for (const seed of this.actionSeeds) {
+      if (seed.bvh instanceof DummyBVH) {
+        this.motionActions[seed.name] = {
+          bvh: seed.bvh
+        }
+        break;
+      }
       const boneRoot = this.objectA3.viewActions[seed.name].boneRoot;
       const mixer = new THREE.AnimationMixer(boneRoot);
       const clipAction = mixer.clipAction(seed.bvh.clip);
@@ -250,7 +256,7 @@ export class Acerola3DMotion extends Motion {
     const name = this.actionSeeds[0].name;
     this.objectA3.changeAction(name);
     const action = this.motionActions[name];
-    action.clipAction.play();
+    action.clipAction?.play();
     this.currentAction = action;
     }
 
@@ -260,10 +266,10 @@ export class Acerola3DMotion extends Motion {
     const firstName = this.actionSeeds[0].name;
     for (const seed of this.actionSeeds) {
       const action = this.motionActions[seed.name];
-      action.mixer.stopAllAction();
+      action.mixer?.stopAllAction();
       const boneRoot = this.objectA3.viewActions[seed.name].boneRoot;
       if (boneRoot)
-        action.mixer.uncacheRoot(boneRoot);
+        action.mixer?.uncacheRoot(boneRoot);
       //action.mixer = null;
       //action.clipAction = null;
       delete this.motionActions[seed.name];
@@ -281,7 +287,7 @@ export class Acerola3DMotion extends Motion {
     if (!this.currentAction)
       return;
     if (!this.isPaused && this.currentAction.mixer) {
-      this.currentAction.mixer.update(dt);
+      this.currentAction.mixer?.update(dt);
       /*
       for (const part of Object.values(this.currentAction.parts)) {
         part.bone.updateWorldMatrix(true,false);
@@ -302,9 +308,9 @@ export class Acerola3DMotion extends Motion {
     const a = this.motionActions[actionName];
     if (a) {
       if (this.currentAction)
-        this.currentAction.clipAction.stop();
+        this.currentAction.clipAction?.stop();
       this.objectA3.changeAction(actionName);
-      a.clipAction.play();
+      a.clipAction?.play();
       this.currentAction = a;
     }
   }
