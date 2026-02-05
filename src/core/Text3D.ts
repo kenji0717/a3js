@@ -3,8 +3,7 @@ import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { ObjectA3 } from './ObjectA3';
 import { isString } from '../utils/TypeGuard';
-//import { unzipSync, strFromU8 } from 'three/addons/libs/fflate.module.js';
-import { unzipAsync, readStringFromUnzipped } from '../utils/math';
+import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 
 let font: Font | null = null;
 /**
@@ -24,7 +23,7 @@ export async function initFont(path: string) {
     let path2 = path.substring(path.lastIndexOf('/')); // zipファイル前のpathを削る
     path2 = path2.substring(0,path2.length-4); // '.zip'を削る
     const zip = await unzipAsync(path)
-    const jsonStr = readStringFromUnzipped(zip, path2);
+    const jsonStr = readStringFromUnzippedA3(zip, path2);
 
     font = new Font(JSON.parse(jsonStr));
   } else {

@@ -38,6 +38,6 @@ export type { MutableQuat, RotationOrder } from './core/Quat';
 export { ViewBase } from './core/ViewBase';
 export { GeneralCamera } from './core/GeneralCamera';
 export type { AsyncInitRequired } from './core/AsyncInitRequired';
-export { times2, asyncSleep, deepMerge } from './utils/math';
+export { asyncSleep, deepMerge } from './utils/math';
 export type { DeepPartial  } from './utils/math';
 //export { getShape, loadVrmlInUnzipped } from './three/getShape';

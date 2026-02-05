@@ -1,17 +1,23 @@
 import { unzip, strFromU8 } from 'fflate'; // 'three/addons/libs/fflate.module.js';
 import type { Unzipped } from 'fflate'; // 'three/addons/libs/fflate.module.js';
 
-export function times2(x: number): number {
-  return 2*x;
-}
-
 export function asyncSleep(time: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(()=>{resolve();},time);
   });
 }
 
-export async function unzipAsync(url: string): Promise<Unzipped> {
+/**
+ * ZIPファイルを解凍した情報の型。
+ * 中にfflateのUnzippedが入ってるラッパーだが、
+ * ZIPファイル自体のURLも含められるようになっている。
+ */
+export interface UnzippedA3 {
+  zipUrl: string;
+  unzipped: Unzipped;
+}
+
+export async function unzipAsync(url: string): Promise<UnzippedA3> {
   const res = await fetch(url);
   const arrayBuffer = await res.arrayBuffer();
   const ret = await new Promise<Unzipped>((resolve, reject) => {
@@ -22,25 +28,25 @@ export async function unzipAsync(url: string): Promise<Unzipped> {
         reject(err)
     });
   });
-  return ret;
+  return {zipUrl: url, unzipped: ret};
 }
 
-export function readStringFromUnzipped(unzipped: Unzipped, path: string): string {
+export function readStringFromUnzippedA3(unzippedA3: UnzippedA3, path: string): string {
   path = path.replace(/^\.\//,'').replace(/^\//,'');
-  if (unzipped[path]) {
-    return strFromU8(unzipped[path]);
+  if (unzippedA3.unzipped[path]) {
+    return strFromU8(unzippedA3.unzipped[path]);
   } else {
-    throw new Error(`readStringFromUnzipped(): no file at ${path}`);
+    throw new Error(`readStringFromUnzippedA3(): no file at ${path}`);
   }
 }
 
-export function readBlobFromUnzipped(unzipped: Unzipped, path: string): Blob {
+export function readBlobFromUnzippedA3(unzippedA3: UnzippedA3, path: string): Blob {
   path = path.replace(/^\.\//,'').replace(/^\//,'');
-  if (unzipped[path]) {
+  if (unzippedA3.unzipped[path]) {
     const mime_type = mimeTypeFromPath(path);
-    return new Blob([new Uint8Array(unzipped[path])],{type: mime_type});
+    return new Blob([new Uint8Array(unzippedA3.unzipped[path])],{type: mime_type});
   } else {
-    throw new Error(`readBlobFromUnzipped(): no file at ${path}`);
+    throw new Error(`readBlobFromUnzippedA3(): no file at ${path}`);
   }
 }
 

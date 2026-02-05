@@ -3,41 +3,55 @@ import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Motion } from './Motion';
 import { Vec3 } from './Vec3';
-import { unzipAsync, readStringFromUnzipped } from '../utils/math';
-import { loadVrmlInUnzipped,
-         loadBvhInUnzipped} from '../three/threeUtils';
-import type { BVH } from 'three/addons/loaders/BVHLoader.js';
-//import type { BVH } from '../three/BVHLoader2.js';
+import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
+import { loadVrmlInUnzippedA3,
+         loadBvhInUnzippedA3,
+         cloneBVH } from '../three/threeUtils';
+import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
 //import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // BVHの情報だけからBoneのワールド座標系を得るために使用
-//const evalScene: THREE.Scene = new THREE.Scene();
+//const evalScene: THREE.Scene = new THREE.Scene(); // と思ったけど中止
 
-interface ViewAction {
+class DummyBVH implements BVH {
+  isDummy = true;
+  skeleton = new THREE.Skeleton([new THREE.Bone()]);
+  clip = new THREE.AnimationClip('dummy');
+};
+
+interface ActionSeed {
   name: string;
-  parts: Record<string,THREE.Object3D>;
-  root: THREE.Object3D;
+  bvh: BVH;
   scale: number;
   offset: Vec3;
-  boneRoot: THREE.Bone | null;
-  bvh: BVH | null; // Acerola3DMotionに受け渡すためだけに保存
+  parts: Record<string,THREE.Object3D>;
+}
+
+interface ViewAction {
+  actionRoot: THREE.Object3D;
+  boneRoot: THREE.Bone;
 }
 
 /**
  * まだ適当。
  */
 export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
+  bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
+  vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
+
   readonly ready: Promise<Acerola3D>;
-  actions: Record<string,ViewAction>;
+  viewActions: Record<string,ViewAction>;
+  currentAction: ViewAction;
   comment: string | null = null; // CATALOG.XMLの<c>の中
-  // bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように(cloneが無理かも)
-  vrmls: Record<string,THREE.Object3D>; // 同じ物、2度読まないように
 
   constructor(url: string) {
     super();
-    this.actions = {};
-    this.vrmls = {};
+    this.viewActions = {};
+    this.currentAction = { // 本当にダミー
+      actionRoot: new THREE.Object3D(),
+      boneRoot: new THREE.Bone()
+    };
     this.ready = this.asyncInit(url);
   }
 
@@ -52,9 +66,9 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
   }
 
   async asyncInit(url: string) {
-    const unzipped = await unzipAsync(url);
+    const unzippedA3 = await unzipAsync(url);
     const xmlParser = new DOMParser();
-    const xmlStr = readStringFromUnzipped(unzipped,'CATALOG.XML');
+    const xmlStr = readStringFromUnzippedA3(unzippedA3,'CATALOG.XML');
     const xmlDoc = xmlParser.parseFromString(xmlStr, "application/xml");
     if (xmlDoc.querySelector('parsererror')) {
       console.error(`Acerola3D.asyncInit(): CATALOG.XML parse error.`);
@@ -64,37 +78,34 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     const cs = xmlDoc.getElementsByTagNameNS(ns,'c');
     if (cs[0]) this.comment = cs[0].textContent;
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
+    const actionSeeds: ActionSeed[] = [];
     for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
       if (actionName) {
         const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
         let bvh: BVH | null = null;
         if (actionBVH) {
-          //if (this.bvhs[actionBVH]) {
-          //  bvh = this.bvhs[actionBVH];
-          //  const clone = {
-          //    clip: bvh.clip.clone(),
-          //    skeleton: SkeletonUtils.clone(bvh.skeleton)
-          //  };
-          //  action.bvh = clone;
-          //} else {
-            bvh = await loadBvhInUnzipped(unzipped, actionBVH);
-            //以下の1行はBVHの動きの補間をOFFにする。Acerola3DのBVHの使い方では必要だけど・・・
+          const bvhKey = unzippedA3.zipUrl + '!' + actionBVH;
+          if (this.bvhs[bvhKey]) {
+            bvh = cloneBVH(this.bvhs[bvhKey]);
+          } else {
+            bvh = await loadBvhInUnzippedA3(unzippedA3, actionBVH);
+            this.bvhs[actionBVH] = bvh;
+          }
+          //以下の行はBVHの動きの補間をOFFにする。Acerola3DのBVHの使い方では必要だけど・・・
+          if (bvh)
             bvh.clip.tracks.forEach(track=>{track.setInterpolation(THREE.InterpolateDiscrete);});
-            //this.bvhs[actionBVH] = bvh;
-          //}
+        } else {
+          bvh = cloneBVH(new DummyBVH);
         }
-        const root = new THREE.Object3D();
         const actionScale = a.getAttribute('scale');
         const scale = actionScale ? Number(actionScale) : 1.0;
-        root.scale.set(scale,scale,scale);
         const actionOffset = a.getAttribute('offset');
         const offset = new Vec3();
         if (actionOffset) {
           const as = actionOffset.split(" ");
           offset.set(Number(as[0]),Number(as[1]),Number(as[2]));
         }
-        root.position.copy(offset);
         const parts: Record<string,THREE.Object3D> = {};
         const ps = a.getElementsByTagNameNS(ns,'p');
         for (const p of Array.from(ps)) {
@@ -102,45 +113,66 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           const wrl = p.getAttribute('wrl');
           if (partName && wrl) {
             let vrml;
-            if (this.vrmls[wrl]) {
-              vrml = this.vrmls[wrl].clone();
+            const vrmlKey = unzippedA3.zipUrl + '!' + wrl;
+            if (this.vrmls[vrmlKey]) {
+              vrml = this.vrmls[vrmlKey].clone(true);
               parts[partName] = vrml;
             } else {
-              vrml = await loadVrmlInUnzipped(unzipped,wrl);
-              this.vrmls[wrl] = vrml;
+              vrml = await loadVrmlInUnzippedA3(unzippedA3,wrl);
+              this.vrmls[vrmlKey] = vrml;
               parts[partName] = vrml;
             }
           }
         }
-        const action: ViewAction = {
+        actionSeeds.push({
           name: actionName,
-          parts,
-          root,
-          boneRoot: null, // あとで
+          bvh,
           scale,
           offset,
-          bvh
-        };
-        this.actions[actionName] = action;
+          parts
+        });
       }
     }
-    for (const action of Object.values(this.actions)) {
-      if (action.bvh) {
-        action.boneRoot = action.bvh.skeleton.bones[0].clone();
-        action.root.add(action.boneRoot);
-        appendPartToBone(action.boneRoot,action.parts);
+    this.generateViewActionsFromActionSeeds(actionSeeds);
+    if (this.motion instanceof Acerola3DMotion)
+      this.motion.myInitialize(actionSeeds);
+    return this;
+  }
+
+  generateViewActionsFromActionSeeds(actionSeeds:ActionSeed[]) {
+    this.viewActions = {};
+    for (const seed of actionSeeds) {
+      const actionRoot = new THREE.Object3D();
+      actionRoot.position.set(seed.offset.x,seed.offset.y,seed.offset.z);
+      actionRoot.scale.set(seed.scale,seed.scale,seed.scale);
+      if (seed.bvh instanceof DummyBVH) { // 実質BVHが無い時
+        for (const part of Object.values(seed.parts))
+          actionRoot.add(part);
+        this.viewActions[seed.name] = {
+          actionRoot,
+          boneRoot: seed.bvh.skeleton.bones[0].clone()
+        }
       } else {
-        for (const part of Object.values(action.parts))
-          action.root.add(part);
+        const boneRoot = seed.bvh.skeleton.bones[0].clone();
+        actionRoot.add(boneRoot);
+        appendPartToBone(boneRoot,seed.parts);
+        this.viewActions[seed.name] = {
+          actionRoot,
+          boneRoot
+        }
       }
       // クリックなどへの対応
-      action.root.traverse((o)=>{
+      actionRoot.traverse((o)=>{
         o.userData['a3js']={object3D:this};
       });
     }
+  }
 
-    this.motion.setObject(this);
-    return this;
+  changeAction(actionName: string) {
+    this.object.remove(this.currentAction.actionRoot);
+    const vAct = this.viewActions[actionName];
+    this.object.add(vAct.actionRoot);
+    this.currentAction = vAct;
   }
 }
 
@@ -158,70 +190,87 @@ function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object
 }
 
 interface MotionAction {
-  name: string;
-  root: THREE.Object3D;
-  bvh: BVH | null;
-  boneRoot: THREE.Bone | null;
-  mixer: THREE.AnimationMixer | null;
-  clipAction:  THREE.AnimationAction | null;
+  bvh: BVH;
+  mixer: THREE.AnimationMixer;
+  clipAction:  THREE.AnimationAction;
 }
 
 export class Acerola3DMotion extends Motion {
-  actions: Record<string,MotionAction>;
+  // objectA3?: ObjectA3; スーパークラスから
+  // object3D?: THREE.Object3D; スーパークラスから
+  actionSeeds: ActionSeed[];
+  motionActions: Record<string,MotionAction>;
   currentAction?: MotionAction;
   isPaused: boolean;
 
   constructor(objectA3: ObjectA3) {
     super(objectA3);
     this.isPaused = false;
-    this.actions = {};
+    this.actionSeeds = [];
+    this.motionActions = {};
   }
 
   setObject(objectA3: ObjectA3) {
     this.isPaused = false;
     if (objectA3 instanceof Acerola3D) {
-      if (!objectA3.actions) // GAHA: 今のところ、初期化前にムダに呼ばれるので
-        return;
       super.setObject(objectA3);
-      this.myInitialize(objectA3);
+      if (this.actionSeeds.length>0)
+        this.myInitialize([]);
     } else {
       console.warn('Acerola3DMotion can set only Acerola3D object.');
     }
   }
 
-  myInitialize(a3: Acerola3D) {
-    for (const vAction of Object.values(a3.actions)) {
-      const name = vAction.name;
-      const root = vAction.root;
-      const bvh = vAction.bvh;
-      const boneRoot = vAction.boneRoot;
-      let mixer: THREE.AnimationMixer | null = null;
-      let clipAction: THREE.AnimationAction | null = null;
-      if (bvh && boneRoot) {
-        mixer = new THREE.AnimationMixer(boneRoot);
-        clipAction = mixer.clipAction(bvh.clip);
-      }
-      const mAction = {
-        name,
-        root,
-        bvh,
-        boneRoot,
+  myInitialize(actionSeeds:ActionSeed[]) {
+    if (!(this.objectA3 instanceof Acerola3D))
+      return;
+    const newActionSeeds: ActionSeed[] = []
+    for (const actionSeed of this.actionSeeds) {
+      newActionSeeds.push(actionSeed);
+    }
+    for (const actionSeed of actionSeeds) {
+      if (newActionSeeds.filter(s=>s.name===actionSeed.name).length===0)
+        newActionSeeds.push(actionSeed);
+    }
+    this.objectA3.generateViewActionsFromActionSeeds(newActionSeeds);
+    this.actionSeeds = newActionSeeds;
+    this.motionActions = {};
+    for (const seed of this.actionSeeds) {
+      const boneRoot = this.objectA3.viewActions[seed.name].boneRoot;
+      const mixer = new THREE.AnimationMixer(boneRoot);
+      const clipAction = mixer.clipAction(seed.bvh.clip);
+      const mAction: MotionAction = {
+        bvh: seed.bvh,
         mixer,
         clipAction
       };
-      this.actions[mAction.name] = mAction;
+      this.motionActions[seed.name] = mAction;
     }
-    for (const mAction of Object.values(this.actions)) {
-      mAction.clipAction?.play();
-      this.currentAction = mAction;
-      if (mAction.root)
-        this.object3D?.add(mAction.root);
-      break;
-    }
-  }
 
-  detachObject(_objectA3: ObjectA3) {
-    // GAHA;
+    const name = this.actionSeeds[0].name;
+    this.objectA3.changeAction(name);
+    const action = this.motionActions[name];
+    action.clipAction.play();
+    this.currentAction = action;
+    }
+
+  detachObject(objectA3: ObjectA3) {
+    if (!(this.objectA3 instanceof Acerola3D))
+      return;
+    const firstName = this.actionSeeds[0].name;
+    for (const seed of this.actionSeeds) {
+      const action = this.motionActions[seed.name];
+      action.mixer.stopAllAction();
+      const boneRoot = this.objectA3.viewActions[seed.name].boneRoot;
+      if (boneRoot)
+        action.mixer.uncacheRoot(boneRoot);
+      //action.mixer = null;
+      //action.clipAction = null;
+      delete this.motionActions[seed.name];
+    }
+
+    this.objectA3.changeAction(firstName);
+    super.detachObject(objectA3);
   }
   
   //static loc = new THREE.Vector3(); // 毎回生成しなくて良いように
@@ -248,17 +297,14 @@ export class Acerola3DMotion extends Motion {
   }
 
   controlMotion(actionName: string) {
-    if (!this.actions) return;
-    const a = this.actions[actionName];
+    if (!(this.objectA3 instanceof Acerola3D))
+      return;
+    const a = this.motionActions[actionName];
     if (a) {
-      if (this.currentAction) {
-        this.currentAction.clipAction?.stop();
-        if (this.currentAction.root)
-          this.object3D?.remove(this.currentAction.root);
-      }
-      if (a.root)
-        this.object3D?.add(a.root);
-      a.clipAction?.play();
+      if (this.currentAction)
+        this.currentAction.clipAction.stop();
+      this.objectA3.changeAction(actionName);
+      a.clipAction.play();
       this.currentAction = a;
     }
   }

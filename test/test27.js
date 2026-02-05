@@ -1,18 +1,21 @@
 // Acerola3DのMotion取り外し、取り付け
-// 違うモデルじゃないからあんまりテストになってないけど。
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
-const motion0 = new a3.Acerola3DMotion();
-const obj = await new a3.Acerola3D('./assets/vesma9.a3').ready;
-obj.setMotion(motion0);
-obj.setLocation(0,-2,0);
-obj.controlMotion('walk');
-view.scene.add(obj);
-view.camera.setLocation(0,0,5);
+const obj0 = await new a3.Acerola3D('./assets/vesma13.a3').ready;
+obj0.setLocation(1,0,0);
+obj0.controlMotion("IamSorry");
+view.scene.add(obj0);
+const obj1 = await new a3.Acerola3D('./assets/vesma9.a3').ready;
+obj1.setLocation(-1,0,0);
+obj1.controlMotion("run");
+view.scene.add(obj1);
 
 await a3.asyncSleep(3000);
-const motion1 = obj.detachMotion();
+const m0 = obj0.detachMotion();
+const m1 = obj1.detachMotion();
+obj1.setMotion(m0);
+obj0.setMotion(m1);
 await a3.asyncSleep(3000);
-obj.setMotion(motion1);
-obj.controlMotion('run');
+obj0.controlMotion("run");
+obj1.controlMotion("IamSorry");
