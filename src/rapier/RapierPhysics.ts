@@ -6,13 +6,16 @@ import * as TG from '../utils/TypeGuard';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { MutableVec3 } from '../core/Vec3';
 import type { MutableQuat } from '../core/Quat';
-import { PhysicsEntity, defaultPhysicsEntityOption } from '../core/Physics';
+import { PhysicsMotion, defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
-              PhysicsEntityOption, Collision } from '../core/Physics';
-import { Motion } from '../core/Motion';
+              PhysicsMotionOption, Collision } from '../core/Physics';
 
 let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
+/**
+ * ColliderのIDとObjectA3の対応を記録しておくためのMap
+ */
+const collisionMap: Map<number,ObjectA3> = new Map();
 
 export class RapierPhysicsEngine implements PhysicsEngine {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -69,17 +72,17 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(entity: PhysicsEntity) {
-    if (isRapierPhysicsEntity(entity)) {
-      entity.addOneself(this);
+  add(motion: PhysicsMotion) {
+    if (motion instanceof RapierMotion) {
+      motion.addOneselfToPhysics(this);
     } else {
       ; // 何もしない
     }
   }
 
-  remove(entity: PhysicsEntity) {
-    if (isRapierPhysicsEntity(entity)) {
-      entity.removeOneself(this);
+  remove(motion: PhysicsMotion) {
+    if (motion instanceof RapierMotion) {
+      motion.removeOneselfFromPhysics(this);
     } else {
       ; // 何もしない
     }
@@ -95,8 +98,8 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   getCollisions(): Collision[] {
     const collisions: Collision[] = [];
     this.collisionEventQueue.drainCollisionEvents((handle1, handle2, started) => {
-      const objA = RapierPhysicsEntity.collisionMap.get(handle1);
-      const objB = RapierPhysicsEntity.collisionMap.get(handle2);
+      const objA = collisionMap.get(handle1);
+      const objB = collisionMap.get(handle2);
       if ( objA && objB) {
         collisions.push({
           objectA: objA,
@@ -111,29 +114,25 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 }
 
-export abstract class RapierPhysicsEntity extends PhysicsEntity {
-  static collisionMap: Map<number,ObjectA3> = new Map();
-  abstract addOneself(world: RapierPhysicsWorld): void;
-  abstract removeOneself(world: RapierPhysicsWorld): void;
+/**
+ * Rapier物理エンジンを使用するMotionであることを示すための
+ */
+export abstract class RapierMotion extends PhysicsMotion {
 }
 
-function isRapierPhysicsEntity(obj: PhysicsEntity): obj is RapierPhysicsEntity {
-  return "addOneself" in obj && "removeOneself" in obj;
-}
-
-export class RapierDefaultMotion extends Motion {
+export class RapierDefaultMotion extends PhysicsMotion {
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[];
   colliders: Rapier.Collider[];
-  completeOption: PhysicsEntityOption;
+  completeOption: PhysicsMotionOption;
 
-  constructor(objectA3?: ObjectA3,option: Partial<PhysicsEntityOption> = {}) {
+  constructor(objectA3?: ObjectA3,option: Partial<PhysicsMotionOption> = {}) {
     super(objectA3);
     this.colliderDescs = [];
     this.colliders = [];
     this.completeOption = {
-      ...defaultPhysicsEntityOption,
+      ...defaultPhysicsMotionOption,
       ...option
     };
   }
@@ -252,17 +251,17 @@ export class RapierDefaultMotion extends Motion {
     // 簡単ではないのでとりあえず保留
   }
 
-  addOnselfToPhysics(world: RapierPhysicsWorld): void {
+  addOneselfToPhysics(world: RapierPhysicsWorld): void {
     if (this.bodyDesc)
       this.body = world.world.createRigidBody(this.bodyDesc);
     this.colliderDescs.forEach((colliderDesc)=>{
       const collider = world.world.createCollider(colliderDesc,this.body);
       this.colliders.push(collider);
       if (this.objectA3)
-        RapierPhysicsEntity.collisionMap.set(collider.handle,this.objectA3);
+        collisionMap.set(collider.handle,this.objectA3);
     });
   }
-  removeOnselfFromPhysics(world: RapierPhysicsWorld): void {
+  removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
     if (this.body)
       world.world.removeRigidBody(this.body);
     this.colliders.forEach((collider) => {

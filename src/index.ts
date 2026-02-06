@@ -22,9 +22,8 @@ export { HTML } from './three/HTML';
 export type { View } from './core/View';
 export type { PhysicsEngine,
               PhysicsWorld,
-              PhysicsEntity,
               PhysicsWorldOption,
-              PhysicsEntityOption,
+              PhysicsMotionOption,
               ColliderKind,
               MeshColliderKind,
               RigidBodyType,

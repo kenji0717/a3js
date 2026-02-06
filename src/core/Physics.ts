@@ -1,8 +1,8 @@
 
 import type { ObjectA3 } from './ObjectA3';
-import type { MutableVec3 } from './Vec3';
-import type { MutableQuat } from './Quat';
-
+//import type { MutableVec3 } from './Vec3';
+//import type { MutableQuat } from './Quat';
+import { Motion } from './Motion';
 
 /*
  * 念のため、物理エンジンが変更されてもa3jsへの影響が少なくなるよう
@@ -43,12 +43,12 @@ export interface PhysicsWorldOption {
 
 /**
  * 物理演算が行われる空間を表すクラス。物理演算のステップを
- * 進めるupdate、PhysicsEntityを追加・削除するためのadd、remove
+ * 進めるupdate、PhysicsMotionを追加・削除するためのadd、remove
  * メソッドを持つ。
  */
 export interface PhysicsWorld {
-  add(entity: PhysicsEntity): void;
-  remove(entity: PhysicsEntity): void;
+  add(motion: PhysicsMotion): void;
+  remove(motion: PhysicsMotion): void;
   update(dt: number): void;
   getCollisions(): Collision[];
 }
@@ -57,10 +57,10 @@ export type RigidBodyType = "dynamic" | "kinematic" | "fixed";
 export type ColliderKind = "solid" | "sensor";
 export type MeshColliderKind = "tri_mesh" | "convex_hull";
 /**
- * PhysicsEngityを生成する時に必要な情報をまとめたもの。
- * 物理エンジンや個別のPhysicsEntityごとに拡張可能。
+ * PhysicsMotionを生成する時に必要な情報をまとめたもの。
+ * 現在はRapierの実装に合わせた物になってしまっている。
  */
-export interface PhysicsEntityOption {
+export interface PhysicsMotionOption {
   rigidBody: RigidBodyType;
   collider: ColliderKind;
   meshCollider: MeshColliderKind;
@@ -72,7 +72,10 @@ export interface PhysicsEntityOption {
   collisionDetection: boolean
 }
 
-export const defaultPhysicsEntityOption: PhysicsEntityOption = {
+/**
+ * デフォルト値となるPhysicsMotionOption
+ */
+export const defaultPhysicsMotionOption: PhysicsMotionOption = {
   rigidBody: "dynamic",
   collider: "solid",
   meshCollider: "convex_hull",
@@ -84,40 +87,13 @@ export const defaultPhysicsEntityOption: PhysicsEntityOption = {
   collisionDetection: false
 };
 
+
 /**
- * RigidBodyなどの個別のObjectA3に必要な物理計算のための
- * 色々な実体が含まれる物のインターフェース。
+ * 物理演算を行うMotionを他のMotionと区別できるようにする。
  */
-export abstract class PhysicsEntity {
-  object: ObjectA3;
-  option: PhysicsEntityOption;
-
-  constructor(object: ObjectA3, option: PhysicsEntityOption) {
-    this.object = object;
-    this.option = option;
-  }
-  
-  /**
-   * 物理演算の結果をObjectA3の位置や回転に反映させる。
-   */
-  abstract synchronize(obj: ObjectA3): void;
-
-  /**
-   * 物理演算対象であっても位置を外部から操作できるようにする。
-   */
-  abstract setLocationNow(v: MutableVec3): void;
-
-  /**
-   * 物理演算対象であっても回転を外部から操作できるようにする。
-   */
-  abstract setQuatNow(q: MutableQuat): void;
-
-  /**
-   * 物理演算対象であっても拡大率を外部から操作できるようにする。
-   * ただ、これは普通難しいかも。
-   */
-  abstract setScaleNow(v: MutableVec3): void;
+export abstract class PhysicsMotion extends Motion {
 }
+
 
 /**
  * 衝突の情報を保持するオブジェクトのインタフェース。

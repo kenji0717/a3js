@@ -3,7 +3,7 @@ import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
 import { Quat, getQuatOfLookAt } from './Quat';
 import type { MutableQuat } from './Quat';
-import type { RapierPhysicsWorld } from "../rapier/RapierPhysics";
+import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 
 /**
@@ -174,8 +174,8 @@ export class Motion {
   setPause(_p: boolean) {}
   setTime(_time: number) {}
 
-  addOnselfToPhysics(_world: RapierPhysicsWorld) {}
-  removeOnselfFromPhysics(_world: RapierPhysicsWorld) {}
+  addOneselfToPhysics(_world: PhysicsWorld) {}
+  removeOneselfFromPhysics(_world: PhysicsWorld) {}
 }
 
 /*

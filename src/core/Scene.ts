@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { physicsEngineInstance, RapierPhysicsWorld } from '../rapier/RapierPhysics';
+import { physicsEngineInstance } from '../rapier/RapierPhysics';
 import type { PhysicsWorld, Collision } from './Physics';
 
 /**
@@ -29,8 +29,8 @@ export class Scene {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
-    if (this.physicsWorld instanceof RapierPhysicsWorld)
-      object.motion.addOnselfToPhysics(this.physicsWorld);
+    if (this.physicsWorld)
+      object.motion.addOneselfToPhysics(this.physicsWorld);
   }
 
   remove(object: ObjectA3) {
@@ -44,8 +44,8 @@ export class Scene {
       this.objects.pop();
     }
     object.scene = null;
-    if (this.physicsWorld instanceof RapierPhysicsWorld)
-      object.motion.removeOnselfFromPhysics(this.physicsWorld);
+    if (this.physicsWorld)
+      object.motion.removeOneselfFromPhysics(this.physicsWorld);
   }
 
   setCollisionListener(func: (cs: Collision[]) => void) {

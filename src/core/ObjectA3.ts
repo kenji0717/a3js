@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 import { Scene } from './Scene';
 import { Motion } from './Motion';
-import { defaultPhysicsEntityOption } from './Physics';
-import type { PhysicsEntityOption } from './Physics';
+import { defaultPhysicsMotionOption } from './Physics';
+import type { PhysicsMotionOption } from './Physics';
 import { RapierDefaultMotion } from '../rapier/RapierPhysics';
 import { Vec3 } from './Vec3';
 import type { MutableVec3 } from './Vec3';
@@ -94,9 +94,9 @@ export abstract class ObjectA3 {
   enableInterpolation(i: boolean) {
     this.motion.enableInterpolation(i);
   }
-  initDefaultPhysics(option: PhysicsEntityOption) {
+  initDefaultPhysics(option: PhysicsMotionOption) {
     const opt = {
-      ...defaultPhysicsEntityOption,
+      ...defaultPhysicsMotionOption,
       ...option
     };
     this.motion = new RapierDefaultMotion(this,opt);
