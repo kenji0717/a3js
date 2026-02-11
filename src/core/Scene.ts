@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { physicsEngineInstance } from '../rapier/RapierPhysics';
+import { physicsEngineInstance, RapierPhysicsWorld } from '../rapier/RapierPhysics';
 import type { PhysicsWorld, Collision } from './Physics';
 
 /**
@@ -13,6 +13,7 @@ export class Scene {
   physicsWorld: PhysicsWorld | null = null;
   physicsDt = 1/60;
   collisionListener?: (cs: Collision[]) => void;
+  rapierLines?: THREE.LineSegments;
 
   constructor() {
     this.scene = new THREE.Scene();
@@ -62,9 +63,37 @@ export class Scene {
       });
       if (this.collisionListener && collisions.length>0)
         this.collisionListener(collisions);
+      if (this.rapierLines) {
+        if (this.physicsWorld instanceof RapierPhysicsWorld) {
+          const { vertices, colors } = this.physicsWorld.world.debugRender();
+          this.rapierLines.geometry.setAttribute(
+            'position',
+            new THREE.BufferAttribute(vertices, 3)
+          );
+          this.rapierLines.geometry.setAttribute(
+            'color',
+            new THREE.BufferAttribute(colors, 4)
+          );
+        }
+      }
     }
     for (const obj of this.objects) {
       obj.update(dt);
+    }
+  }
+
+  rapierDebug(debug: boolean) {
+    if (debug) {
+      this.rapierLines = new THREE.LineSegments(
+        new THREE.BufferGeometry(),
+        new THREE.LineBasicMaterial({vertexColors:true})
+      );
+      this.scene.add(this.rapierLines);
+    } else {
+      if (this.rapierLines) {
+        this.scene.remove(this.rapierLines);
+        this.rapierLines = undefined;
+      }
     }
   }
 }

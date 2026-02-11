@@ -30,6 +30,7 @@ export type { PhysicsEngine,
               Collision } from './core/Physics';
 export { initPhysics, RapierPhysicsEngine } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
+export { CharactorMotion } from './rapier/CharactorMotion';
 export { Vec3 } from './core/Vec3';
 export type { MutableVec3 } from './core/Vec3';
 export { Quat, getQuatOfLookAt, vec3EulerToQuat } from './core/Quat';

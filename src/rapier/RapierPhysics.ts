@@ -10,12 +10,12 @@ import { PhysicsMotion, defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsMotionOption, Collision } from '../core/Physics';
 
-let RAPIER: typeof import('@dimforge/rapier3d-compat');
+export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
 /**
  * ColliderのIDとObjectA3の対応を記録しておくためのMap
  */
-const collisionMap: Map<number,ObjectA3> = new Map();
+export const collisionMap: Map<number,ObjectA3> = new Map();
 
 export class RapierPhysicsEngine implements PhysicsEngine {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -120,7 +120,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
 export abstract class RapierMotion extends PhysicsMotion {
 }
 
-export class RapierDefaultMotion extends PhysicsMotion {
+export class RapierDefaultMotion extends RapierMotion {
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[];
