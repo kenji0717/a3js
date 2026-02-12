@@ -6,6 +6,353 @@ import type { MutableQuat } from './Quat';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 
+
+/**
+ * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
+ * position,quaternion(rotation),scaleのみをコントロールする
+ * モーションのインタフェース。
+ * 
+ * ObjectA3に各種方法で登録されることで、そのObjectA3の
+ * 移動などに関する処理に影響を与える。ObjectA3に登録することが
+ * できるRootMotionは一つとは限らず複数可能である。その場合は、
+ * 登録した順番に従って順番に影響を与えてゆく。なので、この
+ * インターフェースを実装してRootMotionを自作する場合には、他の
+ * RootMotionが対象とするObjectA3のposition,quaternion,scaleを
+ * 変更することを考慮すること。具体的には対象とする
+ * ObjectA3.object.positionなどを最新の情報として参照しながら
+ * 動作するようプログラムすること。ただ、全てのRootMotionの
+ * 組合せが上手く動作する保証は無いし、保証する必要も無い。
+ * 
+ * このインタフェースにはsetLocation()やsetQuat()などの外部の
+ * プログラムから位置や回転を指定す要求を受け付けるメソッドが
+ * あるが、これらは必ずしも要求に応答しなければならないという
+ * わけではない。例えばInterpolationRootMotionでは、移動が
+ * 目視できるように1秒ほど時間をかけて移動するし、物理系の
+ * RootMotionの場合は、基本的に要求を無視して物理法則通りに
+ * 移動させるというのが正解の場合もある。ただし、setLocationNow()や
+ * setQuatNow()のようにメソッドの最後にNowが付いている物については
+ * 可能なかぎり要求に即座に答えなければならない。
+ * 
+ * このRootMotionを実装することでInterpolateRootMotion、
+ * BillboardRootMotion、CharactorRootMotionなどが作られる。
+ */
+export interface RootMotion {
+  /**
+   * 動きをコントロールする対象となるa3.ObjectA3(中に
+   * THREE.Object3Dも入ってる)を設定する。すでに設定されて
+   * いる場合には、変更という意味で対応しなければならない。
+   * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
+   */
+  setObject(objectA3: ObjectA3): void;
+
+  /**
+   * このRootMotionを操作しても、接続されている
+   * ObjectA3に影響したりしないように完全に切り離す。
+   * @param _objectA3 切り離すObjectA3
+   */
+  detachObject(): ObjectA3 | undefined;
+
+  /**
+   * 物理演算が必要な場合にRigidBodyやColliderを
+   * PhysicsWorldに登録する必要があるので、このメソッドで
+   * 対応する。
+   * @param world 登録対象のPhysicsWorld
+   */
+  addOneselfToPhysics(world: PhysicsWorld): void;
+
+  /**
+   * このRootMotionが不必要となって、PhysicsWorldに
+   * 登録していたRigidBodyやColliderを、登録解除する
+   * 処理を行うメソッド。
+   * @param world 解除対象のPhysicsWorld
+   */
+  removeOneselfFromPhysics(world: PhysicsWorld): void;
+
+  /**
+   * 指定の場所に移動せよとの外部からの要求に対応する
+   * ためのメソッド。
+   * @param loc 指定場所
+   */
+  setLocation(loc: MutableVec3): void;
+
+  /**
+   * 指定の場所に直ちに移動せよとの外部からの要求に対応する
+   * ためのメソッド。
+   * @param loc 指定場所
+   */
+  setLocationNow(loc: MutableVec3): void;
+
+  /**
+   * 指定の角度に回転せよとの外部からの要求に対応する
+   * ためのメソッド。
+   * @param quat 指定の回転
+   */
+  setQuat(quat: MutableQuat): void;
+
+  /**
+   * 指定の角度に直ちに回転せよとの外部からの要求に対応する
+   * ためのメソッド。
+   * @param quat 指定の回転
+   */
+  setQuatNow(quat: MutableQuat): void;
+
+  /**
+   * 指定の大きさ(拡大・縮小率)に変形せよとの外部からの要求に
+   * 対応するためのメソッド。
+   * @param scale 指定の大きさ
+   */
+  setScale(scale: MutableVec3): void;
+
+  /**
+   * 指定の大きさ(拡大・縮小率)に直ちに変形せよとの外部からの
+   * 要求に対応するためのメソッド。
+   * @param scale 指定の大きさ
+   */
+  setScaleNow(scale: MutableVec3): void;
+
+  /**
+   * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
+   * メソッド。外部からの指示がなくても自動的に移動するために
+   * 必要。
+   * @param dt 経過時間
+   */
+  update(dt: number): void;
+}
+
+
+/**
+ * 最も簡単なRootMotionの実装クラス。座標、回転、拡大率の
+ * 指定を即座に反映する。その他の機能は無い。ただ、メソッドは
+ * 全て実装されているので、ちょっとしたRootMotionを作りたい
+ * 時は、このクラスを拡張して必要なところだけオーバーライド
+ * するのがお勧め。
+ */
+export class DefaultRootMotion implements RootMotion {
+  // setObject()で与えられたObjectA3を用いて
+  // 以下の2つのプロパティを設定し、RootMotion共通で
+  // 使えるようにしておくと良い。
+  objectA3?: ObjectA3;
+  object3D?: THREE.Object3D;
+
+  /**
+   * コンストラクタ。生成する段階ではObjectA3と独立に
+   * 生成できるようにするのが理想。実際に使うにはsetObject()を
+   * してから使うことになる。
+   */
+  constructor() {}
+
+  setObject(objectA3: ObjectA3) {
+    this.objectA3 = objectA3;
+    this.object3D = objectA3.object;
+  }
+
+  detachObject() {
+    const ret = this.objectA3;
+    this.objectA3 = undefined;
+    this.object3D = undefined;
+    return ret;
+  }
+
+  addOneselfToPhysics(_world: PhysicsWorld): void {}
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+
+  setLocation(loc: MutableVec3) {
+    this.object3D?.position.set(loc.x,loc.y,loc.z);
+  }
+  setLocationNow(loc: MutableVec3) {
+    this.object3D?.position.set(loc.x,loc.y,loc.z);
+  }
+  setQuat(quat: MutableQuat) {
+    this.object3D?.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+  }
+  setQuatNow(quat: MutableQuat) {
+    this.object3D?.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+  }
+  setScale(scale: MutableVec3) {
+    this.object3D?.scale.set(scale.x,scale.y,scale.z);
+  }
+  setScaleNow(scale: MutableVec3) {
+    this.object3D?.scale.set(scale.x,scale.y,scale.z);
+  }
+  update(_dt: number) {
+    // do nothing
+  }
+}
+
+export class InterpolationRootMotion implements RootMotion {
+  objectA3?: ObjectA3;
+  object3D?: THREE.Object3D;
+  firstLoc: Vec3;
+  firstRot: Quat;
+  firstScale: Vec3;
+  nowLoc: Vec3;
+  nowRot: Quat;
+  nowScale: Vec3;
+  lastLoc: Vec3;
+  lastRot: Quat;
+  lastScale: Vec3;
+  nowTime: number;
+  duration: number;
+
+  constructor() {
+    this.firstLoc = new Vec3();
+    this.firstRot = new Quat();
+    this.firstScale = new Vec3();
+    this.nowLoc = new Vec3();
+    this.nowRot = new Quat();
+    this.nowScale = new Vec3();
+    this.lastLoc = new Vec3();
+    this.lastRot = new Quat();
+    this.lastScale = new Vec3();
+    this.nowTime = 0;
+    this.duration = 1;
+  }
+
+  setObject(objectA3: ObjectA3) {
+    this.objectA3 = objectA3;
+    this.object3D = objectA3.object;
+  }
+
+  detachObject() {
+    const ret = this.objectA3;
+    this.objectA3 = undefined;
+    this.object3D = undefined;
+    return ret;
+  }
+
+  addOneselfToPhysics(_world: PhysicsWorld): void {}
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+
+  setLocation(newLoc: MutableVec3) {
+    if (!this.object3D) return;
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
+    this.lastLoc.set(newLoc);
+    //this.lastRot.set(this.object3D.quaternion);
+    //this.lastScale.set(this.object3D.scale);
+    this.nowTime = 0;
+  }
+
+  setLocationNow(newLoc: MutableVec3) {
+    this.setLocation(newLoc);
+    this.nowTime = 1;
+  }
+
+  setQuat(newQuat: MutableQuat) {
+    if (!this.object3D) return;
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
+    //this.lastLoc.set(this.object3D.position);
+    this.lastRot.set(newQuat);
+    //this.lastScale.set(this.object3D.scale);
+    this.nowTime = 0;
+  }
+
+  setQuatNow(newQuat: MutableQuat) {
+    this.setQuat(newQuat);
+    this.nowTime = 1;
+  }
+
+  setScale(newScale: MutableVec3) {
+    if (!this.object3D) return;
+    this.firstLoc.set(this.object3D.position);
+    this.firstRot.set(this.object3D.quaternion);
+    this.firstScale.set(this.object3D.scale);
+    //this.lastLoc.set(this.object3D.position);
+    //this.lastRot.set(this.object3D.quaternion);
+    this.lastScale.set(newScale);
+    this.nowTime = 0;
+  }
+
+  setScaleNow(newScale: MutableVec3) {
+    this.setScale(newScale);
+    this.nowTime = 1;
+  }
+
+  // cssのanimation-timing-functionみたいに
+  // 切り替えられるようにしたいね。
+  smoothstep(t: number): number {
+    return t * t * (3 - 2 * t);
+  }
+
+  update(dt: number) {
+    this.nowTime += dt;
+    if (this.nowTime > this.duration) this.nowTime = this.duration;
+    if (!this.object3D) return;
+    const t0 = this.nowTime/this.duration;
+    const t = this.smoothstep(t0);
+
+    this.nowLoc.lerp(this.firstLoc,this.lastLoc,t);
+    // 以下、たぶん球面線形補間。重いけど必要な時ある。
+    this.nowRot.slerp(this.firstRot,this.lastRot,t);
+    this.nowScale.lerp(this.firstScale,this.lastScale,t);
+
+    this.object3D.position.set(this.nowLoc.x,this.nowLoc.y,this.nowLoc.z);
+    this.object3D.quaternion.set(this.nowRot.x,this.nowRot.y,this.nowRot.z,this.nowRot.w);
+    this.object3D.scale.set(this.nowScale.x,this.nowScale.y,this.nowScale.z);
+  }
+}
+
+const tmpObjLoc: Vec3 = new Vec3();
+const tmpTargetLoc: Vec3 = new Vec3();
+/**
+ * targetで指定した物の方を正面として向き続けるための
+ * RootMotion。特にtargetをカメラにするような使い方を
+ * 想定しているけど、実際には何をtargetにしても良い。
+ * 外部からの要求は全て無視して向きをtargetに向けるだけ
+ * のRootMotionなので複数RootMotionをObjectA3に登録して
+ * 使うなら、一番最後に置いておいてもらうと、良いと思う。
+ */
+export class BillboardRootMotion implements RootMotion {
+  objectA3?: ObjectA3;
+  object3D?: THREE.Object3D;
+  up: Vec3;
+  target: THREE.Object3D;
+
+  constructor(target: THREE.Object3D) {
+    this.up = new Vec3();
+    this.target = target;
+  }
+
+  setTarget(target: THREE.Object3D) {
+    this.target = target;
+  }
+
+  setObject(objectA3: ObjectA3) {
+    this.objectA3 = objectA3;
+    this.object3D = objectA3.object;
+  }
+
+  detachObject() {
+    const ret = this.objectA3;
+    this.objectA3 = undefined;
+    this.object3D = undefined;
+    return ret;
+  }
+
+  addOneselfToPhysics(_world: PhysicsWorld): void {}
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+
+  setLocation(_loc: MutableVec3) {}
+  setLocationNow(_loc: MutableVec3) {}
+  setQuat(_quat: MutableQuat) {}
+  setQuatNow(_quat: MutableQuat) {}
+  setScale(_scale: MutableVec3) {}
+  setScaleNow(_scale: MutableVec3) {}
+
+  update() {
+    if (!this.object3D) return;
+    tmpObjLoc.set(this.object3D.position);
+    tmpTargetLoc.set(this.target.position);
+    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
+    this.object3D.quaternion.set(quat.x,quat.y,quat.z,quat.w);
+  }
+}
+
+
+
 /**
  * ObjectA3が何らかの方法で自動的に動かなければならない
  * 場合に、その動きをコントロールするプログラムを実装する

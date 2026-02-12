@@ -1,3 +1,7 @@
+やっぱりMotionをRootMotionとInnerMotionに分けることにした。
+またブランチを作った`feature/motion2`。また大変だ。
+
+-----
 
 * 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
 * Motion
