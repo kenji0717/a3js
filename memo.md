@@ -1,9 +1,49 @@
-やっぱりMotionをRootMotionとInnerMotionに分けることにした。
+やっぱりMotionをRootMotionとPoseMotionに分けることにした。
+PoseMotionの方はChatGPTからアイデアをもらって、Pose
+インターフェースという型を作って、それでポーズの情報を
+受け渡しすればMixerから脱却できて、物理演算との統合も楽に
+なりそうな感じ。だいぶ改変した後の状態だけど、ChatGPTからの
+アイデアを、ここにメモ。
+
+Poseインターフェースは以下。ここが抽象的な情報になって
+いるところがポイントの一つ。
+
+interface Pose {
+  bones: Map<string, {
+    position: MutialVec3;
+    quaternion: MutalQuat;
+    scale: MutialVec3;
+  }>;
+}
+
+次にPoseMotionインターフェースの大事なところは、
+
+interface PoseMotion {
+  update(dt: number): Pose;
+}
+
+ここが拡張性の要。PoseMotionにObject3Dとかを触らせずに
+済ますのがポイント。これを実装するにあたり、AnimationClipの
+中にあるKeyframeTrackにあるcreateInterpolant()の機能を使う
+と良い。物理エンジンでもRigidBodyの値を使えばOK。
+
+そして、Mixer使わなくても以下の関数書けばブレンドが可能。
+
+function blendPose(a: Pose, b: Pose, weight: number): Pose;
+
+Quatはslerpで、Vec3の方はlerp使えばOK。
+作ったPoseをThree.jsに反映させるためには、
+applyPoseToSkeleton(pose, skeleton)みたいな関数作って、
+そのの中で
+
+skeleton.bones[???].position.copy(...);
+
+のような感じで全てのboneに対して繰り返し処理するだけ。
+
 またブランチを作った`feature/motion2`。また大変だ。
 
 -----
 
-* 後でEntityを探して全部潰すべし。(Motionにしたので必要なくなったから)
 * Motion
     + 独立して生成して気軽に取り替えられるようにする
     + AnimationClipのみをMotionに持たせて、それ以外は

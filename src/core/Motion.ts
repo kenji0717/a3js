@@ -112,9 +112,9 @@ export interface RootMotion {
 
   /**
    * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
-   * メソッド。外部からの指示がなくても自動的に移動するために
-   * 必要。
-   * @param dt 経過時間
+   * メソッド。毎フレーム呼び出されて対応するObjectA3を動かす。
+   * 外部からの指示がなくても自動的に移動するために使用される。
+   * @param dt 経過時間(秒)
    */
   update(dt: number): void;
 }
@@ -351,6 +351,112 @@ export class BillboardRootMotion implements RootMotion {
   }
 }
 
+/**
+ * キャラクタのポーズを表すインターフェース。主に3Dキャラクタ
+ * を想定しているが、車のシャーシーやタイヤの動きも、このPose
+ * インターフェースで表現することができ、PoseMotionインターフェース
+ * は、このPoseインターフェースを用いることで、モーションキャプチャー
+ * データも物理演算結果も、その他の動きも統一して扱えるようになる。
+ */
+export interface Pose {
+  bones: Map<string, {
+    position: MutialVec3;
+    quaternion: MutalQuat;
+    scale: MutialVec3;
+  }>;
+}
+
+
+/**
+ * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
+ * インスタンスには影響を与えないけど、その中に含まれている
+ * 要素をコントロールするモーションインターフェース。
+ * キャラクターの様々なジェスチャーを表すようなモーションを
+ * コントロールすることなどに使われる。
+ * 
+ * このインタフェースにはcontrolMotion()や、setPause()、
+ * setTime()などのメソッドがある。update()は毎フレーム呼び出さ
+ * れて3Dの要素に動きを与えるメソッド。どのメソッドも、原則その
+ * メソッドが示す処理を実装することになるが、どのようなInnerMotion
+ * かによって、その処理内容は様々な場合がありうる。
+ *
+ * Three.jsではTHREE.AnimationClipに対応する対象と考えてもらいたい。
+ */
+export interface InnerMotion {
+  /**
+   * このInnerMotionの名前（例として'Walk'とか'Run'とか）を
+   * 保存しているプロパティ。
+  motionName: string;
+  /**
+   * 動きをコントロールする対象となるa3.ObjectA3(中に
+   * THREE.Object3Dも入ってる)を設定する。すでに設定されて
+   * いる場合には、変更という意味で対応しなければならない。
+   * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
+   */
+  setObject(objectA3: ObjectA3): void;
+
+  /**
+   * このRootMotionを操作しても、接続されている
+   * ObjectA3に影響したりしないように完全に切り離す。
+   * @param _objectA3 切り離すObjectA3
+   */
+  detachObject(): ObjectA3;
+
+  /**
+   * 物理演算が必要な場合にRigidBodyやColliderを
+   * PhysicsWorldに登録する必要があるので、このメソッドで
+   * 対応する。
+   * @param world 登録対象のPhysicsWorld
+   */
+  addOneselfToPhysics(_world: PhysicsWorld): void;
+
+  /**
+   * このRootMotionが不必要となって、PhysicsWorldに
+   * 登録していたRigidBodyやColliderを、登録解除する
+   * 処理を行うメソッド。
+   * @param world 解除対象のPhysicsWorld
+   */
+  removeOneselfFromPhysics(_world: PhysicsWorld): void;
+
+  /**
+   * このInnerMotionが再生されるように準備し再生を開始する。
+   */
+  enable(): void;
+
+  /**
+   * このInnerMotionが再生を停止しする。
+   */
+  disable(): void;
+
+  /**
+   * 動きをコントロールするための情報を引数に与えて呼び出す
+   * メソッド。典型的には一部のglTFファイルに内在するモーフ
+   * (Morh)などのコントロールをする時に使われる。
+   * @param args 動きをコントロールするための情報
+   */
+  controlMotion(...args: string[]): void;
+
+  /**
+   * このモーションの動作を一時停止させたり、停止状態を
+   * 解除したりするためのメソッド。
+   * @param p trueの時停止、falseの時停止解除する
+   */
+  setPause(p: boolean): void;
+
+  /**
+   * モーションがデータを再生させるような種類の物であれば、
+   * そのデータの再生時間を設定する。
+   * @param time 時間(秒)
+   */
+  setTime(time: number): void;
+
+  /**
+   * 経過時間に応じて対象のObjectA3の内部の動きをおこす。
+   * 毎フレーム呼び出されることで、アニメーションを作り出す。
+   * @param dt 経過時間(秒)
+   */
+  update(dt: number): void;
+}
 
 
 /**
