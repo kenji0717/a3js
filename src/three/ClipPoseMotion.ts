@@ -13,12 +13,14 @@ export class ClipPoseMotion implements PoseMotion {
   name: string;
   time: number;
   isPaused: boolean;
+  isFinished: boolean;
   interpolants: Record<string,THREE.Interpolant>;
 
   constructor(clip: THREE.AnimationClip) {
     this.name = clip.name; // this.clip.nameに名前ある
     this.time = 0;
     this.isPaused = false;
+    this.isFinished = false;
     this.interpolants = {};
     for (const track of clip.tracks) {
       const valueSize = track.getValueSize();

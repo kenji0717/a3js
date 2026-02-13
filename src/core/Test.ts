@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { Motion } from './Motion';
+import { Vec3, Transform, vec3EulerToQuat } from './LinearMath';
+import { DefaultRootMotion } from './Motion';
+import type { RootMotion } from './Motion';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { deepMerge } from '../utils/math';
 import type { DeepPartial } from '../utils/math';
@@ -25,8 +27,13 @@ export const defaultTestOption: TestOption = {
 }
 
 export class Test extends ObjectA3 {
-  constructor(opt: DeepPartial<TestOption>) {
+  constructor(opt: DeepPartial<TestOption> = {}) {
     super(opt);
+    const option = {
+      ...defaultTestOption,
+      ...opt
+    };
+    this.addRootMotion(new TestMotion(option));
   }
 
   initObject() {
@@ -42,26 +49,29 @@ export class Test extends ObjectA3 {
     return mesh;
   }
 
-  initMotion(option: DeepPartial<TestOption>): Motion {
+  initRootMotions(option: DeepPartial<TestOption>): RootMotion[] {
     const opt = deepMerge<TestOption>(defaultTestOption,option);
-    return new TestMotion(this,opt);
+    return [new TestMotion(opt)];
   }
 }
 
-class TestMotion extends Motion {
+class TestMotion extends DefaultRootMotion {
   testMode: boolean = true;
-  constructor(obj: ObjectA3,opt: TestOption) {
-    super(obj);
+  rot: Vec3 = new Vec3();
+
+  constructor(opt: TestOption) {
+    super();
     this.testMode = opt.testMode;
   }
 
-  update(dt: number) {
-    if (this.testMode && this.object3D) {
-      this.object3D.rotation.x += dt;
-      this.object3D.rotation.y += dt;
-      this.object3D.rotation.z += dt;
+  update(dt: number, trans: Transform) {
+    if (this.testMode) {
+      this.rot.add(dt,dt,dt);
+      const q = vec3EulerToQuat(this.rot);
+      trans.quat.set(q);
     } else {
-      super.update(dt);
+      super.update(dt,trans);
     }
+    return trans;
   }
 }

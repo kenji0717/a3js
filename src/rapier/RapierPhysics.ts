@@ -5,10 +5,10 @@ import * as TG from '../utils/TypeGuard';
 
 import { ObjectA3 } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
-import { PhysicsMotion, defaultPhysicsMotionOption } from '../core/Physics';
+import { defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsMotionOption, Collision } from '../core/Physics';
-import type { RootMotion } from '../core/Motion';
+import type { RootMotion, PoseMotion } from '../core/Motion';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
@@ -72,20 +72,12 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(motion: PhysicsMotion) {
-    if (motion instanceof RapierMotion) {
-      motion.addOneselfToPhysics(this);
-    } else {
-      ; // 何もしない
-    }
+  add(motion: RootMotion | PoseMotion) {
+    motion.addOneselfToPhysics(this);
   }
 
-  remove(motion: PhysicsMotion) {
-    if (motion instanceof RapierMotion) {
-      motion.removeOneselfFromPhysics(this);
-    } else {
-      ; // 何もしない
-    }
+  remove(motion: RootMotion | PoseMotion) {
+    motion.removeOneselfFromPhysics(this);
   }
 
   update(dt: number) {
@@ -112,12 +104,6 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     });
     return collisions;
   }
-}
-
-/**
- * Rapier物理エンジンを使用するMotionであることを示すための
- */
-export abstract class RapierMotion extends PhysicsMotion {
 }
 
 export class RapierRootMotion implements RootMotion {
@@ -252,156 +238,6 @@ export class RapierRootMotion implements RootMotion {
       trans.quat.set(r.x, r.y, r.z, r.w);
     }
     return trans;
-  }
-}
-
-export class RapierDefaultMotion extends RapierMotion {
-  bodyDesc?: Rapier.RigidBodyDesc;
-  body?: Rapier.RigidBody;
-  colliderDescs: Rapier.ColliderDesc[];
-  colliders: Rapier.Collider[];
-  completeOption: PhysicsMotionOption;
-
-  constructor(objectA3?: ObjectA3,option: Partial<PhysicsMotionOption> = {}) {
-    super(objectA3);
-    this.colliderDescs = [];
-    this.colliders = [];
-    this.completeOption = {
-      ...defaultPhysicsMotionOption,
-      ...option
-    };
-  }
-  setObject(objectA3: ObjectA3): void {
-    super.setObject(objectA3);
-    this.bodyDesc = undefined;
-    this.body = undefined;
-    this.colliderDescs = [];
-    this.colliders = [];
-    this.myInitialize(objectA3);
-  }
-
-  detachObject(_objectA3: ObjectA3) {
-    this.bodyDesc = undefined;
-    this.body = undefined;
-    this.colliderDescs = [];
-    this.colliders = [];
-  }
-
-  myInitialize(objectA3: ObjectA3) {
-    const opt = this.completeOption;
-    switch(opt.rigidBody) {
-      case "dynamic":
-        this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
-        break;
-      case "kinematic":
-        this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
-        //this.bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased(); // GAHAこれあったか！
-        break;
-      case "fixed":
-        this.bodyDesc = RAPIER.RigidBodyDesc.fixed();
-        break;
-    }
-    this.bodyDesc.setTranslation(
-      objectA3.object.position.x,
-      objectA3.object.position.y,
-      objectA3.object.position.z
-    );
-    this.bodyDesc.setRotation({
-      x: objectA3.object.quaternion.x,
-      y: objectA3.object.quaternion.y,
-      z: objectA3.object.quaternion.z,
-      w: objectA3.object.quaternion.w
-    });
-    const volumes: number[] = [];
-    objectA3.object.traverse((obj)=>{
-      if (TG.isMesh(obj)) {
-        const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
-        const collisionGroups = (opt.membership << 16) | opt.filter;
-        if (cv) {
-          cv.colliderDesc.setCollisionGroups(collisionGroups);
-          if (opt.collisionDetection)
-            cv.colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
-          this.colliderDescs.push(cv.colliderDesc);
-          cv.colliderDesc.setRestitution(opt.restitution).setFriction(opt.friction);
-          volumes.push(cv.volume);
-        } else {
-          let c: Rapier.ColliderDesc | null, v: number;
-          switch(opt.meshCollider) {
-            case "tri_mesh":
-              c = createTriMeshColliderDesc(obj);
-              v = computeGeometryVolume(obj.geometry);
-              break;
-            case "convex_hull":
-              c = createConvexHullColliderDesc(obj);
-              v = computeGeometryVolume(obj.geometry);
-              break;
-          }
-          if (c) {
-            c.setCollisionGroups(collisionGroups);
-            if (opt.collisionDetection)
-              c.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
-            this.colliderDescs.push(c);
-            volumes.push(v);
-          }
-        }
-      }
-    });
-    let volumeSum = volumes.reduce((sum,vol)=>sum+vol,0);
-    for (let i=0;i<this.colliderDescs.length;i++) {
-      this.colliderDescs[i].setRestitution(opt.restitution);
-      this.colliderDescs[i].setFriction(opt.friction);
-      this.colliderDescs[i].setMass(opt.mass*(volumes[i]/volumeSum));
-    }
-  }
-
-  update(_: number) {
-    if (this.body) {
-      const t = this.body.translation();
-      this.object3D?.position.set(t.x, t.y, t.z);
-      const r = this.body.rotation();
-      this.object3D?.quaternion.set(r.x, r.y, r.z, r.w);
-    }
-  }
-
-  setLocation(_: Vec3): void {
-    // これはできない物とする
-  }
-  setLocationNow(v: Vec3): void {
-    if (this.body)
-      this.body.setTranslation(v,true); // true? false?
-  }
-
-  setQuat(_: Quat): void {
-    // これはできない物とする
-  }
-  setQuatNow(q: Quat): void {
-    if (this.body)
-      this.body.setRotation(q,true); // true? false?
-  }
-
-  setScale(_: Vec3): void {
-    // これはできない物とする
-  }
-  setScaleNow(_: Vec3): void {
-    // 簡単ではないのでとりあえず保留
-  }
-
-  addOneselfToPhysics(world: RapierPhysicsWorld): void {
-    if (this.bodyDesc)
-      this.body = world.world.createRigidBody(this.bodyDesc);
-    this.colliderDescs.forEach((colliderDesc)=>{
-      const collider = world.world.createCollider(colliderDesc,this.body);
-      this.colliders.push(collider);
-      if (this.objectA3)
-        collisionMap.set(collider.handle,this.objectA3);
-    });
-  }
-  removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.body)
-      world.world.removeRigidBody(this.body);
-    this.colliders.forEach((collider) => {
-      world.world.removeCollider(collider,false); // true? false?
-    });
   }
 }
 

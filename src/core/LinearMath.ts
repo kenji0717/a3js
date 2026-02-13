@@ -435,6 +435,20 @@ export class Transform {
     return this;
   }
 
+  write(objectA3: ObjectA3): void;
+  write(object3D: THREE.Object3D): void;
+  write(obj: ObjectA3 | THREE.Object3D): void {
+    if (obj instanceof ObjectA3) {
+      obj.object.position.set(this.loc.x,this.loc.y,this.loc.z);
+      obj.object.quaternion.set(this.quat.x,this.quat.y,this.quat.z,this.quat.w);
+      obj.object.scale.set(this.scale.x,this.scale.y,this.scale.z);
+    } else {
+      obj.position.set(this.loc.x,this.loc.y,this.loc.z);
+      obj.quaternion.set(this.quat.x,this.quat.y,this.quat.z,this.quat.w);
+      obj.scale.set(this.scale.x,this.scale.y,this.scale.z);
+    }
+  }
+
   blend(trans: Transform, t: number): Transform {
     this.loc.lerp(this.loc,trans.loc,t);
     this.quat.slerp(this.quat,trans.quat,t);

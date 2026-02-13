@@ -1,12 +1,15 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
-import { Motion } from './Motion';
+import { DefaultRootMotion } from './Motion';
+import { InterpolationRootMotion } from './Motion';
+import type { RootMotion, PoseMotion, Pose } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
-import { RapierDefaultMotion } from '../rapier/RapierPhysics';
+import { RapierRootMotion } from '../rapier/RapierPhysics';
 import { Vec3, Quat, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
+import { tmp } from '../utils/math';
 
 /**
  * スクリーン上における方向を表します。
@@ -19,8 +22,6 @@ export type Dir =
   | "LEFT"
   | "BOTTOM";
 
-// BalloonInfoとInterpolationの実装は長いので一番下に移動した。
-
 /**
  * シーンの中に配置される全てのオブジェクトのベース
  * となるアブストラクトクラス。シーンの中の表示対象
@@ -32,23 +33,27 @@ export type Dir =
 export abstract class ObjectA3 {
   static defaultRotationOrder: RotationOrder = "XYZ";
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
-  rotationOrder: RotationOrder | null = null;
-  upVector: Vec3 | null = null;
+  rotationOrder?: RotationOrder;
+  upVector?: Vec3;
   object: THREE.Object3D;
-  scene: Scene | null = null;
-  private balloon: BalloonInfo | null = null;
-  motion: Motion;
-  parent: ObjectA3 | null = null;
+  scene?: Scene;
+  private balloon?: BalloonInfo;
+  rootMotions: RootMotion[];
+  poseMotions: Record<string,PoseMotion>;
+  statePoseMotion?: PoseMotion;
+  emotePoseMotion?: PoseMotion;
+  parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
+  bones?: Record<string,THREE.Object3D>;
 
   constructor(data?: any) {
     this.object = this.initObject(data);
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
-    this.motion = this.initMotion();
-    this.motion.setObject(this);
+    this.rootMotions = this.initRootMotions(data);
+    this.poseMotions = this.initPoseMotions(data);
   }
 
   // 非同期でないと無理な場合などはとりあえず
@@ -57,52 +62,105 @@ export abstract class ObjectA3 {
   abstract initObject(data?: any): THREE.Object3D;
 
   /**
-   * このObjectA3で使用されるMotionを返す。
-   * デフォルトではMotionなのだが、
-   * このメソッドをオーバーライドすることで
-   * Motionを継承した物に変更可能。
+   * このObjectA3のコンストラクタから呼び出され、デフォルトで
+   * 使用されるRootMotionの配列を返す。
+   * このメソッドをオーバーライドすることでデフォルトの
+   * RootMotionを変更することが可能。
    * @param _data コンストラクタから渡された情報
-   * @returns このObjectA3で使用されるMotion
+   * @returns このObjectA3で使用されるRootMotionの配列
    */
-  initMotion(_data?: any): Motion {
-    return new Motion(this);
+  initRootMotions(_data?: any): RootMotion[] {
+    return [new DefaultRootMotion()];
   }
-  setMotion(motion: Motion) {
-    motion.setObject(this);
-    this.motion = motion;
+
+  /**
+   * ObjectA3生成後に使用されるRootMotionの配列を変更する。
+   * @param rootMotions RootMotionの配列
+   */
+  setRootMotions(rootMotions: RootMotion[]): void {
+    this.rootMotions = rootMotions;
   }
-  detachMotion(): Motion {
-    const newMotion = new Motion(this);
-    const oldMotion = this.motion;
-    oldMotion.detachObject(this);
-    this.motion = newMotion;
-    newMotion.setObject(this);
-    return oldMotion;
+
+  /**
+   * ObjectA3生成後に、使用されるRootMotionの配列の最後に
+   * 追加でRootMotionを1つ加える。
+   */
+  addRootMotion(rootMotion: RootMotion): void {
+    this.rootMotions.push(rootMotion);
   }
-  replaceMotion(newMotion: Motion): Motion {
-    const oldMotion = this.motion;
-    oldMotion.detachObject(this);
-    this.motion = newMotion;
-    newMotion.setObject(this);
-    return oldMotion;
+
+  /**
+   * このObjectA3のコンストラクタから呼び出され、デフォルトで
+   * 使用されるPoseMotionの辞書を返す。ただObjectA3の実装では
+   * 空の辞書を返すだけ。このメソッドをオーバーライドすることで
+   * デフォルトのPoseMotionを変更することが可能。
+   * @param _data コンストラクタから渡された情報
+   * @returns このObjectA3で使用されるPoseMotionの辞書
+   */
+  initPoseMotions(_data?: any): Record<string,PoseMotion> {
+    return {};
   }
-  controlMotion(...args: string[]) {
-    this.motion.controlMotion(...args);
+
+  /**
+   * ObjectA3生成後に使用されるRootMotionの配列を変更する。
+   * @param poseMotions PoseMotionの辞書
+   */
+  setPoseMotions(poseMotions: Record<string,PoseMotion>): void {
+    this.poseMotions = poseMotions;
   }
+
+  /**
+   * ObjectA3生成後に、使用されるPoseMotionの辞書に
+   * 追加でPoseMotionを1つ加える。
+   */
+  addPoseMotion(name: string, poseMotion: PoseMotion): void {
+    this.poseMotions[name] = poseMotion;
+  }
+
   enableInterpolation(i: boolean) {
-    this.motion.enableInterpolation(i);
+    if (i) {
+      this.rootMotions.push(new InterpolationRootMotion());
+    } else {
+      const newRootMotions: RootMotion[] = [];
+      this.rootMotions.forEach((m)=>{
+        if (!(m instanceof InterpolationRootMotion))
+          newRootMotions.push(m);
+      });
+      this.rootMotions = newRootMotions;
+    }
   }
-  initDefaultPhysics(option: PhysicsMotionOption) {
+
+  initSimplePhysics(option: PhysicsMotionOption) {
     const opt = {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    this.motion = new RapierDefaultMotion(this,opt);
-    this.motion.setObject(this);
+    this.rootMotions = [new RapierRootMotion(this,opt)];
+    this.poseMotions = {};
   }
 
+  pose: Pose = {};
   update(dt: number) {
-    this.motion.update(dt);
+    //RootMosionを反映
+    tmp.t0.set(this);
+    this.rootMotions.reduce((acc,motion)=>motion.update(dt,acc),tmp.t0);
+    tmp.t0.write(this);
+    //PoseMosionを反映
+    let pose;
+    if (this.emotePoseMotion && !this.emotePoseMotion.isFinished) {
+      pose = this.emotePoseMotion.update(dt);
+      if (this.emotePoseMotion.isFinished)
+        this.emotePoseMotion = undefined;
+    } else if (this.statePoseMotion) {
+      pose = this.statePoseMotion.update(dt);
+    }
+    if (pose && this.bones) {
+      for (const [boneName,trans] of Object.entries(pose)) {
+        const bone = this.bones[boneName];
+        if (bone) trans.write(bone);
+      }
+    }
+
     this.children.forEach((child)=>{
       child.update(dt);
     });
@@ -122,7 +180,7 @@ export abstract class ObjectA3 {
     // if (!this.children.includes(obj)) return; // ちゃんと管理されてれば必要ない
     const idx = this.children.indexOf(obj);
     this.children.splice(idx,1);
-    obj.parent = null;
+    obj.parent = undefined;
     this.object.remove(obj.object);
   }
 
@@ -170,7 +228,9 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.motion.setLocation(newLoc);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setLocation(newLoc);
+    });
   }
 
   setLocationNow(x: number, y: number, z: number): void;
@@ -182,8 +242,9 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.motion.setLocationNow(newLoc);
-    this.object.position.set(newLoc.x,newLoc.y,newLoc.z);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setLocationNow(newLoc);
+    });
   }
 
 
@@ -202,7 +263,9 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.motion.setQuat(newQuat);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setQuat(newQuat);
+    });
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
@@ -214,7 +277,9 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.motion.setQuatNow(newQuat);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setQuatNow(newQuat);
+    });
   }
 
   get scaleX(): number { return this.object.scale.x; }
@@ -229,7 +294,9 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.motion.setScale(newScale);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setScale(newScale);
+    });
   }
 
   setScaleNow(x: number, y: number, z: number): void;
@@ -241,13 +308,15 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.motion.setScaleNow(newScale);
+    this.rootMotions.forEach((rootMotion)=>{
+      rootMotion.setScaleNow(newScale);
+    });
   }
 
   /**
    * オイラー角で回転を設定。単位はラジアンではなくデグリー
    * (360度で1回転)とする。回転の合成の順番はthis.rotationOrderの
-   * 設定によるが、それがnullの時はObject3D.defaultRotationOrderの
+   * 設定によるが、それがundefinedの時はObject3D.defaultRotationOrderの
    * 順番になる。
    */
   setRotation(x: number, y: number, z: number): void;

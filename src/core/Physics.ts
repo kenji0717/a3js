@@ -1,8 +1,6 @@
 
 import type { ObjectA3 } from './ObjectA3';
-//import type { MutableVec3 } from './Vec3';
-//import type { MutableQuat } from './Quat';
-import { Motion } from './Motion';
+import type { RootMotion, PoseMotion } from './Motion';
 
 /*
  * 念のため、物理エンジンが変更されてもa3jsへの影響が少なくなるよう
@@ -47,8 +45,8 @@ export interface PhysicsWorldOption {
  * メソッドを持つ。
  */
 export interface PhysicsWorld {
-  add(motion: PhysicsMotion): void;
-  remove(motion: PhysicsMotion): void;
+  add(motion: RootMotion | PoseMotion): void;
+  remove(motion: RootMotion | PoseMotion): void;
   update(dt: number): void;
   getCollisions(): Collision[];
 }
@@ -86,13 +84,6 @@ export const defaultPhysicsMotionOption: PhysicsMotionOption = {
   filter: 0b0000000000000001,
   collisionDetection: false
 };
-
-
-/**
- * 物理演算を行うMotionを他のMotionと区別できるようにする。
- */
-export abstract class PhysicsMotion extends Motion {
-}
 
 
 /**

@@ -30,8 +30,14 @@ export class Scene {
     this.scene.add(object.object);
     this.objects.push(object);
     object.scene = this;
-    if (this.physicsWorld)
-      object.motion.addOneselfToPhysics(this.physicsWorld);
+    if (this.physicsWorld) {
+      for (const rm of object.rootMotions) {
+        rm.addOneselfToPhysics(this.physicsWorld);
+      }
+      for (const pm of Object.values(object.poseMotions)) {
+        pm.addOneselfToPhysics(this.physicsWorld);
+      }
+    }
   }
 
   remove(object: ObjectA3) {
@@ -44,9 +50,15 @@ export class Scene {
       this.objects[i] = this.objects[this.objects.length-1];
       this.objects.pop();
     }
-    object.scene = null;
-    if (this.physicsWorld)
-      object.motion.removeOneselfFromPhysics(this.physicsWorld);
+    object.scene = undefined;
+    if (this.physicsWorld) {
+      for (const rm of object.rootMotions) {
+        rm.removeOneselfFromPhysics(this.physicsWorld);
+      }
+      for (const pm of Object.values(object.poseMotions)) {
+        pm.removeOneselfFromPhysics(this.physicsWorld);
+      }
+    }
   }
 
   setCollisionListener(func: (cs: Collision[]) => void) {
