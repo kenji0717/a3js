@@ -1,5 +1,30 @@
 import { unzip, strFromU8 } from 'fflate'; // 'three/addons/libs/fflate.module.js';
 import type { Unzipped } from 'fflate'; // 'three/addons/libs/fflate.module.js';
+import { Vec3, Quat, Transform } from '../core/LinearMath';
+
+// new を避けるための共同利用用インスタンス
+// コピペ用import文
+// import { tmp } from '../utils/math';
+export const tmp = {
+  v0: new Vec3(),
+  v1: new Vec3(),
+  v2: new Vec3(),
+  v3: new Vec3(),
+  v4: new Vec3(),
+  q0: new Quat(),
+  q1: new Quat(),
+  q2: new Quat(),
+  q3: new Quat(),
+  q4: new Quat(),
+  t0: new Transform(),
+  t1: new Transform(),
+  t2: new Transform(),
+  t3: new Transform(),
+  t4: new Transform()
+};
+
+
+
 
 export function asyncSleep(time: number): Promise<void> {
   return new Promise((resolve) => {

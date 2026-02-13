@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { Controller } from './Controller';
-import type { MutableVec3 } from './Vec3';
+import { Vec3 } from './LinearMath';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -22,7 +22,7 @@ export abstract class Camera extends ObjectA3 {
   /**
    * ワールド座標 → 正規化デバイス座標（NDC）
    */
-  abstract calcNDC(loc: MutableVec3): {x: number, y: number}; 
+  abstract calcNDC(loc: Vec3): {x: number, y: number}; 
 
   abstract setHeadLightEnable(b: boolean): void;
 
@@ -31,12 +31,16 @@ export abstract class Camera extends ObjectA3 {
   }
 
   setLocation(x: number, y: number, z: number): void;
-  setLocation(v: MutableVec3): void;
-  setLocation(xOrV: number | MutableVec3, y?: number, z?: number): void {
-    if (typeof xOrV === 'number')
+  setLocation(v: Vec3): void;
+  setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
+    const v = new Vec3();
+    if (typeof xOrV === 'number') {
       super.setLocation(xOrV,y!,z!);
-    else
+      v.set(xOrV,y!,z!);
+    } else {
       super.setLocation(xOrV);
-    this.controller?.setCameraLocation(this.object.position);
+      v.set(xOrV);
+    }
+    this.controller?.setCameraLocation(v);
   }
 }

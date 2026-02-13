@@ -5,10 +5,8 @@ import { Motion } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
 import { RapierDefaultMotion } from '../rapier/RapierPhysics';
-import { Vec3 } from './Vec3';
-import type { MutableVec3 } from './Vec3';
-import { Quat, getQuatOfLookAt, vec3EulerToQuat } from './Quat';
-import type { MutableQuat, RotationOrder } from './Quat';
+import { Vec3, Quat, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
+import type { RotationOrder } from './LinearMath';
 
 /**
  * スクリーン上における方向を表します。
@@ -164,8 +162,8 @@ export abstract class ObjectA3 {
   get locY(): number { return this.object.position.y; }
   get locZ(): number { return this.object.position.z; }
   setLocation(x: number, y: number, z: number): void;
-  setLocation(v: MutableVec3): void;
-  setLocation(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setLocation(v: Vec3): void;
+  setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
     const newLoc = new Vec3();
     if (typeof xOrV === "number") {
       newLoc.set(xOrV, y!, z!);
@@ -176,8 +174,8 @@ export abstract class ObjectA3 {
   }
 
   setLocationNow(x: number, y: number, z: number): void;
-  setLocationNow(v: MutableVec3): void;
-  setLocationNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setLocationNow(v: Vec3): void;
+  setLocationNow(xOrV: number | Vec3, y?: number, z?: number): void {
     const newLoc = new Vec3();
     if (typeof xOrV === "number") {
       newLoc.set(xOrV, y!, z!);
@@ -196,8 +194,8 @@ export abstract class ObjectA3 {
   get quatZ(): number { return this.object.quaternion.z; }
   get quatW(): number { return this.object.quaternion.w; }
   setQuat(x: number, y: number, z: number, w: number): void;
-  setQuat(q: MutableQuat): void;
-  setQuat(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
+  setQuat(q: Quat): void;
+  setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     const newQuat = new Quat();
     if (typeof xOrQ === "number") {
       newQuat.set(xOrQ, y!, z!, w!);
@@ -208,8 +206,8 @@ export abstract class ObjectA3 {
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
-  setQuatNow(q: MutableQuat): void;
-  setQuatNow(xOrQ: number | MutableQuat, y?: number, z?: number, w?: number): void {
+  setQuatNow(q: Quat): void;
+  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     const newQuat = new Quat();
     if (typeof xOrQ === "number") {
       newQuat.set(xOrQ, y!, z!, w!);
@@ -223,8 +221,8 @@ export abstract class ObjectA3 {
   get scaleY(): number { return this.object.scale.y; }
   get scaleZ(): number { return this.object.scale.z; }
   setScale(x: number, y: number, z: number): void;
-  setScale(v: MutableVec3): void;
-  setScale(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setScale(v: Vec3): void;
+  setScale(xOrV: number | Vec3, y?: number, z?: number): void {
     const newScale = new Vec3();
     if (typeof xOrV === "number") {
       newScale.set(xOrV, y!, z!);
@@ -235,8 +233,8 @@ export abstract class ObjectA3 {
   }
 
   setScaleNow(x: number, y: number, z: number): void;
-  setScaleNow(v: MutableVec3): void;
-  setScaleNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setScaleNow(v: Vec3): void;
+  setScaleNow(xOrV: number | Vec3, y?: number, z?: number): void {
     const newScale = new Vec3();
     if (typeof xOrV === "number") {
       newScale.set(xOrV, y!, z!);
@@ -253,8 +251,8 @@ export abstract class ObjectA3 {
    * 順番になる。
    */
   setRotation(x: number, y: number, z: number): void;
-  setRotation(v: MutableVec3): void;
-  setRotation(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setRotation(v: Vec3): void;
+  setRotation(xOrV: number | Vec3, y?: number, z?: number): void {
     const rot = new Vec3();
     if (typeof xOrV === "number")
       rot.set(xOrV, y!, z!);
@@ -267,8 +265,8 @@ export abstract class ObjectA3 {
   }
 
   setRotationNow(x: number, y: number, z: number): void;
-  setRotationNow(v: MutableVec3): void;
-  setRotationNow(xOrV: number | MutableVec3, y?: number, z?: number): void {
+  setRotationNow(v: Vec3): void;
+  setRotationNow(xOrV: number | Vec3, y?: number, z?: number): void {
     const rot = new Vec3();
     if (typeof xOrV === "number")
       rot.set(xOrV, y!, z!);
@@ -294,9 +292,9 @@ export abstract class ObjectA3 {
   }
 
   lookAt(x: number, y: number, z: number): void;
-  lookAt(v: MutableVec3): void;
+  lookAt(v: Vec3): void;
   lookAt(o: ObjectA3): void;
-  lookAt(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
+  lookAt(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
@@ -311,9 +309,9 @@ export abstract class ObjectA3 {
   }
 
   lookAtNow(x: number, y: number, z: number): void;
-  lookAtNow(v: MutableVec3): void;
+  lookAtNow(v: Vec3): void;
   lookAtNow(o: ObjectA3): void;
-  lookAtNow(xVO: number | MutableVec3 | ObjectA3, y?: number, z?: number) {
+  lookAtNow(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);

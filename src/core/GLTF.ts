@@ -5,7 +5,6 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Motion } from './Motion';
-import type { Pose, PoseMotion } from './Motion';
 import { isString } from '../utils/TypeGuard';
 
 type MorphTargetObject =
@@ -75,64 +74,6 @@ console.log(`File: ${data}`);
   }
 }
 
-/**
- * glTFファイルに含まれる1つのアニメーションを表すクラス。
- * 基本AnimationClipの情報
- * Morph情報は含めない。
- */
-export class GLTFPoseMotion implements PoseMotion {
-  objectA3?: ObjectA3;
-  object3D?: THREE.Object3D;
-  motionName: string;
-  animationClip?: THREE.AnimationClip;
-  animationAction?: THREE.AnimationAction;
-
-  constructor(motionName: string) {
-    this.motionName = motionName;
-  }
-
-  setObject(objectA3: ObjectA3) {
-    if (!(objectA3 instanceof GLTF)) return;
-    this.objectA3 = objectA3;
-    this.object3D = objectA3.object;
-    const gltf = objectA3.gltf;
-    
-  }
-
-  detachObject() {
-    const ret = this.objectA3;
-    this.objectA3 = undefined;
-    this.object3D = undefined;
-    return ret;
-  }
-
-  addOneselfToPhysics(_world: PhysicsWorld) {}
-  removeOneselfFromPhysics(_world: PhysicsWorld) {}
-
-  enable() {
-    gaha;
-  }
-
-  disable() {
-    gaha;
-  }
-
-  controlMotion(...args: string[]) {
-    gaha;
-  }
-
-  setPause(p: boolean) {
-    gaha;
-  }
-
-  setTime(time: number) {
-    gaha;
-  }
-
-  update(dt: number) {
-    gaha;
-  }
-}
 
 /**
  * GLTF用のMotion。

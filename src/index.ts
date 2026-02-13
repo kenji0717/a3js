@@ -19,7 +19,7 @@ export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
 export { HTML } from './three/HTML';
-export type { View } from './core/View';
+export type { View, ViewBase } from './core/View';
 export type { PhysicsEngine,
               PhysicsWorld,
               PhysicsWorldOption,
@@ -31,11 +31,8 @@ export type { PhysicsEngine,
 export { initPhysics, RapierPhysicsEngine } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { CharactorMotion } from './rapier/CharactorMotion';
-export { Vec3 } from './core/Vec3';
-export type { MutableVec3 } from './core/Vec3';
-export { Quat, getQuatOfLookAt, vec3EulerToQuat } from './core/Quat';
-export type { MutableQuat, RotationOrder } from './core/Quat';
-export { ViewBase } from './core/ViewBase';
+export { Vec3, Quat, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';
+export type { RotationOrder } from './core/LinearMath';
 export { GeneralCamera } from './core/GeneralCamera';
 export type { AsyncInitRequired } from './core/AsyncInitRequired';
 export { asyncSleep, deepMerge } from './utils/math';

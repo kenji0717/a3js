@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Motion } from './Motion';
-//import type { RootMotion, InnerMotion } from './Motion';
-import { Vec3 } from './Vec3';
+import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3,
          loadBvhInUnzippedA3,

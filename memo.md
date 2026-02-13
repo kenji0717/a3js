@@ -8,12 +8,9 @@ PoseMotionの方はChatGPTからアイデアをもらって、Pose
 Poseインターフェースは以下。ここが抽象的な情報になって
 いるところがポイントの一つ。
 
-interface Pose {
-  bones: Map<string, {
-    position: MutialVec3;
-    quaternion: MutalQuat;
-    scale: MutialVec3;
-  }>;
+type Pose = Record<string,Transform>;
+class Transform {
+  loc: Vec3; quat: Quat; scale: Vec3;
 }
 
 次にPoseMotionインターフェースの大事なところは、

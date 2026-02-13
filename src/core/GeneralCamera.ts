@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Camera } from './Camera';
 import { isPerspectiveCamera } from '../utils/TypeGuard';
-import type { MutableVec3 } from './Vec3';
+import { Vec3 } from './LinearMath';
 
 /**
  * Three.jsのPerspectiveCameraとかの一般的なカメラを
@@ -45,7 +45,7 @@ export class GeneralCamera extends Camera {
       this.headLight.intensity = 0;
   }
 
-  calcNDC(loc: MutableVec3) {
+  calcNDC(loc: Vec3) {
     const v = new THREE.Vector3(loc.x,loc.y,loc.z);
     v.project(this.camera);
     return { x: v.x, y: v.y };

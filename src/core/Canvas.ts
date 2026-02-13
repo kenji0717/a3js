@@ -3,11 +3,12 @@ import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
-import { ViewBase } from './ViewBase';
+import { ViewBase } from './View';
 import { GeneralCamera } from './GeneralCamera';
 import type { Controller } from './Controller';
-import type { MutableVec3 } from './Vec3';
+import { Vec3 } from './LinearMath';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { tmp } from '../utils/math';
 
 export interface CanvasOption {
   camera?: THREE.Camera;
@@ -148,7 +149,7 @@ export class Canvas extends HTMLElement implements View {
     this.css2DRenderer.render(this.scene.scene, this.camera3js);
   };
 
-  worldToScreen(loc: MutableVec3): { x: number, y: number } {
+  worldToScreen(loc: Vec3): { x: number, y: number } {
     const v = new THREE.Vector3(loc.x, loc.y, loc.z);
     v.project(this.camera3js);
     const size = new THREE.Vector2();
@@ -158,7 +159,7 @@ export class Canvas extends HTMLElement implements View {
     return { x, y };
   }
 
-  screenToWorld(x: number, y: number, depth: number): MutableVec3 {
+  screenToWorld(x: number, y: number, depth: number): Vec3 {
     const ndc = new THREE.Vector3(
       (x / this._canvas.clientWidth) * 2 -1,
       -(y / this._canvas.clientHeight) * 2 + 1,
@@ -166,19 +167,21 @@ export class Canvas extends HTMLElement implements View {
     );
     ndc.unproject(this.camera3js);
     const dir = ndc.sub(this.camera3js.position).normalize();
-    return this.camera3js.position.clone().add(dir.multiplyScalar(depth));
+    return new Vec3(this.camera3js.position.clone().add(dir.multiplyScalar(depth)));
   }
 
-  cameraToScreen(loc: MutableVec3): { x: number, y: number } {
+  cameraToScreen(loc: Vec3): { x: number, y: number } {
     const v = new THREE.Vector3(loc.x,loc.y,loc.z);
     const worldPos = v.applyMatrix4(this.camera3js.matrixWorld);
-    return this.worldToScreen(worldPos);
+    tmp.v0.set(worldPos);
+    return this.worldToScreen(tmp.v0);
   }
 
-  screenToCamera(x: number, y: number, depth: number): MutableVec3 {
+  screenToCamera(x: number, y: number, depth: number): Vec3 {
     const vec = this.screenToWorld(x,y,depth);
     const worldPos = new THREE.Vector3(vec.x,vec.y,vec.z);
-    return worldPos.applyMatrix4(this.camera3js.matrixWorldInverse);
+    vec.set(worldPos.applyMatrix4(this.camera3js.matrixWorldInverse));
+    return vec;
   }
 
 //----------------------------------

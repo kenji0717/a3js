@@ -1,8 +1,5 @@
 import type { View } from './View';
-import { Vec3 } from './Vec3';
-import type { MutableVec3 } from './Vec3';
-import { Quat, getQuatOfLookAt } from './Quat';
-import type { MutableQuat } from './Quat';
+import { Vec3, Quat, getQuatOfLookAt } from './LinearMath';
 
 /**
  * キーやマウスなどの様々なイベントを受け取り
@@ -31,12 +28,12 @@ export interface Controller {
   touchMove(event: TouchEvent): void;
   touchCancel(event: TouchEvent): void;
 
-  setCameraLocation(loc: MutableVec3): void;
-  setCameraLocationNow(loc: MutableVec3): void;
-  setCameraQuat(quat: MutableQuat): void;
-  setCameraQuatNow(quat: MutableQuat): void;
-  setCameraScale(scale: MutableVec3): void;
-  setCameraScaleNow(scale: MutableVec3): void;
+  setCameraLocation(loc: Vec3): void;
+  setCameraLocationNow(loc: Vec3): void;
+  setCameraQuat(quat: Quat): void;
+  setCameraQuatNow(quat: Quat): void;
+  setCameraScale(scale: Vec3): void;
+  setCameraScaleNow(scale: Vec3): void;
 }
 
 /**
@@ -67,12 +64,12 @@ export class ControllerBase implements Controller {
   touchEnd(_event: TouchEvent): void {}
   touchMove(_event: TouchEvent): void {}
   touchCancel(_event: TouchEvent): void {}
-  setCameraLocation(_loc: MutableVec3): void {}
-  setCameraLocationNow(_loc: MutableVec3): void {}
-  setCameraQuat(_quat: MutableQuat): void {}
-  setCameraQuatNow(_quat: MutableQuat): void {}
-  setCameraScale(_scale: MutableVec3): void {}
-  setCameraScaleNow(_scale: MutableVec3): void {}
+  setCameraLocation(_loc: Vec3): void {}
+  setCameraLocationNow(_loc: Vec3): void {}
+  setCameraQuat(_quat: Quat): void {}
+  setCameraQuatNow(_quat: Quat): void {}
+  setCameraScale(_scale: Vec3): void {}
+  setCameraScaleNow(_scale: Vec3): void {}
 }
 
 /**
@@ -85,9 +82,9 @@ export class OrbitController extends ControllerBase {
   cameraLoc: Vec3 = new Vec3(0,0,3);
   cameraQuat: Quat = new Quat(0,0,0,1);
 
-  constructor(view: View,target: MutableVec3);
+  constructor(view: View,target: Vec3);
   constructor(view: View,tx: number, ty: number, tz: number);
-  constructor(view: View,xOrV: number | MutableVec3, y?: number, z?: number) {
+  constructor(view: View,xOrV: number | Vec3, y?: number, z?: number) {
     super(view);
     this.preMouse = {x:0,y:0};
     if (typeof xOrV === "number") {
@@ -156,14 +153,14 @@ console.log(`GAHA: touchStart()`,event);
     this.view.camera.setLocation(loc);
   }
 */
-  setCameraLocation(loc: MutableVec3): void {
+  setCameraLocation(loc: Vec3): void {
     this.cameraLoc.set(loc);
   }
-  setCameraLocationNow(loc: MutableVec3): void {
+  setCameraLocationNow(loc: Vec3): void {
     this.cameraLoc.set(loc);
   }
-  //setCameraQuat(quat: MutableQuat): void {}
-  //setCameraQuatNow(quat: MutableQuat): void {}
+  //setCameraQuat(quat: Quat): void {}
+  //setCameraQuatNow(quat: Quat): void {}
 }
 
 
