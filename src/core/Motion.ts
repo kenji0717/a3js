@@ -296,14 +296,21 @@ export class BillboardRootMotion implements RootMotion {
   }
 }
 
+
+type Morph = {
+  name: string,
+  vals: number[]
+}
 /**
  * キャラクタのポーズを表すインターフェース。主に3Dキャラクタ
  * を想定しているが、車のシャーシーやタイヤの動きも、このPose
  * インターフェースで表現することができ、PoseMotionインターフェース
  * は、このPoseインターフェースを用いることで、モーションキャプチャー
  * データも物理演算結果も、その他の動きも統一して扱えるようになる。
+ * 試してみたら、glTFのモデルではモーフィングのデータも含めてるものが
+ * 多いみたいだったので、それも忘れずに。
  */
-export type Pose = Record<string, Transform>;
+export type Pose = Record<string, {trans: Transform, morphs: Morph[]}>;
 
 
 /**
@@ -323,10 +330,15 @@ export type Pose = Record<string, Transform>;
  */
 export interface PoseMotion {
   /**
-   * このPoseMotionが再生を終了したかどうかを表わすフラグ。
+   * このPoseMotionが何回再生されたかを保存している。
    *
    */
-  isFinished: boolean;
+  playCount: number;
+  
+  /**
+   * 現在再生中のモーションがスータトから何秒経過した状態かを示す。
+   */
+  time: number;
 
   /**
    * 物理演算が必要な場合にRigidBodyやColliderを
@@ -345,14 +357,17 @@ export interface PoseMotion {
   removeOneselfFromPhysics(_world: PhysicsWorld): void;
 
   /**
-   * このPoseMotionが再生されるように準備し再生を開始する。
+   * このPoseMotionが再生の前に、3Dの表示についての追加処理が
+   * 必要な場合に引数のObjectA3にアクセスして準備する。
    */
-  //enable(): void;
+  prepare3D(objectA3: ObjectA3): void;
 
   /**
-   * このPoseMotionの再生を停止しする。
+   * このPoseMotionが再生停止した後に、3Dの表示についての
+   * 後片付けの処理が必要な場合に引数のObjectA3にアクセス
+   * して後片付けする。
    */
-  //disable(): void;
+  cleanup3D(objectA3: ObjectA3): void;
 
   /**
    * 動きをコントロールするための情報を引数に与えて呼び出す
@@ -360,7 +375,7 @@ export interface PoseMotion {
    * (Morh)などのコントロールをする時に使われる。
    * @param args 動きをコントロールするための情報
    */
-  controlMotion(...args: string[]): void;
+  //controlMotion(...args: string[]): void;
 
   /**
    * このモーションの動作を一時停止させたり、停止状態を

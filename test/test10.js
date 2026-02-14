@@ -6,6 +6,6 @@ document.body.appendChild(view);
 const obj1 = new a3.Test();
 view.scene.add(obj1);
 const obj2 = new a3.Test();
-obj2.setLocation(0.3,0,0);
+obj2.setLocation(0.5,0,0);
 view.scene.add(obj2);
 view.addEventListener('click3d',(e)=>{console.log(e.detail.value);});

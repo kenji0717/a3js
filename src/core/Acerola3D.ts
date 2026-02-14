@@ -6,14 +6,10 @@ import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3,
          loadBvhInUnzippedA3,
          cloneBVH } from '../three/threeUtils';
-import type { PoseMotion } from './Motion';
 import { ClipPoseMotion } from '../three/ClipPoseMotion';
 import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
 //import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-
-// BVHの情報だけからBoneのワールド座標系を得るために使用
-//const evalScene: THREE.Scene = new THREE.Scene(); // と思ったけど中止
 
 class DummyBVH implements BVH {
   isDummy = true;
@@ -32,16 +28,15 @@ interface Action {
   parts: Record<string,THREE.Object3D>;
 }
 
+const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
+const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
+
 /**
  * まだ適当。
  */
 export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
-  bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
-  vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
-
   readonly ready: Promise<Acerola3D>;
   actions: Record<string,Action>;
-  currentAction?: Action;
   comment: string | null = null; // CATALOG.XMLの<c>の中
 
   constructor(url: string) {
@@ -70,20 +65,19 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     if (cs[0]) this.comment = cs[0].textContent;
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
     const actions: Record<string,Action> = {};
-    const clipPoseMotions: Record<string,PoseMotion> = {};
+    const a3PoseMotions: Record<string,Acerola3DPoseMotion> = {};
+    let firstActionName;
     for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
       if (actionName) {
+        if (!firstActionName) firstActionName = actionName;
         let bvh: BVH | undefined;
         const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
         if (actionBVH) {
           const bvhKey = unzippedA3.zipUrl + '!' + actionBVH;
-          if (this.bvhs[bvhKey]) {
-            bvh = cloneBVH(this.bvhs[bvhKey]);
-          } else {
-            bvh = await loadBvhInUnzippedA3(unzippedA3, actionBVH);
-            this.bvhs[actionBVH] = bvh;
-          }
+          if (!bvhs[bvhKey])
+            bvhs[bvhKey] = await loadBvhInUnzippedA3(unzippedA3, actionBVH);
+          bvh = cloneBVH(bvhs[bvhKey]);
           //以下の行はBVHの動きの補間をOFFにする。Acerola3DのBVHの使い方では必要だけど・・・
           if (bvh)
             bvh.clip.tracks.forEach(track=>{track.setInterpolation(THREE.InterpolateDiscrete);});
@@ -108,20 +102,17 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           const partName = p.getAttribute('name');
           const wrl = p.getAttribute('wrl');
           if (partName && wrl) {
-            let vrml;
             const vrmlKey = unzippedA3.zipUrl + '!' + wrl;
-            if (this.vrmls[vrmlKey]) {
-              vrml = this.vrmls[vrmlKey].clone(true);
-              parts[partName] = vrml;
-            } else {
-              vrml = await loadVrmlInUnzippedA3(unzippedA3,wrl);
-              this.vrmls[vrmlKey] = vrml;
-              parts[partName] = vrml;
-            }
+            if (!vrmls[vrmlKey])
+              vrmls[vrmlKey] = await loadVrmlInUnzippedA3(unzippedA3,wrl);
+            parts[partName] = vrmls[vrmlKey].clone(true);
           }
         }
-        const root = bvh.skeleton.bones[0];
+        const root = new THREE.Object3D();
+        root.add(bvh.skeleton.bones[0]);
         appendPartToBone(root,parts);
+        root.position.add(offset);
+        root.scale.set(scale,scale,scale);
         // クリックなどへの対応
         root.traverse((o)=>{
           o.userData['a3js']={objectA3:this};
@@ -135,20 +126,30 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           offset,
           parts
         };
-        clipPoseMotions[actionName] = new ClipPoseMotion(bvh.clip);
+        a3PoseMotions[actionName] = new Acerola3DPoseMotion(bvh.clip,actionName);
       }
     }
     this.actions = actions;
-    this.setPoseMotions(clipPoseMotions);
+    this.setPoseMotions(a3PoseMotions);
+    if (firstActionName)
+      this.setState(firstActionName);
     return this;
   }
 
-  changeAction(actionName: string) {
-    if (this.currentAction)
-      this.object.remove(this.currentAction.root);
-    const vAct = this.actions[actionName];
-    this.object.add(vAct.root);
-    this.currentAction = vAct;
+  addActionRoot(name: string) {
+    const action = this.actions[name];
+    if (action) {
+      this.object.add(action.root);
+      this.bones = action.bones;
+    }
+  }
+
+  removeActionRoot(name: string) {
+    const action = this.actions[name];
+    if (action) {
+      this.object.remove(action.root);
+      this.bones = {};
+    }
   }
 }
 
@@ -162,5 +163,18 @@ function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object
     obj.children.forEach( o => {
       appendPartToBone(o,parts);
     });
+  }
+}
+
+class Acerola3DPoseMotion extends ClipPoseMotion {
+  prepare3D(objectA3: ObjectA3) {
+    if (objectA3 instanceof Acerola3D) {
+      objectA3.addActionRoot(this.name);
+    }
+  }
+  cleanup3D(objectA3: ObjectA3) {
+    if (objectA3 instanceof Acerola3D) {
+      objectA3.removeActionRoot(this.name);
+    }
   }
 }

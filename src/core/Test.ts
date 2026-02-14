@@ -65,12 +65,11 @@ class TestMotion extends DefaultRootMotion {
   }
 
   update(dt: number, trans: Transform) {
+    super.update(dt,trans);
     if (this.testMode) {
       this.rot.add(dt,dt,dt);
       const q = vec3EulerToQuat(this.rot);
       trans.quat.set(q);
-    } else {
-      super.update(dt,trans);
     }
     return trans;
   }

@@ -42,12 +42,16 @@ export abstract class ObjectA3 {
   poseMotions: Record<string,PoseMotion>;
   statePoseMotion?: PoseMotion;
   emotePoseMotion?: PoseMotion;
+  currentPoseMotion?: PoseMotion;
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
-  bones?: Record<string,THREE.Object3D>;
+  bones: Record<string,THREE.Object3D>;
+  morphs: Record<string, {array: Array<number>, idx: number}>;
 
   constructor(data?: any) {
+    this.bones = {};
+    this.morphs = {};
     this.object = this.initObject(data);
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
@@ -117,16 +121,43 @@ export abstract class ObjectA3 {
     this.poseMotions[name] = poseMotion;
   }
 
+  setState(name: string) {
+    this.statePoseMotion = this.poseMotions[name];
+    if (this.statePoseMotion) {
+      this.currentPoseMotion?.cleanup3D(this);
+      this.statePoseMotion.prepare3D(this);
+      this.statePoseMotion.playCount = 0;
+      this.statePoseMotion.time = 0;
+      this.currentPoseMotion = this.statePoseMotion;
+    }
+  }
+
+  setEmote(name: string) {
+    this.emotePoseMotion = this.poseMotions[name];
+    if (this.emotePoseMotion) {
+      this.currentPoseMotion?.cleanup3D(this);
+      this.emotePoseMotion.prepare3D(this);
+      this.emotePoseMotion.playCount = 0;
+      this.emotePoseMotion.time = 0;
+      this.currentPoseMotion = this.emotePoseMotion;
+    }
+  }
+
   enableInterpolation(i: boolean) {
-    if (i) {
-      this.rootMotions.push(new InterpolationRootMotion());
-    } else {
       const newRootMotions: RootMotion[] = [];
       this.rootMotions.forEach((m)=>{
         if (!(m instanceof InterpolationRootMotion))
           newRootMotions.push(m);
       });
       this.rootMotions = newRootMotions;
+    if (i)
+      this.rootMotions.push(new InterpolationRootMotion());
+  }
+
+  morph(name: string, value: number) {
+    if (name in this.morphs) {
+      const { array, idx } = this.morphs[name];
+      array[idx] = value;
     }
   }
 
@@ -147,17 +178,38 @@ export abstract class ObjectA3 {
     tmp.t0.write(this);
     //PoseMosionを反映
     let pose;
-    if (this.emotePoseMotion && !this.emotePoseMotion.isFinished) {
+    if (this.emotePoseMotion && this.emotePoseMotion.playCount<=0) {
       pose = this.emotePoseMotion.update(dt);
-      if (this.emotePoseMotion.isFinished)
+      if (this.emotePoseMotion.playCount>0) {
+        this.emotePoseMotion.cleanup3D(this);
         this.emotePoseMotion = undefined;
+        if (this.statePoseMotion)
+          this.statePoseMotion.prepare3D(this);
+      }
     } else if (this.statePoseMotion) {
       pose = this.statePoseMotion.update(dt);
     }
     if (pose && this.bones) {
-      for (const [boneName,trans] of Object.entries(pose)) {
+      for (const [boneName,data] of Object.entries(pose)) {
+        // モーフィング対応無いと動かないglTFもある。
+        // モーフィングのデータの保存のしかた失敗してる説ある。
+        // this.morphs
+        for (const pMorph of data.morphs) {
+          for (const myMName of Object.keys(this.morphs)) {
+            if (myMName.startsWith(pMorph.name)) {
+              const {array} = this.morphs[myMName];
+              for (let i=0;i<array.length;i++) {
+                array[i] = pMorph.vals[i];
+              }
+              break;
+            }
+          }
+        }
+        //位置、回転、拡大率対応
         const bone = this.bones[boneName];
-        if (bone) trans.write(bone);
+        if (bone) {
+          data.trans.write(bone);
+        }
       }
     }
 

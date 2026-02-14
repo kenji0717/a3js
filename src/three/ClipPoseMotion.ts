@@ -12,15 +12,17 @@ import type { PhysicsWorld } from '../core/Physics';
 export class ClipPoseMotion implements PoseMotion {
   name: string;
   time: number;
+  duration: number;
   isPaused: boolean;
-  isFinished: boolean;
+  playCount: number;
   interpolants: Record<string,THREE.Interpolant>;
 
-  constructor(clip: THREE.AnimationClip) {
-    this.name = clip.name; // this.clip.nameに名前ある
+  constructor(clip: THREE.AnimationClip,name?: string) {
+    this.name = name?name:clip.name;
     this.time = 0;
+    this.duration = clip.duration;
     this.isPaused = false;
-    this.isFinished = false;
+    this.playCount = 0;
     this.interpolants = {};
     for (const track of clip.tracks) {
       const valueSize = track.getValueSize();
@@ -48,8 +50,8 @@ export class ClipPoseMotion implements PoseMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld) {}
   removeOneselfFromPhysics(_world: PhysicsWorld) {}
-
-  controlMotion(..._args: string[]) {}
+  prepare3D(_objectA3: ObjectA3) {}
+  cleanup3D(_objectA3: ObjectA3) {}
 
   setPause(p: boolean) {
     this.isPaused = p;
@@ -61,25 +63,32 @@ export class ClipPoseMotion implements PoseMotion {
 
   update(dt: number): Pose {
     this.time += dt;
+    if (this.time > this.duration) {
+      this.time -= this.duration;
+      this.playCount++;
+    }
     const pose: Pose = {};
     for (const [name,interpolant] of Object.entries(this.interpolants)) {
       const [nodeName,property] = name.split('.');
-      let trans = pose[nodeName];
-      if (!trans) {
-        trans = new Transform();
-        pose[name] = trans;
+      let data = pose[nodeName];
+      if (!data) {
+        data = {trans: new Transform(), morphs: []};
+        pose[nodeName] = data;
       }
       const res = interpolant.evaluate(this.time);
       if (property === 'position') {
-        trans.loc.set(res[0],res[1],res[2]);
+        data.trans.loc.set(res[0],res[1],res[2]);
       } else if (property === 'quaternion') {
-        trans.quat.set(res[0],res[1],res[2],res[3]);
+        data.trans.quat.set(res[0],res[1],res[2],res[3]);
       } else if (property === 'scale') {
-        trans.scale.set(res[0],res[1],res[2]);
+        data.trans.scale.set(res[0],res[1],res[2]);
+      } else if (property === 'morphTargetInfluences') {
+        // いいのか？
+        const vals:number[] = Array.from(res);
+        data.morphs.push({name: nodeName,vals});
       } else {
         console.warn(`ClipPoseMotion: update. unknown property(${property})`);
       }
-      pose[name] = interpolant.evaluate(this.time);
     }
     return pose;
   }
