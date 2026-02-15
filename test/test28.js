@@ -1,4 +1,4 @@
-// a3.CharactorMotionのテスト
+// ⚠️   a3.CharactorMotionのテスト
 import * as a3 from 'a3js';
 
 await a3.initPhysics();
@@ -8,12 +8,12 @@ view.camera.setLocation(0,10,10);
 view.camera.lookAt(0,0,0);
 view.scene.rapierDebug(true);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
-ground.initDefaultPhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
+ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
 view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
-obj.setLocation(0,3,0);
-const motion = new a3.CharactorMotion();
-obj.setMotion(motion);
+obj.setLocationNow(0,3,0);
+const motion = new a3.CharactorRootMotion(obj);
+obj.setRootMotions([motion]);
 view.scene.add(obj);
 
 let keyW = false;

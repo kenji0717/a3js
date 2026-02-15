@@ -7,7 +7,7 @@ import type { RootMotion, PoseMotion, Pose } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
 import { RapierRootMotion } from '../rapier/RapierPhysics';
-import { Vec3, Quat, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
+import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
 
@@ -89,6 +89,14 @@ export abstract class ObjectA3 {
   }
 
   /**
+   * ObjectA3に現在設定されているRootMotionの配列を返す。
+   * @return RootMotionの配列
+   */
+  getRootMotions(): RootMotion[] {
+    return this.rootMotions;
+  }
+
+  /**
    * ObjectA3生成後に、使用されるRootMotionの配列の最後に
    * 追加でRootMotionを1つ加える。
    */
@@ -109,11 +117,19 @@ export abstract class ObjectA3 {
   }
 
   /**
-   * ObjectA3生成後に使用されるRootMotionの配列を変更する。
+   * ObjectA3生成後に使用されるPoseMotionの辞書を設定する。
    * @param poseMotions PoseMotionの辞書
    */
   setPoseMotions(poseMotions: Record<string,PoseMotion>): void {
     this.poseMotions = poseMotions;
+  }
+
+  /**
+   * ObjectA3に現在設定されているPoseMotionの辞書を返す。
+   * @return PoseMotionの辞書
+   */
+  getPoseMotions(): Record<string,PoseMotion> {
+    return this.poseMotions;
   }
 
   /**
@@ -122,6 +138,16 @@ export abstract class ObjectA3 {
    */
   addPoseMotion(name: string, poseMotion: PoseMotion): void {
     this.poseMotions[name] = poseMotion;
+  }
+
+  /**
+   * ObjectA3に設定されているPoseMotionを名前を指定して
+   * 削除する。
+   */
+  removePoseMotion(name: string): PoseMotion {
+    const pm = this.poseMotions[name];
+    delete this.poseMotions[name];
+    return pm;
   }
 
   setState(name: string) {
@@ -279,9 +305,13 @@ export abstract class ObjectA3 {
       await this.clickListener(this);
   }
 
-  get locX(): number { return this.object.position.x; }
-  get locY(): number { return this.object.position.y; }
-  get locZ(): number { return this.object.position.z; }
+  get trans(): Transform {
+    if (this.rootMotions.length>0)
+      return this.rootMotions.reduce((acc,motion)=>motion.getTrans(acc),new Transform());
+    return new Transform(); // しょうがない
+  }
+
+  get loc(): Vec3 { return this.trans.loc.clone(); }
   setLocation(x: number, y: number, z: number): void;
   setLocation(v: Vec3): void;
   setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -313,10 +343,7 @@ export abstract class ObjectA3 {
 
 
 
-  get quatX(): number { return this.object.quaternion.x; }
-  get quatY(): number { return this.object.quaternion.y; }
-  get quatZ(): number { return this.object.quaternion.z; }
-  get quatW(): number { return this.object.quaternion.w; }
+  get quat(): Quat { return this.trans.quat.clone(); }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -345,9 +372,7 @@ export abstract class ObjectA3 {
     });
   }
 
-  get scaleX(): number { return this.object.scale.x; }
-  get scaleY(): number { return this.object.scale.y; }
-  get scaleZ(): number { return this.object.scale.z; }
+  get scale(): Vec3 { return this.trans.scale.clone(); }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -431,12 +456,12 @@ export abstract class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.locX,xVO.locY,xVO.locZ);
+      target.set(xVO.loc);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(new Vec3(this.object.position),target,up);
+    const newQuat = getQuatOfLookAt(this.loc,target,up);
     this.setQuat(newQuat);
   }
 
@@ -448,12 +473,12 @@ export abstract class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.locX,xVO.locY,xVO.locZ);
+      target.set(xVO.loc);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(new Vec3(this.object.position),target,up);
+    const newQuat = getQuatOfLookAt(this.loc,target,up);
     this.setQuatNow(newQuat);
   }
 

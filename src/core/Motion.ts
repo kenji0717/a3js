@@ -60,6 +60,15 @@ export interface RootMotion {
   removeOneselfFromPhysics(world: PhysicsWorld): void;
 
   /**
+   * 現在のTransformを返す。update(dt,trans)と同様の仕組みで
+   * 複数のRootMotionを連鎖して最終結果を得るが、updateとは異なり
+   * 位置などの更新を行わない。
+   * @param trans 前のRootMotionのgetTransの返り値
+   * @return 現在の位置、回転、拡大縮小
+   */
+  getTrans(trans: Transform): Transform;
+
+  /**
    * 指定の場所に移動せよとの外部からの要求を受け付ける
    * ためのメソッド。実際にそれを反映させる処理はupdate()
    * メソッドに書く。
@@ -143,6 +152,10 @@ export class DefaultRootMotion implements RootMotion {
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
+  getTrans(trans: Transform): Transform {
+    trans.set(this.nextTrans);
+    return trans;
+  }
   setLocation(loc: Vec3) {
     this.nextTrans.loc.set(loc);
   }
@@ -190,6 +203,11 @@ export class InterpolationRootMotion implements RootMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+
+  getTrans(trans: Transform): Transform {
+    trans.set(this.nowTrans);
+    return trans;
+  }
 
   setLocation(newLoc: Vec3) {
     this.firstTrans.set(this.nowTrans);
@@ -257,10 +275,12 @@ const tmpTargetLoc: Vec3 = new Vec3();
 export class BillboardRootMotion implements RootMotion {
   up: Vec3;
   target: THREE.Object3D;
+  lastTrans: Transform;
 
   constructor(target: THREE.Object3D) {
     this.up = new Vec3(0,1,0);
     this.target = target;
+    this.lastTrans = new Transform();
   }
 
   setTarget(target: THREE.Object3D) {
@@ -275,11 +295,16 @@ export class BillboardRootMotion implements RootMotion {
       //this.up.set(ObjectA3.defaultUpVector);
       this.up = ObjectA3.defaultUpVector;
     }
+    this.lastTrans.set(objectA3);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
+  getTrans(trans: Transform): Transform {
+    trans.set(this.lastTrans);
+    return trans;
+  }
   setLocation(_loc: Vec3) {}
   setLocationNow(_loc: Vec3) {}
   setQuat(_quat: Quat) {}
@@ -292,6 +317,7 @@ export class BillboardRootMotion implements RootMotion {
     tmpTargetLoc.set(this.target.position);
     const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
     trans.quat.set(quat);
+    this.lastTrans.set(trans);
     return trans;
   }
 }

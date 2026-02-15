@@ -136,15 +136,15 @@ export class RapierRootMotion implements RootMotion {
         break;
     }
     this.bodyDesc.setTranslation(
-      objectA3.object.position.x,
-      objectA3.object.position.y,
-      objectA3.object.position.z
+      objectA3.loc.x,
+      objectA3.loc.y,
+      objectA3.loc.z
     );
     this.bodyDesc.setRotation({
-      x: objectA3.object.quaternion.x,
-      y: objectA3.object.quaternion.y,
-      z: objectA3.object.quaternion.z,
-      w: objectA3.object.quaternion.w
+      x: objectA3.quat.x,
+      y: objectA3.quat.y,
+      z: objectA3.quat.z,
+      w: objectA3.quat.w
     });
     const volumes: number[] = [];
     objectA3.object.traverse((obj)=>{
@@ -207,12 +207,24 @@ export class RapierRootMotion implements RootMotion {
     });
   }
 
+  getTrans(trans: Transform): Transform {
+    if (this.body) {
+      trans.loc.set(this.body.translation());
+      trans.quat.set(this.body.rotation());
+    } else {
+      trans.loc.set(this.bodyDesc.translation);
+      trans.quat.set(this.bodyDesc.rotation);
+    }
+    return trans;
+  }
   setLocation(_: Vec3): void {
     // これはできない物とする
   }
   setLocationNow(v: Vec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
+    else
+      this.bodyDesc.setTranslation(v.x,v.y,v.z);
   }
 
   setQuat(_: Quat): void {
@@ -221,6 +233,8 @@ export class RapierRootMotion implements RootMotion {
   setQuatNow(q: Quat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
+    else
+      this.bodyDesc.setRotation(q); // true? false?
   }
 
   setScale(_: Vec3): void {

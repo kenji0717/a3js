@@ -53,16 +53,16 @@ export class CharactorRootMotion implements RootMotion {
         this.completeOption.height,
         this.completeOption.radius);
     this.bodyDesc.setTranslation(
-      objectA3.object.position.x,
-      objectA3.object.position.y,
-      objectA3.object.position.z
+      objectA3.loc.x,
+      objectA3.loc.y,
+      objectA3.loc.z
     );
-    this.preLocation.set(objectA3.object.position);
+    this.preLocation.set(objectA3.loc);
     this.bodyDesc.setRotation({
-      x: objectA3.object.quaternion.x,
-      y: objectA3.object.quaternion.y,
-      z: objectA3.object.quaternion.z,
-      w: objectA3.object.quaternion.w
+      x: objectA3.quat.x,
+      y: objectA3.quat.y,
+      z: objectA3.quat.z,
+      w: objectA3.quat.w
     });
   }
 
@@ -83,23 +83,37 @@ export class CharactorRootMotion implements RootMotion {
       collisionMap.delete(this.collider.handle);
     }
   }
-  
+
+  getTrans(trans: Transform): Transform {
+    if (this.body) {
+      this.body.translation();
+    } else {
+      this.bodyDesc.translation;
+    }
+    return trans;
+  }
   setLocation(v: Vec3): void {
     this.nextLocation.set(v);
   }
   setLocationNow(v: Vec3): void {
     if (this.body)
       this.body.setNextKinematicTranslation(v); // こんなメソッドもあるのね
+    else
+      this.bodyDesc.setTranslation(v.x,v.y,v.z);
   }
 
   setQuat(q: Quat): void {
     // Capluleだし、制限なしとする
     if (this.body)
       this.body.setRotation(q,false); // Kinematicだからfalse
+    else
+      this.bodyDesc.setRotation(q);
   }
   setQuatNow(q: Quat): void {
     if (this.body)
       this.body.setRotation(q,false); // Kinematicだからfalse
+    else
+      this.bodyDesc.setRotation(q); // Kinematicだからfalse
   }
 
   setScale(_: Vec3): void {

@@ -428,9 +428,10 @@ export class Transform {
       this.quat.set(tOrO.quat);
       this.scale.set(tOrO.scale);
     } else {
-      this.loc.set(tOrO.object.position);
-      this.quat.set(tOrO.object.quaternion);
-      this.scale.set(tOrO.object.scale);
+      const t = tOrO.trans;
+      this.loc.set(t.loc);
+      this.quat.set(t.quat);
+      this.scale.set(t.scale);
     }
     return this;
   }
@@ -454,5 +455,11 @@ export class Transform {
     this.quat.slerp(this.quat,trans.quat,t);
     this.scale.lerp(this.scale,trans.scale,t);
     return this;
+  }
+
+  clone(): Transform {
+    const t = new Transform();
+    t.set(this);
+    return t;
   }
 }

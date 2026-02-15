@@ -7,10 +7,10 @@ view.scene.setCollisionListener((collistions)=>{
   console.log(collistions);
 });
 const ground = new a3.Box(10,0.5,10,"red");
-ground.setLocation(0,-3,0);
-ground.initDefaultPhysics({rigidBody: 'fixed', collisionDetection: true});
+ground.setLocationNow(0,-3,0);
+ground.initSimplePhysics({rigidBody: 'fixed', collisionDetection: true});
 view.scene.add(ground);
 const obj = new a3.Sphere();
-obj.setLocation(0,0,0);
-obj.initDefaultPhysics({collisionDetection: true});
+obj.setLocationNow(0,0,0);
+obj.initSimplePhysics({collisionDetection: true});
 view.scene.add(obj);
