@@ -46,10 +46,13 @@ export abstract class ObjectA3 {
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
+  //以下PoseMotionを処理するための情報。一部スーパークラスでの対応が必要。
+  skeletons: THREE.Skeleton[];
   bones: Record<string,THREE.Object3D>;
   morphs: Record<string, {array: Array<number>, idx: number}>;
 
   constructor(data?: any) {
+    this.skeletons = [];
     this.bones = {};
     this.morphs = {};
     this.object = this.initObject(data);
@@ -191,27 +194,35 @@ export abstract class ObjectA3 {
     }
     if (pose && this.bones) {
       for (const [boneName,data] of Object.entries(pose)) {
-        // モーフィング対応無いと動かないglTFもある。
-        // モーフィングのデータの保存のしかた失敗してる説ある。
-        // this.morphs
-        for (const pMorph of data.morphs) {
-          for (const myMName of Object.keys(this.morphs)) {
-            if (myMName.startsWith(pMorph.name)) {
-              const {array} = this.morphs[myMName];
-              for (let i=0;i<array.length;i++) {
-                array[i] = pMorph.vals[i];
-              }
-              break;
-            }
-          }
-        }
         //位置、回転、拡大率対応
         const bone = this.bones[boneName];
         if (bone) {
-          data.trans.write(bone);
+          if (data.loc) bone.position.set(data.loc.x,data.loc.y,data.loc.z);
+          if (data.quat) bone.quaternion.set(data.quat.x,data.quat.y,data.quat.z,data.quat.w);
+          if (data.scale) bone.scale.set(data.scale.x,data.scale.y,data.scale.z);
+        }
+        // モーフィング対応。無いと動かないglTFもある。
+        // モーフィングのデータの保存のしかた失敗してる説ある。GAHA
+        // this.morphs
+        if (data.morphs) {
+          for (const pMorph of data.morphs) {
+            for (const myMName of Object.keys(this.morphs)) {
+              if (myMName.startsWith(pMorph.name)) {
+                const {array} = this.morphs[myMName];
+                for (let i=0;i<array.length;i++) {
+                  array[i] = pMorph.vals[i];
+                }
+                break;
+              }
+            }
+          }
         }
       }
     }
+    this.object.updateMatrixWorld(true); // 必要なのか？
+    this.skeletons.forEach((skeleton)=> { // 必要なのか？
+      skeleton.update();
+    });
 
     this.children.forEach((child)=>{
       child.update(dt);

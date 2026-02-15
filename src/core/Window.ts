@@ -9,6 +9,7 @@ import type { Controller } from './Controller';
 import { Vec3 } from './LinearMath';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
+import { regenerateGLTFLoader } from './GLTF';
 
 export interface WindowOption {
   width: number;
@@ -111,6 +112,7 @@ export class Window extends HTMLElement implements View {
     this.controller = this.base.controller;
     this.clock = new THREE.Clock();
     this.renderer = new THREE.WebGLRenderer();
+    regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(width, height);
     this._canvas = this.renderer.domElement;
     this._canvas.width = width;

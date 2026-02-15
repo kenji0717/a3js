@@ -9,6 +9,7 @@ import type { Controller } from './Controller';
 import { Vec3 } from './LinearMath';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
+import { regenerateGLTFLoader } from './GLTF';
 
 export interface CanvasOption {
   camera?: THREE.Camera;
@@ -76,6 +77,7 @@ export class Canvas extends HTMLElement implements View {
       alpha: (opt.transparent?opt.transparent:false)
     };
     this.renderer = new THREE.WebGLRenderer(o);
+    regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(600,300);
     if ('opaque' in opt) this.renderer.setClearAlpha(0);
     this._canvas = this.renderer.domElement;

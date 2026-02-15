@@ -1,3 +1,17 @@
+skeletonが入っていないのに、アニメーションがある
+glTFファイルある(例えば`Parrot.glb`)。その他、
+アニメーション情報の中にモーフィングの情報も入って
+いて、これも扱わないといけないことも判明したし、
+THREE.AnimationClipの中に入っていないのに並進移動を
+(0,0,0)と仮定してはいけないとかあるので、下に書いて
+あることには、少し変更が必要だった。その他、Skeleton
+の中のboneInversesとかが何かも不明で理解できてない。
+THREE.Object3D.updateMatrixWorld()とか、skeleton.update()
+とかも不明。
+
+----------------------------------------
+
+
 やっぱりMotionをRootMotionとPoseMotionに分けることにした。
 PoseMotionの方はChatGPTからアイデアをもらって、Pose
 インターフェースという型を作って、それでポーズの情報を

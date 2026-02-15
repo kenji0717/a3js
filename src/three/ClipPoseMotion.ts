@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Pose, PoseMotion } from '../core/Motion';
 import { ObjectA3 } from '../core/ObjectA3';
-import { Transform } from '../core/LinearMath';
+import { Quat, Vec3 } from '../core/LinearMath';
 import type { PhysicsWorld } from '../core/Physics';
 
 /**
@@ -72,17 +72,18 @@ export class ClipPoseMotion implements PoseMotion {
       const [nodeName,property] = name.split('.');
       let data = pose[nodeName];
       if (!data) {
-        data = {trans: new Transform(), morphs: []};
+        data = {};
         pose[nodeName] = data;
       }
       const res = interpolant.evaluate(this.time);
       if (property === 'position') {
-        data.trans.loc.set(res[0],res[1],res[2]);
+        data.loc = new Vec3(res[0],res[1],res[2]);
       } else if (property === 'quaternion') {
-        data.trans.quat.set(res[0],res[1],res[2],res[3]);
+        data.quat = new Quat(res[0],res[1],res[2],res[3]);
       } else if (property === 'scale') {
-        data.trans.scale.set(res[0],res[1],res[2]);
+        data.scale = new Vec3(res[0],res[1],res[2]);
       } else if (property === 'morphTargetInfluences') {
+        if (!data.morphs) data.morphs = [];
         // いいのか？
         const vals:number[] = Array.from(res);
         data.morphs.push({name: nodeName,vals});

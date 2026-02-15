@@ -21,6 +21,7 @@ interface Action {
   name: string;
   root: THREE.Object3D;
   bones: Record<string,THREE.Object3D>;
+  skeleton: THREE.Skeleton;
 
   bvh: BVH;
   scale: number;
@@ -117,15 +118,18 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
         root.traverse((o)=>{
           o.userData['a3js']={objectA3:this};
         });
+//root.add(new THREE.SkeletonHelper(bvh.skeleton.bones[0])); // GAHA!
         actions[actionName] = {
           name: actionName,
           root,
           bones,
+          skeleton: bvh.skeleton,
           bvh,
           scale,
           offset,
           parts
         };
+console.log(`actionName=${actionName}`);
         a3PoseMotions[actionName] = new Acerola3DPoseMotion(bvh.clip,actionName);
       }
     }
@@ -141,6 +145,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     if (action) {
       this.object.add(action.root);
       this.bones = action.bones;
+      this.skeletons = [action.skeleton];
     }
   }
 
@@ -149,6 +154,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     if (action) {
       this.object.remove(action.root);
       this.bones = {};
+      this.skeletons = [];
     }
   }
 }

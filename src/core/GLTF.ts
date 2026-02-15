@@ -2,11 +2,14 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import type { PoseMotion } from './Motion';
 import { ClipPoseMotion } from '../three/ClipPoseMotion';
 import { isString } from '../utils/TypeGuard';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+//import { MeshoptDecoder } from 'meshoptimizer';
 
 type MorphTargetObject =
   | THREE.Mesh
@@ -29,10 +32,43 @@ function hasMorphTargets(
   );
 }
 
-const gltfLoader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
-gltfLoader.setDRACOLoader(dracoLoader);
+export interface GLTFOption {
+  renderer?: THREE.WebGLRenderer /*| THREE.WebGPURenderer*/,
+  draco: string,
+  ktx2: string,
+  meshopt: boolean
+}
+
+export const defaultGLTFOption = {
+  draco: 'https://unpkg.com/three@0.182/examples/jsm/libs/draco/',
+  ktx2: 'https://unpkg.com/three@0.182.0/examples/jsm/libs/basis/',
+  meshopt: true
+};
+
+export function regenerateGLTFLoader(option: Partial<GLTFOption>={}) {
+  const opt = {
+    ...defaultGLTFOption,
+    ...option
+  };
+  let newGltfLoader = new GLTFLoader();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath(opt.draco);
+  newGltfLoader.setDRACOLoader(dracoLoader);
+  if (opt.renderer) {
+    const ktx2Loader = new KTX2Loader();
+    ktx2Loader.setTranscoderPath(opt.ktx2);
+    ktx2Loader.detectSupport(opt.renderer);
+    newGltfLoader.setKTX2Loader(ktx2Loader);
+  }
+  if (opt.meshopt) {
+    newGltfLoader.setMeshoptDecoder(MeshoptDecoder);
+  }
+  gltfLoader = newGltfLoader;
+}
+
+
+let gltfLoader = new GLTFLoader();
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 /**
  * glTFモデルを読み込み表示するためのクラス。
@@ -57,6 +93,8 @@ export class GLTF extends ObjectA3 implements AsyncInitRequired<GLTF> {
 console.log(`File: ${data}`);
       this.gltf = await gltfLoader.loadAsync(data);
       this.bones = {};
+      this.skeletons = [];
+      this.morphs = {};
       this.gltf.scene.traverse((o: THREE.Object3D)=>{
         o.userData['a3js'] = { objectA3: this };
         if (hasMorphTargets(o)) {
@@ -70,6 +108,9 @@ console.log(`morphName="${morphName}"`);
         }
         if (o instanceof THREE.Bone)
           this.bones[o.name] = o;
+        if (o instanceof THREE.SkinnedMesh) {
+          this.skeletons.push(o.skeleton);
+        }
       });
       const poseMotions: Record<string,PoseMotion> = {};
       this.gltf.animations.forEach((anim)=>{

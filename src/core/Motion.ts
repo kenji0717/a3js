@@ -307,10 +307,12 @@ type Morph = {
  * インターフェースで表現することができ、PoseMotionインターフェース
  * は、このPoseインターフェースを用いることで、モーションキャプチャー
  * データも物理演算結果も、その他の動きも統一して扱えるようになる。
- * 試してみたら、glTFのモデルではモーフィングのデータも含めてるものが
- * 多いみたいだったので、それも忘れずに。
+ * 例えば、モーションキャプチャデータに並進移動のデータが含まれていない
+ * 場合、(0,0,0)を仮定してはいけない、そのような場合はundefinedとしておく。
+ * またglTFのモデルではモーフィングのデータも含めてるものが多くあったので、
+ * それも忘れずに。
  */
-export type Pose = Record<string, {trans: Transform, morphs: Morph[]}>;
+export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs?: Morph[]}>;
 
 
 /**
