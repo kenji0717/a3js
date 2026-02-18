@@ -66,11 +66,13 @@ export abstract class ObjectA3 {
   skeletons: THREE.Skeleton[];
   bones: Record<string,THREE.Object3D>;
   morphs: Record<string, {array: Array<number>, idx: number}>;
+  morphsOverwrite: boolean;
 
   constructor(data?: any) {
     this.skeletons = [];
     this.bones = {};
     this.morphs = {};
+    this.morphsOverwrite = false;
     this.object = this.initObject(data);
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
@@ -207,6 +209,12 @@ export abstract class ObjectA3 {
     }
   }
 
+  // 今のところ、こんな感じでにげる。AnimationMixerを
+  // 完全に真似するまでは時間がかかりそう。
+  setMorphsOverwrite(b: boolean) {
+    this.morphsOverwrite = b;
+  }
+
   morph(name: string, value: number) {
     if (name in this.morphs) {
       const { array, idx } = this.morphs[name];
@@ -253,16 +261,17 @@ export abstract class ObjectA3 {
         }
         // モーフィング対応。無いと動かないglTFもある。
         // モーフィングのデータの保存のしかた失敗してる説ある。GAHA
-        // this.morphs
-        if (data.morphs) {
-          for (const pMorph of data.morphs) {
-            for (const myMName of Object.keys(this.morphs)) {
-              if (myMName.startsWith(pMorph.name)) {
-                const {array} = this.morphs[myMName];
-                for (let i=0;i<array.length;i++) {
-                  array[i] = pMorph.vals[i];
+        if (!this.morphsOverwrite) {
+          if (data.morphs) {
+            for (const pMorph of data.morphs) {
+              for (const myMName of Object.keys(this.morphs)) {
+                if (myMName.startsWith(pMorph.name)) {
+                  const {array} = this.morphs[myMName];
+                  for (let i=0;i<array.length;i++) {
+                    array[i] = pMorph.vals[i];
+                  }
+                  break;
                 }
-                break;
               }
             }
           }

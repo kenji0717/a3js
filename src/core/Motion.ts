@@ -403,7 +403,7 @@ export interface PoseMotion {
    * 対応する。
    * @param world 登録対象のPhysicsWorld
    */
-  addOneselfToPhysics(_world: PhysicsWorld): void;
+  addOneselfToPhysics(world: PhysicsWorld): void;
 
   /**
    * このPoseMotionが不必要となった時に、PhysicsWorldに
@@ -411,7 +411,7 @@ export interface PoseMotion {
    * 処理を行うメソッド。
    * @param world 解除対象のPhysicsWorld
    */
-  removeOneselfFromPhysics(_world: PhysicsWorld): void;
+  removeOneselfFromPhysics(world: PhysicsWorld): void;
 
   /**
    * このPoseMotionが再生の前に、3Dの表示についての追加処理が
