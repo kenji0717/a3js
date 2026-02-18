@@ -33,7 +33,7 @@ export class Test extends ObjectA3 {
       ...defaultTestOption,
       ...opt
     };
-    this.addRootMotion(new TestMotion(option));
+    this.setRootMotion(new TestMotion(option));
   }
 
   initObject() {

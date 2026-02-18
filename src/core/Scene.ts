@@ -31,9 +31,7 @@ export class Scene {
     this.objects.push(object);
     object.scene = this;
     if (this.physicsWorld) {
-      for (const rm of object.rootMotions) {
-        rm.addOneselfToPhysics(this.physicsWorld);
-      }
+      object.rootMotion.addOneselfToPhysics(this.physicsWorld);
       for (const pm of Object.values(object.poseMotions)) {
         pm.addOneselfToPhysics(this.physicsWorld);
       }
@@ -52,9 +50,7 @@ export class Scene {
     }
     object.scene = undefined;
     if (this.physicsWorld) {
-      for (const rm of object.rootMotions) {
-        rm.removeOneselfFromPhysics(this.physicsWorld);
-      }
+      object.rootMotion.removeOneselfFromPhysics(this.physicsWorld);
       for (const pm of Object.values(object.poseMotions)) {
         pm.removeOneselfFromPhysics(this.physicsWorld);
       }

@@ -13,7 +13,7 @@ view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
 obj.setLocationNow(0,3,0);
 const motion = new a3.CharactorRootMotion(obj);
-obj.setRootMotions([motion]);
+obj.setRootMotion(motion);
 view.scene.add(obj);
 
 let keyW = false;

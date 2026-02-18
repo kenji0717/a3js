@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { Vec3, Quat, getQuatOfLookAt, Transform } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
@@ -37,8 +36,11 @@ export interface RootMotion {
    * メソッド。引数にコントロール対象のa3.ObjectA3(中に
    * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
    * それをスキャンして情報を得ることは許可されるが、変更を
-   * 加えてはならない。すでに設定されている状態で呼び出された
-   * 場合には、再設定という意味で対応しなければならない。
+   * 加えてはならない。特に初期の位置、回転、拡大・縮小率は、
+   * objectA3.object: THREE.Object3Dからコピーして、このRootMotion
+   * 内に保持して利用することを想定している。すでに設定されている
+   * 状態で呼び出された場合には、再設定という意味で対応しなければ
+   * ならない。
    * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
    */
   init(objectA3: ObjectA3): void;
@@ -60,13 +62,12 @@ export interface RootMotion {
   removeOneselfFromPhysics(world: PhysicsWorld): void;
 
   /**
-   * 現在のTransformを返す。update(dt,trans)と同様の仕組みで
-   * 複数のRootMotionを連鎖して最終結果を得るが、updateとは異なり
-   * 位置などの更新を行わない。
-   * @param trans 前のRootMotionのgetTransの返り値
+   * 現在のTransformを返す。無駄なnewを避けるために
+   * 引数に指定されたTransformを書き換えることで、
+   * 情報を返さなければならない。
    * @return 現在の位置、回転、拡大縮小
    */
-  getTrans(trans: Transform): Transform;
+  getTrans(trans: Transform): void;
 
   /**
    * 指定の場所に移動せよとの外部からの要求を受け付ける
@@ -120,9 +121,11 @@ export interface RootMotion {
    * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
    * メソッド。毎フレーム呼び出されて対応するObjectA3を動かす。
    * 外部からの指示がなくても自動的に移動するために使用される。
+   * 無駄なnewを避けるために引数のtransに情報を書き込むことで
+   * 結果を伝えることになっている。
    * @param dt 経過時間(秒)
    */
-  update(dt: number,trans: Transform): Transform;
+  update(dt: number,trans: Transform): void;
 }
 
 
@@ -152,9 +155,8 @@ export class DefaultRootMotion implements RootMotion {
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
-  getTrans(trans: Transform): Transform {
+  getTrans(trans: Transform): void {
     trans.set(this.nextTrans);
-    return trans;
   }
   setLocation(loc: Vec3) {
     this.nextTrans.loc.set(loc);
@@ -204,9 +206,8 @@ export class InterpolationRootMotion implements RootMotion {
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
-  getTrans(trans: Transform): Transform {
+  getTrans(trans: Transform): void {
     trans.set(this.nowTrans);
-    return trans;
   }
 
   setLocation(newLoc: Vec3) {
@@ -248,7 +249,7 @@ export class InterpolationRootMotion implements RootMotion {
     return t * t * (3 - 2 * t);
   }
 
-  update(dt: number, trans: Transform) {
+  update(dt: number, trans: Transform): void {
     this.nowTime += dt;
     if (this.nowTime > this.duration) this.nowTime = this.duration;
     const t0 = this.nowTime/this.duration;
@@ -258,7 +259,6 @@ export class InterpolationRootMotion implements RootMotion {
     this.nowTrans.blend(this.lastTrans,t);
 
     trans.set(this.nowTrans);
-    return trans;
   }
 }
 
@@ -274,16 +274,16 @@ const tmpTargetLoc: Vec3 = new Vec3();
  */
 export class BillboardRootMotion implements RootMotion {
   up: Vec3;
-  target: THREE.Object3D;
+  target: ObjectA3;
   lastTrans: Transform;
 
-  constructor(target: THREE.Object3D) {
+  constructor(target: ObjectA3) {
     this.up = new Vec3(0,1,0);
     this.target = target;
     this.lastTrans = new Transform();
   }
 
-  setTarget(target: THREE.Object3D) {
+  setTarget(target: ObjectA3) {
     this.target = target;
   }
 
@@ -301,9 +301,8 @@ export class BillboardRootMotion implements RootMotion {
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
-  getTrans(trans: Transform): Transform {
+  getTrans(trans: Transform): void {
     trans.set(this.lastTrans);
-    return trans;
   }
   setLocation(_loc: Vec3) {}
   setLocationNow(_loc: Vec3) {}
@@ -312,16 +311,46 @@ export class BillboardRootMotion implements RootMotion {
   setScale(_scale: Vec3) {}
   setScaleNow(_scale: Vec3) {}
 
-  update(_dt: number, trans: Transform) {
+  update(_dt: number, trans: Transform): void {
     tmpObjLoc.set(trans.loc);
-    tmpTargetLoc.set(this.target.position);
+    tmpTargetLoc.set(this.target.trans.loc);
     const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
     trans.quat.set(quat);
     this.lastTrans.set(trans);
-    return trans;
   }
 }
 
+export class InterpolationBillboardRootMotion extends InterpolationRootMotion {
+  up: Vec3;
+  target: ObjectA3;
+
+  constructor(target: ObjectA3) {
+    super();
+    this.up = new Vec3(0,1,0);
+    this.target = target;
+  }
+
+  init(objectA3: ObjectA3) {
+    super.init(objectA3);
+    if (objectA3.upVector) {
+      this.up = objectA3.upVector;
+    } else {
+      this.up = ObjectA3.defaultUpVector;
+    }
+  }
+
+  setQuat(_newQuat: Quat) { /* do nothing. */ }
+  setQuatNow(_newQuat: Quat) { /* do nothing. */ }
+
+  update(dt: number, trans: Transform) {
+    super.update(dt,trans);
+    tmpObjLoc.set(trans.loc);
+    tmpTargetLoc.set(this.target.trans.loc);
+    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
+    trans.quat.set(quat);
+    this.nowTrans.set(trans);
+  }
+}
 
 type Morph = {
   name: string,

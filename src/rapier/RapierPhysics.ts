@@ -207,7 +207,7 @@ export class RapierRootMotion implements RootMotion {
     });
   }
 
-  getTrans(trans: Transform): Transform {
+  getTrans(trans: Transform): void {
     if (this.body) {
       trans.loc.set(this.body.translation());
       trans.quat.set(this.body.rotation());
@@ -215,7 +215,6 @@ export class RapierRootMotion implements RootMotion {
       trans.loc.set(this.bodyDesc.translation);
       trans.quat.set(this.bodyDesc.rotation);
     }
-    return trans;
   }
   setLocation(_: Vec3): void {
     // これはできない物とする
@@ -244,14 +243,13 @@ export class RapierRootMotion implements RootMotion {
     // 簡単ではないのでとりあえず保留
   }
 
-  update(_: number, trans: Transform) {
+  update(_: number, trans: Transform): void {
     if (this.body) {
       const t = this.body.translation();
       trans.loc.set(t.x, t.y, t.z);
       const r = this.body.rotation();
       trans.quat.set(r.x, r.y, r.z, r.w);
     }
-    return trans;
   }
 }
 

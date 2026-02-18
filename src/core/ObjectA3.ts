@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
-import { DefaultRootMotion } from './Motion';
-import { InterpolationRootMotion } from './Motion';
+import { DefaultRootMotion, InterpolationRootMotion,
+         BillboardRootMotion, InterpolationBillboardRootMotion } from './Motion';
 import type { RootMotion, PoseMotion, Pose } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
@@ -23,6 +23,22 @@ export type Dir =
   | "BOTTOM";
 
 /**
+ * ObjectA3の位置、回転、拡大・縮小率をコントロール
+ * するモードの選択。setRootMotionMode()メソッドの
+ * 引数として使用する。ここで示される選択肢以外の
+ * モードもあるが、それらはsetRootMotion()メソッド
+ * を用いて指定することになる。
+ */
+export type RootMotionMode =
+  | "Default"
+  | "Interpolation"
+  | "Billboard"
+  | "InterpolationBillboard"
+  | "SimplePhysics";
+
+
+
+/**
  * シーンの中に配置される全てのオブジェクトのベース
  * となるアブストラクトクラス。シーンの中の表示対象
  * はもちろん、カメラやライトなどもこのクラスのサブ
@@ -38,7 +54,7 @@ export abstract class ObjectA3 {
   object: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
-  rootMotions: RootMotion[];
+  rootMotion: RootMotion;
   poseMotions: Record<string,PoseMotion>;
   statePoseMotion?: PoseMotion;
   emotePoseMotion?: PoseMotion;
@@ -59,7 +75,7 @@ export abstract class ObjectA3 {
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
-    this.rootMotions = this.initRootMotions(data);
+    this.rootMotion = this.initRootMotion(data);
     this.poseMotions = this.initPoseMotions(data);
   }
 
@@ -76,32 +92,42 @@ export abstract class ObjectA3 {
    * @param _data コンストラクタから渡された情報
    * @returns このObjectA3で使用されるRootMotionの配列
    */
-  initRootMotions(_data?: any): RootMotion[] {
-    return [new DefaultRootMotion()];
+  initRootMotion(_data?: any): RootMotion {
+    return new DefaultRootMotion();
   }
 
   /**
-   * ObjectA3生成後に使用されるRootMotionの配列を変更する。
-   * @param rootMotions RootMotionの配列
+   * ObjectA3生成後に使用されるRootMotionを変更する。
+   * @param rootMotion 新しいRootMotion
    */
-  setRootMotions(rootMotions: RootMotion[]): void {
-    this.rootMotions = rootMotions;
+  setRootMotion(rootMotion: RootMotion): void {
+    this.rootMotion = rootMotion;
   }
 
   /**
    * ObjectA3に現在設定されているRootMotionの配列を返す。
    * @return RootMotionの配列
    */
-  getRootMotions(): RootMotion[] {
-    return this.rootMotions;
+  getRootMotion(): RootMotion {
+    return this.rootMotion;
   }
 
-  /**
-   * ObjectA3生成後に、使用されるRootMotionの配列の最後に
-   * 追加でRootMotionを1つ加える。
-   */
-  addRootMotion(rootMotion: RootMotion): void {
-    this.rootMotions.push(rootMotion);
+  setRootMotionMode(mode: RootMotionMode,option?: any) {
+    if (mode === "Default")
+      this.setRootMotion(new DefaultRootMotion());
+    else if (mode === "Interpolation")
+      this.setRootMotion(new InterpolationRootMotion());
+    else if (mode === "Billboard")
+      this.setRootMotion(new BillboardRootMotion(option));
+    else if (mode === "InterpolationBillboard")
+      this.setRootMotion(new InterpolationBillboardRootMotion(option));
+    else if (mode === "SimplePhysics") {
+      const opt = {
+        ...defaultPhysicsMotionOption,
+        ...option
+      };
+      this.setRootMotion(new RapierRootMotion(this,opt));
+    }
   }
 
   /**
@@ -130,6 +156,15 @@ export abstract class ObjectA3 {
    */
   getPoseMotions(): Record<string,PoseMotion> {
     return this.poseMotions;
+  }
+
+  /**
+   * 引数の名前でObjectA3に現在設定されているPoseMotion
+   * を返す。
+   * @return PoseMotion
+   */
+  getPoseMotion(name: string): PoseMotion {
+    return this.poseMotions[name];
   }
 
   /**
@@ -172,17 +207,6 @@ export abstract class ObjectA3 {
     }
   }
 
-  enableInterpolation(i: boolean) {
-      const newRootMotions: RootMotion[] = [];
-      this.rootMotions.forEach((m)=>{
-        if (!(m instanceof InterpolationRootMotion))
-          newRootMotions.push(m);
-      });
-      this.rootMotions = newRootMotions;
-    if (i)
-      this.rootMotions.push(new InterpolationRootMotion());
-  }
-
   morph(name: string, value: number) {
     if (name in this.morphs) {
       const { array, idx } = this.morphs[name];
@@ -190,20 +214,20 @@ export abstract class ObjectA3 {
     }
   }
 
+  // setRootMotionModeでも同じことできるけど。。。
   initSimplePhysics(option: PhysicsMotionOption) {
     const opt = {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    this.rootMotions = [new RapierRootMotion(this,opt)];
+    this.rootMotion = new RapierRootMotion(this,opt);
     this.poseMotions = {};
   }
 
   pose: Pose = {};
   update(dt: number) {
     //RootMosionを反映
-    tmp.t0.set(this);
-    this.rootMotions.reduce((acc,motion)=>motion.update(dt,acc),tmp.t0);
+    this.rootMotion.update(dt,tmp.t0);
     tmp.t0.write(this);
     //PoseMosionを反映
     let pose;
@@ -306,9 +330,8 @@ export abstract class ObjectA3 {
   }
 
   get trans(): Transform {
-    if (this.rootMotions.length>0)
-      return this.rootMotions.reduce((acc,motion)=>motion.getTrans(acc),new Transform());
-    return new Transform(); // しょうがない
+    this.rootMotion.getTrans(tmp.t0);
+    return tmp.t0.clone();
   }
 
   get loc(): Vec3 { return this.trans.loc.clone(); }
@@ -321,9 +344,7 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setLocation(newLoc);
-    });
+    this.rootMotion.setLocation(newLoc);
   }
 
   setLocationNow(x: number, y: number, z: number): void;
@@ -335,9 +356,7 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setLocationNow(newLoc);
-    });
+    this.rootMotion.setLocationNow(newLoc);
   }
 
 
@@ -353,9 +372,7 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setQuat(newQuat);
-    });
+    this.rootMotion.setQuat(newQuat);
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
@@ -367,9 +384,7 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setQuatNow(newQuat);
-    });
+    this.rootMotion.setQuatNow(newQuat);
   }
 
   get scale(): Vec3 { return this.trans.scale.clone(); }
@@ -382,9 +397,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setScale(newScale);
-    });
+    this.rootMotion.setScale(newScale);
   }
 
   setScaleNow(x: number, y: number, z: number): void;
@@ -396,9 +409,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.rootMotions.forEach((rootMotion)=>{
-      rootMotion.setScaleNow(newScale);
-    });
+    this.rootMotion.setScaleNow(newScale);
   }
 
   /**
