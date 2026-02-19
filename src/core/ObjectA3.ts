@@ -514,6 +514,224 @@ export abstract class ObjectA3 {
     const vecZ = new Vec3(0,0,1);
     return vecZ.apply(this.object.quaternion);
   }
+
+  addLocation(v: Vec3): void;
+  addLocation(x: number, y: number, z: number): void;
+  addLocation(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.add(xOrV,y!,z!);
+    else
+      tmp.v0.add(xOrV);
+    this.setLocation(tmp.v0);
+  }
+
+  addLocationNow(v: Vec3): void;
+  addLocationNow(x: number, y: number, z: number): void;
+  addLocationNow(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.add(xOrV,y!,z!);
+    else
+      tmp.v0.add(xOrV);
+    this.setLocationNow(tmp.v0);
+  }
+
+  mulQuat(q: Quat): void;
+  mulQuat(x: number, y: number, z: number, w: number): void;
+  mulQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
+    tmp.q0.set(this.trans.quat);
+    if (typeof xOrQ === 'number')
+      tmp.q0.mul(xOrQ,y!,z!,w!);
+    else
+      tmp.q0.mul(xOrQ);
+    this.setQuat(tmp.q0);
+  }
+
+  mulQuatNow(q: Quat): void;
+  mulQuatNow(x: number, y: number, z: number, w: number): void;
+  mulQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
+    tmp.q0.set(this.trans.quat);
+    if (typeof xOrQ === 'number')
+      tmp.q0.mul(xOrQ,y!,z!,w!);
+    else
+      tmp.q0.mul(xOrQ);
+    this.setQuatNow(tmp.q0);
+  }
+
+  mulRotation(v: Vec3): void;
+  mulRotation(x: number, y: number, z: number): void;
+  mulRotation(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+    else
+      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+    tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
+    const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
+    const quat = vec3EulerToQuat(tmp.v0,order);
+    tmp.q0.set(this.trans.quat);
+    tmp.q0.mul(quat);
+    this.setQuat(tmp.q0);
+  }
+
+  mulRotationNow(v: Vec3): void;
+  mulRotationNow(x: number, y: number, z: number): void;
+  mulRotationNow(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+    else
+      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+    tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
+    const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
+    const quat = vec3EulerToQuat(tmp.v0,order);
+    tmp.q0.set(this.trans.quat);
+    tmp.q0.mul(quat);
+    this.setQuatNow(tmp.q0);
+  }
+
+  mulScale(v: Vec3): void;
+  mulScale(x: number, y: number, z: number): void;
+  mulScale(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+    else
+      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+    this.setScale(tmp.v0);
+  }
+
+  mulScaleNow(v: Vec3): void;
+  mulScaleNow(x: number, y: number, z: number): void;
+  mulScaleNow(xOrV: number | Vec3, y?: number, z?: number) {
+    tmp.v0.set(this.trans.loc);
+    if (typeof xOrV === 'number')
+      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+    else
+      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+    this.setScaleNow(tmp.v0);
+  }
+
+  moveForward(f: number) {
+    tmp.v0.set(this.getUnitVecZ());
+    tmp.v0.scale(f);
+    this.addLocation(tmp.v0);
+  }
+
+  moveForwardNow(f: number) {
+    tmp.v0.set(this.getUnitVecZ());
+    tmp.v0.scale(f);
+    this.addLocationNow(tmp.v0);
+  }
+
+  moveBackward(b: number) {
+    tmp.v0.set(this.getUnitVecZ());
+    tmp.v0.scale(-b);
+    this.addLocation(tmp.v0);
+  }
+
+  moveBackwardNow(b: number) {
+    tmp.v0.set(this.getUnitVecZ());
+    tmp.v0.scale(-b);
+    this.addLocationNow(tmp.v0);
+  }
+
+  moveRight(r: number) {
+    tmp.v0.set(this.getUnitVecX());
+    tmp.v0.scale(-r);
+    this.addLocation(tmp.v0);
+  }
+
+  moveRightNow(r: number) {
+    tmp.v0.set(this.getUnitVecX());
+    tmp.v0.scale(-r);
+    this.addLocationNow(tmp.v0);
+  }
+
+  moveLeft(l: number) {
+    tmp.v0.set(this.getUnitVecX());
+    tmp.v0.scale(l);
+    this.addLocation(tmp.v0);
+  }
+
+  moveLeftNow(l: number) {
+    tmp.v0.set(this.getUnitVecX());
+    tmp.v0.scale(l);
+    this.addLocationNow(tmp.v0);
+  }
+
+  moveUp(u: number) {
+    tmp.v0.set(this.getUnitVecY());
+    tmp.v0.scale(u);
+    this.addLocation(tmp.v0);
+  }
+
+  moveUpNow(u: number) {
+    tmp.v0.set(this.getUnitVecY());
+    tmp.v0.scale(u);
+    this.addLocationNow(tmp.v0);
+  }
+
+  moveDown(d: number) {
+    tmp.v0.set(this.getUnitVecY());
+    tmp.v0.scale(-d);
+    this.addLocation(tmp.v0);
+  }
+
+  moveDownNow(d: number) {
+    tmp.v0.set(this.getUnitVecY());
+    tmp.v0.scale(-d);
+    this.addLocationNow(tmp.v0);
+  }
+
+  turnUp(u: number) {
+    this.mulRotation(-u,0,0);
+  }
+
+  turnUpNow(u: number) {
+    this.mulRotationNow(-u,0,0);
+  }
+
+  turnDown(d: number) {
+    this.mulRotation(d,0,0);
+  }
+
+  turnDownNow(d: number) {
+    this.mulRotationNow(d,0,0);
+  }
+
+  turnRight(r: number) {
+    this.mulRotation(0,-r,0);
+  }
+
+  turnRightNow(r: number) {
+    this.mulRotationNow(0,-r,0);
+  }
+
+  turnLeft(l: number) {
+    this.mulRotation(0,l,0);
+  }
+
+  turnLeftNow(l: number) {
+    this.mulRotationNow(0,l,0);
+  }
+
+  rollRight(r: number) {
+    this.mulRotation(0,0,r);
+  }
+
+  rollRightNow(r: number) {
+    this.mulRotationNow(0,0,r);
+  }
+
+  rollLeft(l: number) {
+    this.mulRotation(0,0,-l);
+  }
+
+  rollLeftNow(l: number) {
+    this.mulRotationNow(0,0,-l);
+  }
 }
 
 /*

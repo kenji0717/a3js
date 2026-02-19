@@ -1,5 +1,6 @@
 import type { View } from './View';
-import { Vec3, Quat, getQuatOfLookAt } from './LinearMath';
+import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
+import { tmp } from '../utils/math';
 
 /**
  * キーやマウスなどの様々なイベントを受け取り
@@ -163,4 +164,58 @@ console.log(`GAHA: touchStart()`,event);
   //setCameraQuatNow(quat: Quat): void {}
 }
 
+
+/**
+  * 適当。
+  */
+export class FollowAvatarController extends ControllerBase {
+  private _keyUp: boolean;
+  private _keyLeft: boolean;
+  private _keyDown: boolean;
+  private _keyRight: boolean;
+  private _cameraQuat: Quat;
+  private _offset: Vec3;
+
+  constructor(view: View) {
+    super(view);
+    this._keyUp = this._keyLeft = this._keyDown = this._keyRight = false;
+    this._cameraQuat = new Quat();
+    this._offset = new Vec3(0,5,10);
+  }
+
+  keyDown(event: KeyboardEvent): void {
+    if (event.code === 'keyUp') this._keyUp = true;
+    else if (event.code === 'keyLeft') this._keyLeft = true;
+    else if (event.code === 'keyDown') this._keyDown = true;
+    else if (event.code === 'keyRgitht') this._keyRight = true;
+  }
+
+  keyUp(event: KeyboardEvent): void {
+    if (event.code === 'keyUp') this._keyUp = false;
+    else if (event.code === 'keyLeft') this._keyLeft = false;
+    else if (event.code === 'keyDown') this._keyDown = false;
+    else if (event.code === 'keyRgitht') this._keyRight = false;
+  }
+
+  update(_dt: number): void {
+    if (!this.view.scene.avatar) return;
+    if (this._keyUp) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0.1,0,0)))
+    if (this._keyLeft) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0,0.1,0)))
+    if (this._keyDown) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(-0.1,0,0)))
+    if (this._keyRight) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0,-0.1,0)))
+    const aTrans = new Transform();
+    aTrans.set(this.view.scene.avatar);
+    tmp.v0.set(this._offset);
+    tmp.v0.apply(aTrans.quat);
+    tmp.v0.apply(this._cameraQuat);
+    tmp.v0.add(aTrans.loc);
+    this.view.camera.setLocationNow(tmp.v0);
+    this.view.camera.lookAt(this.view.scene.avatar);
+  }
+
+  //setCameraLocation(loc: Vec3): void {}
+  //setCameraLocationNow(loc: Vec3): void {}
+  //setCameraQuat(quat: Quat): void {}
+  //setCameraQuatNow(quat: Quat): void {}
+}
 

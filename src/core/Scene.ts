@@ -10,6 +10,7 @@ import type { PhysicsWorld, Collision } from './Physics';
 export class Scene {
   scene: THREE.Scene;
   objects: ObjectA3[];
+  avatar?: ObjectA3;
   physicsWorld: PhysicsWorld | null = null;
   physicsDt = 1/60;
   collisionListener?: (cs: Collision[]) => void;
@@ -55,6 +56,10 @@ export class Scene {
         pm.removeOneselfFromPhysics(this.physicsWorld);
       }
     }
+  }
+
+  setAvatar(avatar: ObjectA3) {
+    this.avatar = avatar;
   }
 
   setCollisionListener(func: (cs: Collision[]) => void) {

@@ -4,7 +4,6 @@ import { Scene } from './Scene';
 import type { Camera } from './Camera';
 import type { Controller } from './Controller';
 import { Vec3 } from './LinearMath';
-
 import { OrbitController } from './Controller';
 import { Sound } from '../three/Sound';
 
