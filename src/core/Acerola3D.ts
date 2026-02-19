@@ -152,7 +152,6 @@ console.log(`actionName=${actionName}`);
 
   addActionRoot(name: string) {
     const action = this.actions[name];
-console.log(`GAHA: Acerola3D(${this.object.name}).addActionRoot(${name}).`,action);
     if (action) {
       this.object.add(action.root);
       this.bones = action.bones;

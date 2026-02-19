@@ -72,6 +72,7 @@ export class Canvas extends HTMLElement implements View {
     this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
+    this.timer.connect(document);
     const o = {
       antialias: (opt.antialias?opt.antialias:false),
       alpha: (opt.transparent?opt.transparent:false)
@@ -145,6 +146,7 @@ export class Canvas extends HTMLElement implements View {
   animationFrameId: number = -1;
   renderingLoop = () => {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
+    this.timer.update();
     const dt = this.timer.getDelta();
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);

@@ -111,6 +111,7 @@ export class Window extends HTMLElement implements View {
     this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
+    this.timer.connect(document);
     this.renderer = new THREE.WebGLRenderer();
     regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(width, height);
@@ -324,6 +325,7 @@ export class Window extends HTMLElement implements View {
   animationFrameId: number = -1;
   renderingLoop = () => {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
+    this.timer.update();
     const dt = this.timer.getDelta();
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
