@@ -180,7 +180,7 @@ export class FollowAvatarController extends ControllerBase {
     super(view);
     this._keyUp = this._keyLeft = this._keyDown = this._keyRight = false;
     this._cameraQuat = new Quat();
-    this._offset = new Vec3(0,5,10);
+    this._offset = new Vec3(0,5,-10);
   }
 
   keyDown(event: KeyboardEvent): void {

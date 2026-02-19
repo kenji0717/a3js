@@ -77,7 +77,7 @@ export class Vec3 {
   }
 
   set(v: Vec3): Vec3;
-  set(v3: MutableVec3): Vec3;
+  set(v: MutableVec3): Vec3;
   set(x: number, y: number, z: number): Vec3;
   set(xOrVV: Arg1Vec3, y?: number, z?: number): Vec3 {
     if (typeof xOrVV === "number") {
@@ -93,7 +93,7 @@ export class Vec3 {
   }
 
   add(v: Vec3): Vec3;
-  add(v3: MutableVec3): Vec3;
+  add(v: MutableVec3): Vec3;
   add(x: number, y: number, z: number): Vec3;
   add(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -109,7 +109,7 @@ export class Vec3 {
   }
   
   sub(v: Vec3): Vec3;
-  sub(v3: MutableVec3): Vec3;
+  sub(v: MutableVec3): Vec3;
   sub(x: number, y: number, z: number): Vec3;
   sub(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {

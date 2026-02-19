@@ -339,11 +339,12 @@ export abstract class ObjectA3 {
   }
 
   get trans(): Transform {
-    this.rootMotion.getTrans(tmp.t0);
-    return tmp.t0.clone();
+    const t = new Transform();
+    this.rootMotion.getTrans(t);
+    return t;
   }
 
-  get loc(): Vec3 { return this.trans.loc.clone(); }
+  get loc(): Vec3 { return this.trans.loc; }
   setLocation(x: number, y: number, z: number): void;
   setLocation(v: Vec3): void;
   setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -371,7 +372,7 @@ export abstract class ObjectA3 {
 
 
 
-  get quat(): Quat { return this.trans.quat.clone(); }
+  get quat(): Quat { return this.trans.quat; }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -396,7 +397,7 @@ export abstract class ObjectA3 {
     this.rootMotion.setQuatNow(newQuat);
   }
 
-  get scale(): Vec3 { return this.trans.scale.clone(); }
+  get scale(): Vec3 { return this.trans.scale; }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -518,59 +519,62 @@ export abstract class ObjectA3 {
   addLocation(v: Vec3): void;
   addLocation(x: number, y: number, z: number): void;
   addLocation(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
+    const tmpV = new Vec3();
+    tmpV.set(this.loc);
     if (typeof xOrV === 'number')
-      tmp.v0.add(xOrV,y!,z!);
+      tmpV.add(xOrV,y!,z!);
     else
-      tmp.v0.add(xOrV);
-    this.setLocation(tmp.v0);
+      tmpV.add(xOrV);
+    this.setLocation(tmpV);
   }
 
   addLocationNow(v: Vec3): void;
   addLocationNow(x: number, y: number, z: number): void;
   addLocationNow(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
+    const tmpV = new Vec3();
+    tmpV.set(this.loc);
     if (typeof xOrV === 'number')
-      tmp.v0.add(xOrV,y!,z!);
+      tmpV.add(xOrV,y!,z!);
     else
-      tmp.v0.add(xOrV);
-    this.setLocationNow(tmp.v0);
+      tmpV.add(xOrV);
+    this.setLocationNow(tmpV);
   }
 
   mulQuat(q: Quat): void;
   mulQuat(x: number, y: number, z: number, w: number): void;
   mulQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
-    tmp.q0.set(this.trans.quat);
+    const tmpQ = new Quat();
+    tmpQ.set(this.quat);
     if (typeof xOrQ === 'number')
-      tmp.q0.mul(xOrQ,y!,z!,w!);
+      tmpQ.mul(xOrQ,y!,z!,w!);
     else
-      tmp.q0.mul(xOrQ);
-    this.setQuat(tmp.q0);
+      tmpQ.mul(xOrQ);
+    this.setQuat(tmpQ);
   }
 
   mulQuatNow(q: Quat): void;
   mulQuatNow(x: number, y: number, z: number, w: number): void;
   mulQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
-    tmp.q0.set(this.trans.quat);
+    const tmpQ = new Quat();
+    tmpQ.set(this.quat);
     if (typeof xOrQ === 'number')
-      tmp.q0.mul(xOrQ,y!,z!,w!);
+      tmpQ.mul(xOrQ,y!,z!,w!);
     else
-      tmp.q0.mul(xOrQ);
-    this.setQuatNow(tmp.q0);
+      tmpQ.mul(xOrQ);
+    this.setQuatNow(tmpQ);
   }
 
   mulRotation(v: Vec3): void;
   mulRotation(x: number, y: number, z: number): void;
   mulRotation(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
     if (typeof xOrV === 'number')
-      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+      tmp.v0.set(xOrV, y!, z!);
     else
-      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+      tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
     const quat = vec3EulerToQuat(tmp.v0,order);
-    tmp.q0.set(this.trans.quat);
+    tmp.q0.set(this.quat);
     tmp.q0.mul(quat);
     this.setQuat(tmp.q0);
   }
@@ -578,15 +582,14 @@ export abstract class ObjectA3 {
   mulRotationNow(v: Vec3): void;
   mulRotationNow(x: number, y: number, z: number): void;
   mulRotationNow(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
     if (typeof xOrV === 'number')
-      tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
+      tmp.v0.set(xOrV, y!, z!);
     else
-      tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
+      tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
     const quat = vec3EulerToQuat(tmp.v0,order);
-    tmp.q0.set(this.trans.quat);
+    tmp.q0.set(this.quat);
     tmp.q0.mul(quat);
     this.setQuatNow(tmp.q0);
   }
@@ -594,7 +597,7 @@ export abstract class ObjectA3 {
   mulScale(v: Vec3): void;
   mulScale(x: number, y: number, z: number): void;
   mulScale(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
+    tmp.v0.set(this.scale);
     if (typeof xOrV === 'number')
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else
@@ -605,7 +608,7 @@ export abstract class ObjectA3 {
   mulScaleNow(v: Vec3): void;
   mulScaleNow(x: number, y: number, z: number): void;
   mulScaleNow(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.trans.loc);
+    tmp.v0.set(this.scale);
     if (typeof xOrV === 'number')
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else
