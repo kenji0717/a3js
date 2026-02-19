@@ -173,8 +173,8 @@ export abstract class ObjectA3 {
    * ObjectA3生成後に、使用されるPoseMotionの辞書に
    * 追加でPoseMotionを1つ加える。
    */
-  addPoseMotion(name: string, poseMotion: PoseMotion): void {
-    this.poseMotions[name] = poseMotion;
+  addPoseMotion(poseMotion: PoseMotion): void {
+    this.poseMotions[poseMotion.name] = poseMotion;
   }
 
   /**

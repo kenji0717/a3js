@@ -1,4 +1,4 @@
-// ⚠️   a3.CharactorMotionのテスト
+// a3.CharactorMotionのテスト
 import * as a3 from 'a3js';
 
 await a3.initPhysics();
@@ -11,7 +11,7 @@ const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
 view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
-obj.setLocationNow(0,3,0);
+obj.setLocationNow(0,5,3);
 const motion = new a3.CharactorRootMotion(obj);
 obj.setRootMotion(motion);
 view.scene.add(obj);

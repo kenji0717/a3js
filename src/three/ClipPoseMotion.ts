@@ -17,7 +17,7 @@ export class ClipPoseMotion implements PoseMotion {
   playCount: number;
   interpolants: Record<string,THREE.Interpolant>;
 
-  constructor(clip: THREE.AnimationClip,name?: string) {
+  constructor(clip: THREE.AnimationClip, name?: string) {
     this.name = name?name:clip.name;
     this.time = 0;
     this.duration = clip.duration;

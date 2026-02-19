@@ -11,6 +11,6 @@ obj.setState('Walking');
 view.scene.add(obj);
 
 await a3.asyncSleep(3000);
-obj.addPoseMotion('走る',motion1);
+motion1.name = '走る';
+obj.addPoseMotion(motion1);
 obj.setState('走る');
-

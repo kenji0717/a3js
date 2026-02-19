@@ -84,13 +84,14 @@ export class CharactorRootMotion implements RootMotion {
     }
   }
 
-  getTrans(trans: Transform): Transform {
+  getTrans(trans: Transform): void {
     if (this.body) {
-      this.body.translation();
+      trans.loc.set(this.body.translation());
+      trans.quat.set(this.body.rotation());
     } else {
-      this.bodyDesc.translation;
+      trans.loc.set(this.bodyDesc.translation);
+      trans.quat.set(this.bodyDesc.rotation);
     }
-    return trans;
   }
   setLocation(v: Vec3): void {
     this.nextLocation.set(v);
@@ -129,20 +130,22 @@ export class CharactorRootMotion implements RootMotion {
     return false; // こういうことで
   }
 
-  update(_dt: number, trans: Transform): Transform {
+  update(_dt: number, trans: Transform): void {
     if (!this.body || !this.controller || !this.collider)
-      return trans;
+      return;
+
     this.tmpVec3.set(this.nextLocation);
     this.tmpVec3.sub(this.preLocation);
+    //this.tmpVec3.sub(this.body.translation()); // こっちは振動する
     this.controller.computeColliderMovement(this.collider,this.tmpVec3);
     const corrected = this.controller.computedMovement();
-    this.tmpVec3.set(this.body.translation());
+
+    this.tmpVec3.set(this.preLocation);
+    //this.tmpVec3.set(this.body.translation()); // こっちは振動する
     this.tmpVec3.add(corrected.x,corrected.y,corrected.z);
     this.body.setNextKinematicTranslation(this.tmpVec3);
-    const t = this.body.translation();
-    trans.loc.set(t.x, t.y, t.z);
-    const r = this.body.rotation();
-    trans.quat.set(r.x, r.y, r.z, r.w);
-    return trans;
+
+    trans.loc.set(this.body.translation());
+    trans.quat.set(this.body.rotation());
   }
 }

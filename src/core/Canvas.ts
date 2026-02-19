@@ -29,7 +29,7 @@ export class Canvas extends HTMLElement implements View {
   camera: Camera;
   controller: Controller;
   camera3js: THREE.Camera;
-  clock: THREE.Clock;
+  timer: THREE.Timer;
   private _canvas: HTMLCanvasElement;
   private _css2DCanvas: HTMLElement;
   
@@ -71,7 +71,7 @@ export class Canvas extends HTMLElement implements View {
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
-    this.clock = new THREE.Clock();
+    this.timer = new THREE.Timer();
     const o = {
       antialias: (opt.antialias?opt.antialias:false),
       alpha: (opt.transparent?opt.transparent:false)
@@ -145,7 +145,7 @@ export class Canvas extends HTMLElement implements View {
   animationFrameId: number = -1;
   renderingLoop = () => {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
-    const dt = this.clock.getDelta();
+    const dt = this.timer.getDelta();
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
     this.css2DRenderer.render(this.scene.scene, this.camera3js);

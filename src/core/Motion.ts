@@ -387,6 +387,11 @@ export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs
  */
 export interface PoseMotion {
   /**
+   * このPoseMotionにつける名前。
+   */
+  name: string;
+
+  /**
    * このPoseMotionが何回再生されたかを保存している。
    *
    */

@@ -140,8 +140,19 @@ console.log(`actionName=${actionName}`);
     return this;
   }
 
+  addAction(action: Action) {
+    this.actions[action.name] = action;
+  }
+
+  removeAction(name: string): Action {
+    const a = this.actions[name];
+    delete this.actions[name];
+    return a;
+  }
+
   addActionRoot(name: string) {
     const action = this.actions[name];
+console.log(`GAHA: Acerola3D(${this.object.name}).addActionRoot(${name}).`,action);
     if (action) {
       this.object.add(action.root);
       this.bones = action.bones;

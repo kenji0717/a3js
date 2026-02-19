@@ -1,22 +1,22 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 
-interface RapierVec3 {
+interface MutableVec3 {
     x: number;
     y: number;
     z: number;
 }
 
-type Arg1Vec3 = number | Vec3 | THREE.Vector3 | RapierVec3;
+type Arg1Vec3 = number | Vec3 | MutableVec3;
 
-interface RapierQuat {
+interface MutableQuat {
     x: number;
     y: number;
     z: number;
     w: number;
 }
 
-type Arg1Quat = number | Quat | THREE.Quaternion | RapierQuat;
+type Arg1Quat = number | Quat | MutableQuat;
 
 /**
  * 3次元ベクトル
@@ -32,8 +32,7 @@ export class Vec3 {
 
   constructor();
   constructor(v: Vec3);
-  constructor(v: THREE.Vector3);
-  constructor(v: RapierVec3);
+  constructor(v: MutableVec3);
   constructor(x: number,y: number,z: number)
   constructor(xOrV?: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -78,8 +77,7 @@ export class Vec3 {
   }
 
   set(v: Vec3): Vec3;
-  set(v3: THREE.Vector3): Vec3;
-  set(v3: RapierVec3): Vec3;
+  set(v3: MutableVec3): Vec3;
   set(x: number, y: number, z: number): Vec3;
   set(xOrVV: Arg1Vec3, y?: number, z?: number): Vec3 {
     if (typeof xOrVV === "number") {
@@ -94,9 +92,10 @@ export class Vec3 {
     return this;
   }
 
-  add(x: number, y: number, z: number): Vec3;
   add(v: Vec3): Vec3;
-  add(xOrV: number | Vec3, y?: number, z?: number) {
+  add(v3: MutableVec3): Vec3;
+  add(x: number, y: number, z: number): Vec3;
+  add(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
       this._x += xOrV;
       this._y += y!;
@@ -109,9 +108,10 @@ export class Vec3 {
     return this;
   }
   
-  sub(x: number, y: number, z: number): Vec3;
   sub(v: Vec3): Vec3;
-  sub(xOrV: number | Vec3, y?: number, z?: number) {
+  sub(v3: MutableVec3): Vec3;
+  sub(x: number, y: number, z: number): Vec3;
+  sub(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
       this._x -= xOrV;
       this._y -= y!;
@@ -139,11 +139,10 @@ export class Vec3 {
     return this;
   }
 
-  apply(x: number, y: number, z: number, w: number): Vec3;
   apply(q: Quat): Vec3;
-  apply(q: THREE.Quaternion): Vec3;
-  apply(q: RapierQuat): Vec3;
-  apply(xOrQ: number | Quat | THREE.Quaternion | RapierQuat, argY?: number, argZ?: number, argW?: number): Vec3 {
+  apply(q: MutableQuat): Vec3;
+  apply(x: number, y: number, z: number, w: number): Vec3;
+  apply(xOrQ: Arg1Quat, argY?: number, argZ?: number, argW?: number): Vec3 {
     const q = new Quat();
     if (typeof xOrQ === "number")
       q.set(xOrQ,argY!,argZ!,argW!);
@@ -195,8 +194,7 @@ export class Quat {
 
   constructor();
   constructor(q: Quat);
-  constructor(q: THREE.Quaternion);
-  constructor(q: RapierQuat);
+  constructor(q: MutableQuat);
   constructor(x: number, y: number, z: number, w: number);
   constructor(xOrQQ?: Arg1Quat, y?: number, z?: number, w?: number) {
     if (typeof xOrQQ === "number") {
@@ -242,8 +240,7 @@ export class Quat {
   }
 
   set(q: Quat): Quat;
-  set(q: THREE.Quaternion): Quat;
-  set(q: RapierQuat): Quat;
+  set(q: MutableQuat): Quat;
   set(x: number, y: number, z: number, w: number): Quat;
   set(xOrQ: Arg1Quat, y?: number, z?: number, w?: number): Quat {
     if (typeof xOrQ === "number") {
@@ -260,9 +257,10 @@ export class Quat {
     return this;
   }
 
-  mul(x: number, y: number, z: number, w: number): Quat;
   mul(q: Quat): Quat;
-  mul(xOrQ: number | Quat, y?: number, z?: number, w?: number): Quat {
+  mul(q: MutableQuat): Quat;
+  mul(x: number, y: number, z: number, w: number): Quat;
+  mul(xOrQ: Arg1Quat, y?: number, z?: number, w?: number): Quat {
     const q1 = new Quat(this);
     const q2 = new Quat();
     if (typeof xOrQ === "number")

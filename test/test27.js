@@ -1,4 +1,6 @@
-// ⚠️   Acerola3DのMotion取り外し、取り付け
+// Acerola3DのMotion取り外し、取り付け
+// Acerola3Dの場合はActionというのがあって、
+// モーションと対になっているので面倒。
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
@@ -11,13 +13,13 @@ obj1.setLocation(-1,0,0);
 obj1.setState("run");
 view.scene.add(obj1);
 await a3.asyncSleep(3000);
-obj0.setState("default");
-obj1.setState("default");
-await a3.asyncSleep(1000);
+const a_sorry = obj0.removeAction('IamSorry');
 const m_sorry = obj0.removePoseMotion('IamSorry');
+const a_run = obj1.removeAction('run');
 const m_run = obj1.removePoseMotion('run');
-obj0.addPoseMotion('run',m_run);
-obj1.addPoseMotion('IamSorry',m_sorry);
-await a3.asyncSleep(3000);
+obj0.addAction(a_run);
+obj0.addPoseMotion(m_run);
+obj1.addAction(a_sorry);
+obj1.addPoseMotion(m_sorry);
 obj0.setState("run");
 obj1.setState("IamSorry");
