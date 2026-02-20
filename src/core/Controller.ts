@@ -79,6 +79,7 @@ export class ControllerBase implements Controller {
 export class OrbitController extends ControllerBase {
   preMouse: {x:number,y:number};
   leftClick: boolean = false;
+  rightClick: boolean = false;
   target: Vec3;
   cameraLoc: Vec3 = new Vec3(0,0,3);
   cameraQuat: Quat = new Quat(0,0,0,1);
@@ -106,34 +107,57 @@ export class OrbitController extends ControllerBase {
       this.leftClick = true;
       this.preMouse.x = e.clientX;
       this.preMouse.y = e.clientY;
+    } else if (e.button === 2) {
+      this.rightClick = true;
+      this.preMouse.x = e.clientX;
+      this.preMouse.y = e.clientY;
     }
   }
   mouseMove(e: MouseEvent): void {
-    if (this.leftClick === false)
-      return;
-    const epsilon = 0.01;
-    const dx = epsilon*(e.clientX - this.preMouse.x);
-    const dy = epsilon*(e.clientY - this.preMouse.y);
-    const sinX = Math.sin(-dx); const cosX = Math.cos(-dx);
-    const sinY = Math.sin(-dy); const cosY = Math.cos(-dy);
-    const vecX = new Vec3(1,0,0).apply(this.cameraQuat);
-    const vecY = new Vec3(0,1,0).apply(this.cameraQuat);
-    const quatX = new Quat(vecX.x*sinY,vecX.y*sinY,vecX.z*sinY,cosY);
-    const quatY = new Quat(vecY.x*sinX,vecY.y*sinX,vecY.z*sinX,cosX);
-    const newCameraLoc = new Vec3(this.cameraLoc);
-    newCameraLoc.sub(this.target);
-    newCameraLoc.apply(quatX);
-    newCameraLoc.apply(quatY);
-    newCameraLoc.add(this.target);
-    this.cameraLoc.set(newCameraLoc);
-    const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
-    this.cameraQuat.set(newCameraQuat);
-    this.preMouse.x = e.clientX;
-    this.preMouse.y = e.clientY;
+    if (this.leftClick) {
+      const epsilon = 0.01;
+      const dx = epsilon*(e.clientX - this.preMouse.x);
+      const dy = epsilon*(e.clientY - this.preMouse.y);
+      const sinX = Math.sin(-dx); const cosX = Math.cos(-dx);
+      const sinY = Math.sin(-dy); const cosY = Math.cos(-dy);
+      const vecX = new Vec3(1,0,0).apply(this.cameraQuat);
+      const vecY = new Vec3(0,1,0).apply(this.cameraQuat);
+      const quatX = new Quat(vecX.x*sinY,vecX.y*sinY,vecX.z*sinY,cosY);
+      const quatY = new Quat(vecY.x*sinX,vecY.y*sinX,vecY.z*sinX,cosX);
+      const newCameraLoc = new Vec3(this.cameraLoc);
+      newCameraLoc.sub(this.target);
+      newCameraLoc.apply(quatX);
+      newCameraLoc.apply(quatY);
+      newCameraLoc.add(this.target);
+      this.cameraLoc.set(newCameraLoc);
+      const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
+      this.cameraQuat.set(newCameraQuat);
+      this.preMouse.x = e.clientX;
+      this.preMouse.y = e.clientY;
+    } else if (this.rightClick) {
+      tmp.v0.set(this.target);
+      tmp.v0.sub(this.view.camera.loc);
+      const dist = tmp.v0.length();
+      const epsilon = 0.005*dist;
+      const dx = epsilon*(e.clientX - this.preMouse.x);
+      const dy = epsilon*(e.clientY - this.preMouse.y);
+      this.view.camera.moveRight(dx);
+      this.view.camera.moveUp(dy);
+      const left = this.view.camera.getUnitVecX();
+      const up = this.view.camera.getUnitVecY();
+      left.scale(-dx);
+      up.scale(dy);
+      this.target.add(left);
+      this.target.add(up);
+      this.preMouse.x = e.clientX;
+      this.preMouse.y = e.clientY;
+    }
   }
   mouseUp(e: MouseEvent): void {
     if (e.button === 0) {
       this.leftClick = false;
+    } else if (e.button === 2) {
+      this.rightClick = false;
     }
   }
   mouseWheel(e: WheelEvent): void {
