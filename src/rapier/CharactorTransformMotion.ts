@@ -20,27 +20,29 @@ export const defaultCharactorMotionOption = {
 };
 
 export class CharactorTransformMotion implements TransformMotion {
-  objectA3: ObjectA3;
+  trans: Transform;
+  objectA3?: ObjectA3;
   completeOption: CharactorMotionOption;
   controller?: Rapier.KinematicCharacterController;
-  bodyDesc: Rapier.RigidBodyDesc;
+  bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
-  colliderDesc: Rapier.ColliderDesc; // Capsule
+  colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
-  preLocation: Vec3;
   nextLocation: Vec3;
   tmpVec3: Vec3;
 
-  constructor(objectA3: ObjectA3, option: Partial<CharactorMotionOption> = {}) {
+  constructor(option: Partial<CharactorMotionOption> = {}) {
     this.completeOption = {
       ...defaultCharactorMotionOption,
       ...option
     };
-    this.objectA3 = objectA3;
-    this.preLocation = new Vec3();
+    this.trans = new Transform();
     this.nextLocation = new Vec3();
     this.tmpVec3 = new Vec3();
+  }
 
+  init(trans: Transform, objectA3: ObjectA3) {
+    this.trans.set(trans);
     if (this.completeOption.auto) {
       const box = new THREE.Box3().setFromObject(objectA3.object);
       const size = new THREE.Vector3();
@@ -53,26 +55,27 @@ export class CharactorTransformMotion implements TransformMotion {
         this.completeOption.height,
         this.completeOption.radius);
     this.bodyDesc.setTranslation(
-      objectA3.loc.x,
-      objectA3.loc.y,
-      objectA3.loc.z
+      trans.loc.x,
+      trans.loc.y,
+      trans.loc.z
     );
-    this.preLocation.set(objectA3.loc);
+    this.trans.set(objectA3);
     this.bodyDesc.setRotation({
-      x: objectA3.quat.x,
-      y: objectA3.quat.y,
-      z: objectA3.quat.z,
-      w: objectA3.quat.w
+      x: trans.quat.x,
+      y: trans.quat.y,
+      z: trans.quat.z,
+      w: trans.quat.w
     });
-  }
 
-  init(_objectA3: ObjectA3) {}
+  }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
     this.controller = world.world.createCharacterController(this.completeOption.offset);
-    this.body = world.world.createRigidBody(this.bodyDesc);
+    if (this.bodyDesc)
+      this.body = world.world.createRigidBody(this.bodyDesc);
+    if (this.colliderDesc)
     this.collider = world.world.createCollider(this.colliderDesc,this.body);
-    if (this.collider)
+    if (this.collider && this.objectA3)
       collisionMap.set(this.collider.handle,this.objectA3);
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
@@ -84,15 +87,6 @@ export class CharactorTransformMotion implements TransformMotion {
     }
   }
 
-  getTrans(trans: Transform): void {
-    if (this.body) {
-      trans.loc.set(this.body.translation());
-      trans.quat.set(this.body.rotation());
-    } else {
-      trans.loc.set(this.bodyDesc.translation);
-      trans.quat.set(this.bodyDesc.rotation);
-    }
-  }
   setLocation(v: Vec3): void {
     this.nextLocation.set(v);
   }
@@ -100,7 +94,8 @@ export class CharactorTransformMotion implements TransformMotion {
     if (this.body)
       this.body.setNextKinematicTranslation(v); // こんなメソッドもあるのね
     else
-      this.bodyDesc.setTranslation(v.x,v.y,v.z);
+      this.bodyDesc?.setTranslation(v.x,v.y,v.z);
+    this.trans.loc.set(v);
   }
 
   setQuat(q: Quat): void {
@@ -108,13 +103,15 @@ export class CharactorTransformMotion implements TransformMotion {
     if (this.body)
       this.body.setRotation(q,false); // Kinematicだからfalse
     else
-      this.bodyDesc.setRotation(q);
+      this.bodyDesc?.setRotation(q);
+    this.trans.loc.set(q);
   }
   setQuatNow(q: Quat): void {
     if (this.body)
       this.body.setRotation(q,false); // Kinematicだからfalse
     else
-      this.bodyDesc.setRotation(q); // Kinematicだからfalse
+      this.bodyDesc?.setRotation(q);
+    this.trans.quat.set(q);
   }
 
   setScale(_: Vec3): void {
@@ -130,22 +127,22 @@ export class CharactorTransformMotion implements TransformMotion {
     return false; // こういうことで
   }
 
-  update(_dt: number, trans: Transform): void {
+  update(_dt: number): void {
     if (!this.body || !this.controller || !this.collider)
       return;
 
     this.tmpVec3.set(this.nextLocation);
-    this.tmpVec3.sub(this.preLocation);
+    this.tmpVec3.sub(this.trans.loc);
     //this.tmpVec3.sub(this.body.translation()); // こっちは振動する
     this.controller.computeColliderMovement(this.collider,this.tmpVec3);
     const corrected = this.controller.computedMovement();
 
-    this.tmpVec3.set(this.preLocation);
+    this.tmpVec3.set(this.trans.loc);
     //this.tmpVec3.set(this.body.translation()); // こっちは振動する
     this.tmpVec3.add(corrected.x,corrected.y,corrected.z);
     this.body.setNextKinematicTranslation(this.tmpVec3);
 
-    trans.loc.set(this.body.translation());
-    trans.quat.set(this.body.rotation());
+    this.trans.loc.set(this.body.translation());
+    this.trans.quat.set(this.body.rotation());
   }
 }

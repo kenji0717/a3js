@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import { Vec3, Transform, vec3EulerToQuat } from './LinearMath';
+import { Vec3, vec3EulerToQuat } from './LinearMath';
 import { DefaultTransformMotion } from './Motion';
 import type { TransformMotion } from './Motion';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -49,9 +49,9 @@ export class Test extends ObjectA3 {
     return mesh;
   }
 
-  initTransformMotions(option: DeepPartial<TestOption>): TransformMotion[] {
+  initTransformMotion(option: DeepPartial<TestOption>): TransformMotion {
     const opt = deepMerge<TestOption>(defaultTestOption,option);
-    return [new TestMotion(opt)];
+    return new TestMotion(opt);
   }
 }
 
@@ -64,13 +64,12 @@ class TestMotion extends DefaultTransformMotion {
     this.testMode = opt.testMode;
   }
 
-  update(dt: number, trans: Transform) {
-    super.update(dt,trans);
+  update(dt: number) {
+    super.update(dt);
     if (this.testMode) {
       this.rot.add(dt,dt,dt);
       const q = vec3EulerToQuat(this.rot);
-      trans.quat.set(q);
+      this.trans.quat.set(q);
     }
-    return trans;
   }
 }

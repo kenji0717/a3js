@@ -107,47 +107,59 @@ export class RapierPhysicsWorld implements PhysicsWorld {
 }
 
 export class RapierTransformMotion implements TransformMotion {
-  objectA3: ObjectA3;
-  bodyDesc: Rapier.RigidBodyDesc;
+  trans: Transform;
+  objectA3?: ObjectA3;
+  bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[];
   colliders: Rapier.Collider[];
   completeOption: PhysicsMotionOption;
 
-  constructor(objectA3: ObjectA3, option: Partial<PhysicsMotionOption> = {}) {
-    this.objectA3 = objectA3;
-    this.colliderDescs = [];
-    this.colliders = [];
+  // 最低限の初期化。
+  constructor(option: Partial<PhysicsMotionOption> = {}) {
     this.completeOption = {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    const opt = this.completeOption;
-    switch(opt.rigidBody) {
+    this.trans = new Transform();
+    this.colliderDescs = [];
+    this.colliders = [];
+  }
+
+  private makeBodyDesc(): Rapier.RigidBodyDesc {
+    let bodyDesc: Rapier.RigidBodyDesc;
+    switch(this.completeOption.rigidBody) {
       case "dynamic":
-        this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
+        bodyDesc = RAPIER.RigidBodyDesc.dynamic();
         break;
       case "kinematic":
-        this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
+        bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
         //this.bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased(); // GAHAこれあったか！
         break;
       case "fixed":
-        this.bodyDesc = RAPIER.RigidBodyDesc.fixed();
+        bodyDesc = RAPIER.RigidBodyDesc.fixed();
         break;
     }
-    this.bodyDesc.setTranslation(
-      objectA3.loc.x,
-      objectA3.loc.y,
-      objectA3.loc.z
+    bodyDesc.setTranslation(
+      this.trans.loc.x,
+      this.trans.loc.y,
+      this.trans.loc.z
     );
-    this.bodyDesc.setRotation({
-      x: objectA3.quat.x,
-      y: objectA3.quat.y,
-      z: objectA3.quat.z,
-      w: objectA3.quat.w
+    bodyDesc.setRotation({
+      x: this.trans.quat.x,
+      y: this.trans.quat.y,
+      z: this.trans.quat.z,
+      w: this.trans.quat.w
     });
+
+    return bodyDesc;
+  }
+
+  private configColliderDescs() {
+    if (!this.objectA3) return; // あっちゃいけない
+    const opt = this.completeOption;
     const volumes: number[] = [];
-    objectA3.object.traverse((obj)=>{
+    this.objectA3.object.traverse((obj)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
         const collisionGroups = (opt.membership << 16) | opt.filter;
@@ -188,34 +200,34 @@ export class RapierTransformMotion implements TransformMotion {
     }
   }
 
-  init(_objectA3: ObjectA3) {}
+  init(trans: Transform, objectA3: ObjectA3) {
+    this.trans.set(trans);
+    this.objectA3 = objectA3;
+    this.colliderDescs = [];
+    this.colliders = [];
+    this.bodyDesc = this.makeBodyDesc();
+    this.configColliderDescs();
+  }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
+    if (!this.bodyDesc) return; // GAHA
     this.body = world.world.createRigidBody(this.bodyDesc);
     this.colliderDescs.forEach((colliderDesc)=>{
       const collider = world.world.createCollider(colliderDesc,this.body);
       this.colliders.push(collider);
-      collisionMap.set(collider.handle,this.objectA3);
+      if (this.objectA3) // GAHA
+        collisionMap.set(collider.handle,this.objectA3);
     });
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
     if (this.body)
       world.world.removeRigidBody(this.body);
     this.colliders.forEach((collider) => {
-      world.world.removeCollider(collider,false); // true? false?
+      world.world.removeCollider(collider,false); // falseでOK
       collisionMap.delete(collider.handle);
     });
   }
 
-  getTrans(trans: Transform): void {
-    if (this.body) {
-      trans.loc.set(this.body.translation());
-      trans.quat.set(this.body.rotation());
-    } else {
-      trans.loc.set(this.bodyDesc.translation);
-      trans.quat.set(this.bodyDesc.rotation);
-    }
-  }
   setLocation(_: Vec3): void {
     // これはできない物とする
   }
@@ -223,7 +235,8 @@ export class RapierTransformMotion implements TransformMotion {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
     else
-      this.bodyDesc.setTranslation(v.x,v.y,v.z);
+      this.bodyDesc?.setTranslation(v.x,v.y,v.z);
+    this.trans.loc.set(v);
   }
 
   setQuat(_: Quat): void {
@@ -233,7 +246,8 @@ export class RapierTransformMotion implements TransformMotion {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
     else
-      this.bodyDesc.setRotation(q); // true? false?
+      this.bodyDesc?.setRotation(q); // true? false?
+    this.trans.quat.set(q);
   }
 
   setScale(_: Vec3): void {
@@ -243,12 +257,12 @@ export class RapierTransformMotion implements TransformMotion {
     // 簡単ではないのでとりあえず保留
   }
 
-  update(_: number, trans: Transform): void {
+  update(_dt: number): void {
     if (this.body) {
       const t = this.body.translation();
-      trans.loc.set(t.x, t.y, t.z);
+      this.trans.loc.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      trans.quat.set(r.x, r.y, r.z, r.w);
+      this.trans.quat.set(r.x, r.y, r.z, r.w);
     }
   }
 }

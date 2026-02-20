@@ -103,6 +103,8 @@ export abstract class ObjectA3 {
    * @param transformMotion 新しいTransformMotion
    */
   setTransformMotion(transformMotion: TransformMotion): void {
+    tmp.t0.set(this.transformMotion.trans);
+    transformMotion.init(tmp.t0, this);
     this.transformMotion = transformMotion;
   }
 
@@ -128,7 +130,7 @@ export abstract class ObjectA3 {
         ...defaultPhysicsMotionOption,
         ...option
       };
-      this.setTransformMotion(new RapierTransformMotion(this,opt));
+      this.setTransformMotion(new RapierTransformMotion(opt));
     }
   }
 
@@ -228,15 +230,15 @@ export abstract class ObjectA3 {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    this.transformMotion = new RapierTransformMotion(this,opt);
+    this.setTransformMotion(new RapierTransformMotion(opt));
     this.poseMotions = {};
   }
 
   pose: Pose = {};
   update(dt: number) {
     //TransformMosionを反映
-    this.transformMotion.update(dt,tmp.t0);
-    tmp.t0.write(this);
+    this.transformMotion.update(dt);
+    this.transformMotion.trans.write(this);
     //PoseMosionを反映
     let pose;
     if (this.emotePoseMotion && this.emotePoseMotion.playCount<=0) {
@@ -339,9 +341,7 @@ export abstract class ObjectA3 {
   }
 
   get trans(): Transform {
-    const t = new Transform();
-    this.transformMotion.getTrans(t);
-    return t;
+    return this.transformMotion.trans.clone();
   }
 
   get loc(): Vec3 { return this.trans.loc; }

@@ -6,7 +6,11 @@ import { ObjectA3 } from "./ObjectA3";
 /**
  * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
  * position,quaternion(rotation),scaleのみをコントロールする
- * モーションのインタフェース。
+ * モーションのインタフェース。コントロールするというだけでなく、
+ * ObjectA3の位置、回転、拡大・縮小率に関する情報はこの
+ * インタフェースのインスタンスが管理しており、これがObjectA3の
+ * 正式な情報で、ObjectA3.object.positionなどは表示の都合で
+ * 管理されている情報という位置付けとなる。
  * 
  * ObjectA3に各種方法で登録されることで、そのObjectA3の
  * 移動などに関する処理に影響を与える。ObjectA3に登録することが
@@ -27,18 +31,26 @@ import { ObjectA3 } from "./ObjectA3";
  */
 export interface TransformMotion {
   /**
+   * このTransformMotionが管理している位置、回転、拡大・縮小率。
+   * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
+   * ならない。
+   */
+  trans: Transform;
+
+  /**
    * このTransformMotionの動作に必要な初期化処理を実装する
    * メソッド。引数にコントロール対象のa3.ObjectA3(中に
    * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
    * それをスキャンして情報を得ることは許可されるが、変更を
    * 加えてはならない。特に初期の位置、回転、拡大・縮小率は、
-   * objectA3.object: THREE.Object3Dからコピーして、このTransformMotion
-   * 内に保持して利用することを想定している。すでに設定されている
+   * 第一引数のtransから得なければならず、objectA3.object
+   * (THREE.Object3D)から得てはならない。すでに設定されている
    * 状態で呼び出された場合には、再設定という意味で対応しなければ
    * ならない。
+   * @param trans 初期位置、回転、拡大・縮小率
    * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
    */
-  init(objectA3: ObjectA3): void;
+  init(trans: Transform, objectA3: ObjectA3): void;
 
   /**
    * 物理演算が必要な場合にRigidBodyやColliderを
@@ -55,14 +67,6 @@ export interface TransformMotion {
    * @param world 解除対象のPhysicsWorld
    */
   removeOneselfFromPhysics(world: PhysicsWorld): void;
-
-  /**
-   * 現在のTransformを返す。無駄なnewを避けるために
-   * 引数に指定されたTransformを書き換えることで、
-   * 情報を返さなければならない。
-   * @return 現在の位置、回転、拡大縮小
-   */
-  getTrans(trans: Transform): void;
 
   /**
    * 指定の場所に移動せよとの外部からの要求を受け付ける
@@ -114,13 +118,13 @@ export interface TransformMotion {
 
   /**
    * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
-   * メソッド。毎フレーム呼び出されて対応するObjectA3を動かす。
-   * 外部からの指示がなくても自動的に移動するために使用される。
-   * 無駄なnewを避けるために引数のtransに情報を書き込むことで
-   * 結果を伝えることになっている。
+   * メソッド。毎フレーム呼び出される。その時点での位置、回転、
+   * 拡大・縮小率は必ずthis.transに反映させなければならない。
+   * 外部からの指示がなくても自動的に移動するようなことが実現
+   * される。
    * @param dt 経過時間(秒)
    */
-  update(dt: number,trans: Transform): void;
+  update(dt: number): void;
 }
 
 
@@ -132,7 +136,7 @@ export interface TransformMotion {
  * するのがお勧め。
  */
 export class DefaultTransformMotion implements TransformMotion {
-  nextTrans: Transform;
+  trans: Transform;
 
   /**
    * コンストラクタ。生成する段階ではObjectA3と独立に
@@ -140,73 +144,63 @@ export class DefaultTransformMotion implements TransformMotion {
    * してから使うことになる。
    */
   constructor() {
-    this.nextTrans = new Transform();
+    this.trans = new Transform();
   }
 
-  init(objectA3: ObjectA3) {
-    this.nextTrans.set(objectA3);
+  init(trans: Transform, _objectA3: ObjectA3) {
+    this.trans.set(trans);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
-  getTrans(trans: Transform): void {
-    trans.set(this.nextTrans);
-  }
   setLocation(loc: Vec3) {
-    this.nextTrans.loc.set(loc);
+    this.trans.loc.set(loc);
   }
   setLocationNow(loc: Vec3) {
-    this.nextTrans.loc.set(loc);
+    this.trans.loc.set(loc);
   }
   setQuat(quat: Quat) {
-    this.nextTrans.quat.set(quat);
+    this.trans.quat.set(quat);
   }
   setQuatNow(quat: Quat) {
-    this.nextTrans.quat.set(quat);
+    this.trans.quat.set(quat);
   }
   setScale(scale: Vec3) {
-    this.nextTrans.scale.set(scale);
+    this.trans.scale.set(scale);
   }
   setScaleNow(scale: Vec3) {
-    this.nextTrans.scale.set(scale);
+    this.trans.scale.set(scale);
   }
-  update(_dt: number, trans: Transform) {
-    trans.set(this.nextTrans);
-    return trans;
-  }
+  update(_dt: number) {}
 }
 
 export class InterpolationTransformMotion implements TransformMotion {
   firstTrans: Transform;
-  nowTrans: Transform;
+  trans: Transform; // 現在のTransform
   lastTrans: Transform;
   nowTime: number;
   duration: number;
 
   constructor() {
     this.firstTrans = new Transform();
-    this.nowTrans = new Transform();
+    this.trans = new Transform();
     this.lastTrans = new Transform();
     this.nowTime = 0;
     this.duration = 1;
   }
 
-  init(objectA3: ObjectA3) {
-    this.firstTrans.set(objectA3);
-    this.nowTrans.set(objectA3);
-    this.lastTrans.set(objectA3);
+  init(trans: Transform, _objectA3: ObjectA3) {
+    this.firstTrans.set(trans);
+    this.trans.set(trans);
+    this.lastTrans.set(trans);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
 
-  getTrans(trans: Transform): void {
-    trans.set(this.nowTrans);
-  }
-
   setLocation(newLoc: Vec3) {
-    this.firstTrans.set(this.nowTrans);
+    this.firstTrans.set(this.trans);
     this.lastTrans.loc.set(newLoc);
     this.nowTime = 0;
   }
@@ -217,7 +211,7 @@ export class InterpolationTransformMotion implements TransformMotion {
   }
 
   setQuat(newQuat: Quat) {
-    this.firstTrans.set(this.nowTrans);
+    this.firstTrans.set(this.trans);
     this.lastTrans.quat.set(newQuat);
     this.nowTime = 0;
   }
@@ -228,7 +222,7 @@ export class InterpolationTransformMotion implements TransformMotion {
   }
 
   setScale(newScale: Vec3) {
-    this.firstTrans.set(this.nowTrans);
+    this.firstTrans.set(this.trans);
     this.lastTrans.scale.set(newScale);
     this.nowTime = 0;
   }
@@ -244,16 +238,14 @@ export class InterpolationTransformMotion implements TransformMotion {
     return t * t * (3 - 2 * t);
   }
 
-  update(dt: number, trans: Transform): void {
+  update(dt: number): void {
     this.nowTime += dt;
     if (this.nowTime > this.duration) this.nowTime = this.duration;
     const t0 = this.nowTime/this.duration;
     const t = this.smoothstep(t0);
 
-    this.nowTrans.set(this.firstTrans);
-    this.nowTrans.blend(this.lastTrans,t);
-
-    trans.set(this.nowTrans);
+    this.trans.set(this.firstTrans);
+    this.trans.blend(this.lastTrans,t);
   }
 }
 
@@ -266,22 +258,22 @@ const tmpTargetLoc: Vec3 = new Vec3();
  * 外部からの要求は全て無視して向きをtargetに向けるだけ
  * のTransformMotionとなっている。
   */
-export class BillboardTransformMotion implements TransformMotion {
+export class BillboardTransformMotion extends DefaultTransformMotion {
   up: Vec3;
   target: ObjectA3;
-  lastTrans: Transform;
 
   constructor(target: ObjectA3) {
+    super();
     this.up = new Vec3(0,1,0);
     this.target = target;
-    this.lastTrans = new Transform();
   }
 
   setTarget(target: ObjectA3) {
     this.target = target;
   }
 
-  init(objectA3: ObjectA3) {
+  init(trans: Transform, objectA3: ObjectA3) {
+    super.init(trans, objectA3);
     if (objectA3.upVector) {
       //this.up.set(objectA3.upVector);
       this.up = objectA3.upVector;
@@ -289,28 +281,16 @@ export class BillboardTransformMotion implements TransformMotion {
       //this.up.set(ObjectA3.defaultUpVector);
       this.up = ObjectA3.defaultUpVector;
     }
-    this.lastTrans.set(objectA3);
   }
 
-  addOneselfToPhysics(_world: PhysicsWorld): void {}
-  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
-
-  getTrans(trans: Transform): void {
-    trans.set(this.lastTrans);
-  }
-  setLocation(_loc: Vec3) {}
-  setLocationNow(_loc: Vec3) {}
   setQuat(_quat: Quat) {}
   setQuatNow(_quat: Quat) {}
-  setScale(_scale: Vec3) {}
-  setScaleNow(_scale: Vec3) {}
 
-  update(_dt: number, trans: Transform): void {
-    tmpObjLoc.set(trans.loc);
+  update(_dt: number): void {
+    tmpObjLoc.set(this.trans.loc);
     tmpTargetLoc.set(this.target.trans.loc);
     const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
-    trans.quat.set(quat);
-    this.lastTrans.set(trans);
+    this.trans.quat.set(quat);
   }
 }
 
@@ -324,8 +304,8 @@ export class InterpolationBillboardTransformMotion extends InterpolationTransfor
     this.target = target;
   }
 
-  init(objectA3: ObjectA3) {
-    super.init(objectA3);
+  init(trans: Transform, objectA3: ObjectA3) {
+    super.init(trans, objectA3);
     if (objectA3.upVector) {
       this.up = objectA3.upVector;
     } else {
@@ -336,13 +316,12 @@ export class InterpolationBillboardTransformMotion extends InterpolationTransfor
   setQuat(_newQuat: Quat) { /* do nothing. */ }
   setQuatNow(_newQuat: Quat) { /* do nothing. */ }
 
-  update(dt: number, trans: Transform) {
-    super.update(dt,trans);
-    tmpObjLoc.set(trans.loc);
+  update(dt: number) {
+    super.update(dt);
+    tmpObjLoc.set(this.trans.loc);
     tmpTargetLoc.set(this.target.trans.loc);
     const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
-    trans.quat.set(quat);
-    this.nowTrans.set(trans);
+    this.trans.quat.set(quat);
   }
 }
 
