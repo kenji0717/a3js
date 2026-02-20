@@ -10,34 +10,29 @@ import { ObjectA3 } from "./ObjectA3";
  * 
  * ObjectA3に各種方法で登録されることで、そのObjectA3の
  * 移動などに関する処理に影響を与える。ObjectA3に登録することが
- * できるRootMotionは一つとは限らず複数可能である。その場合は、
- * 登録した順番に従って順番に影響を与えてゆく。なので、この
- * インターフェースを実装してRootMotionを自作する場合には、他の
- * RootMotionが自分の計算結果を上書きする可能性があることを
- * 考慮すること。ただ、全てのRootMotionの組合せが上手く動作する
- * 保証は無いし、保証する必要も無い。
+ * できるTransformMotionは必ず一つである。
  * 
  * このインタフェースにはsetLocation()やsetQuat()などの外部の
  * プログラムから位置や回転を指定す要求を受け付けるメソッドが
  * あるが、これらは必ずしも要求に応答しなければならないという
- * わけではない。例えばInterpolationRootMotionでは、移動が
+ * わけではない。例えばInterpolationTransformMotionでは、移動が
  * 目視できるように1秒ほど時間をかけて移動するし、物理系の
- * RootMotionの場合は、基本的に要求を無視して物理法則通りに
+ * TransformMotionの場合は、基本的に要求を無視して物理法則通りに
  * 移動させるというのが正解の場合もある。ただし、setLocationNow()や
  * setQuatNow()のようにメソッドの最後にNowが付いている物については
  * 可能なかぎり要求に即座に答えなければならない。
  * 
- * このRootMotionを実装することでInterpolateRootMotion、
- * BillboardRootMotion、CharactorRootMotionなどが作られる。
+ * このTransformMotionを実装することでInterpolateTransformMotion、
+ * BillboardTransformMotion、CharactorTransformMotionなどが作られる。
  */
-export interface RootMotion {
+export interface TransformMotion {
   /**
-   * このRootMotionの動作に必要な初期化処理を実装する
+   * このTransformMotionの動作に必要な初期化処理を実装する
    * メソッド。引数にコントロール対象のa3.ObjectA3(中に
    * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
    * それをスキャンして情報を得ることは許可されるが、変更を
    * 加えてはならない。特に初期の位置、回転、拡大・縮小率は、
-   * objectA3.object: THREE.Object3Dからコピーして、このRootMotion
+   * objectA3.object: THREE.Object3Dからコピーして、このTransformMotion
    * 内に保持して利用することを想定している。すでに設定されている
    * 状態で呼び出された場合には、再設定という意味で対応しなければ
    * ならない。
@@ -54,7 +49,7 @@ export interface RootMotion {
   addOneselfToPhysics(world: PhysicsWorld): void;
 
   /**
-   * このRootMotionが不必要となって、PhysicsWorldに
+   * このTransformMotionが不必要となった時に、PhysicsWorldに
    * 登録していたRigidBodyやColliderを、登録解除する
    * 処理を行うメソッド。
    * @param world 解除対象のPhysicsWorld
@@ -130,13 +125,13 @@ export interface RootMotion {
 
 
 /**
- * 最も簡単なRootMotionの実装クラス。座標、回転、拡大率の
+ * 最も簡単なTransformMotionの実装クラス。座標、回転、拡大率の
  * 指定を即座に反映する。その他の機能は無い。ただ、メソッドは
- * 全て実装されているので、ちょっとしたRootMotionを作りたい
+ * 全て実装されているので、ちょっとしたTransformMotionを作りたい
  * 時は、このクラスを拡張して必要なところだけオーバーライド
  * するのがお勧め。
  */
-export class DefaultRootMotion implements RootMotion {
+export class DefaultTransformMotion implements TransformMotion {
   nextTrans: Transform;
 
   /**
@@ -182,7 +177,7 @@ export class DefaultRootMotion implements RootMotion {
   }
 }
 
-export class InterpolationRootMotion implements RootMotion {
+export class InterpolationTransformMotion implements TransformMotion {
   firstTrans: Transform;
   nowTrans: Transform;
   lastTrans: Transform;
@@ -266,13 +261,12 @@ const tmpObjLoc: Vec3 = new Vec3();
 const tmpTargetLoc: Vec3 = new Vec3();
 /**
  * targetで指定した物の方を正面として向き続けるための
- * RootMotion。特にtargetをカメラにするような使い方を
+ * TransformMotion。特にtargetをカメラにするような使い方を
  * 想定しているけど、実際には何をtargetにしても良い。
  * 外部からの要求は全て無視して向きをtargetに向けるだけ
- * のRootMotionなので複数RootMotionをObjectA3に登録して
- * 使うなら、一番最後に置いておいてもらうと、良いと思う。
- */
-export class BillboardRootMotion implements RootMotion {
+ * のTransformMotionとなっている。
+  */
+export class BillboardTransformMotion implements TransformMotion {
   up: Vec3;
   target: ObjectA3;
   lastTrans: Transform;
@@ -320,7 +314,7 @@ export class BillboardRootMotion implements RootMotion {
   }
 }
 
-export class InterpolationBillboardRootMotion extends InterpolationRootMotion {
+export class InterpolationBillboardTransformMotion extends InterpolationTransformMotion {
   up: Vec3;
   target: ObjectA3;
 

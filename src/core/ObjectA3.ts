@@ -1,12 +1,12 @@
 
 import * as THREE from 'three';
 import { Scene } from './Scene';
-import { DefaultRootMotion, InterpolationRootMotion,
-         BillboardRootMotion, InterpolationBillboardRootMotion } from './Motion';
-import type { RootMotion, PoseMotion, Pose } from './Motion';
+import { DefaultTransformMotion, InterpolationTransformMotion,
+         BillboardTransformMotion, InterpolationBillboardTransformMotion } from './Motion';
+import type { TransformMotion, PoseMotion, Pose } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
-import { RapierRootMotion } from '../rapier/RapierPhysics';
+import { RapierTransformMotion } from '../rapier/RapierPhysics';
 import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
@@ -24,12 +24,12 @@ export type Dir =
 
 /**
  * ObjectA3の位置、回転、拡大・縮小率をコントロール
- * するモードの選択。setRootMotionMode()メソッドの
+ * するモードの選択。setTransformMotionMode()メソッドの
  * 引数として使用する。ここで示される選択肢以外の
- * モードもあるが、それらはsetRootMotion()メソッド
+ * モードもあるが、それらはsetTransfromMotion()メソッド
  * を用いて指定することになる。
  */
-export type RootMotionMode =
+export type TransformMotionMode =
   | "Default"
   | "Interpolation"
   | "Billboard"
@@ -54,7 +54,7 @@ export abstract class ObjectA3 {
   object: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
-  rootMotion: RootMotion;
+  transformMotion: TransformMotion;
   poseMotions: Record<string,PoseMotion>;
   statePoseMotion?: PoseMotion;
   emotePoseMotion?: PoseMotion;
@@ -77,7 +77,7 @@ export abstract class ObjectA3 {
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
-    this.rootMotion = this.initRootMotion(data);
+    this.transformMotion = this.initTransformMotion(data);
     this.poseMotions = this.initPoseMotions(data);
   }
 
@@ -88,47 +88,47 @@ export abstract class ObjectA3 {
 
   /**
    * このObjectA3のコンストラクタから呼び出され、デフォルトで
-   * 使用されるRootMotionの配列を返す。
+   * 使用されるTransformMotionの配列を返す。
    * このメソッドをオーバーライドすることでデフォルトの
-   * RootMotionを変更することが可能。
+   * TransformMotionを変更することが可能。
    * @param _data コンストラクタから渡された情報
-   * @returns このObjectA3で使用されるRootMotionの配列
+   * @returns このObjectA3で使用されるTransformMotionの配列
    */
-  initRootMotion(_data?: any): RootMotion {
-    return new DefaultRootMotion();
+  initTransformMotion(_data?: any): TransformMotion {
+    return new DefaultTransformMotion();
   }
 
   /**
-   * ObjectA3生成後に使用されるRootMotionを変更する。
-   * @param rootMotion 新しいRootMotion
+   * ObjectA3生成後に使用されるTransformMotionを変更する。
+   * @param transformMotion 新しいTransformMotion
    */
-  setRootMotion(rootMotion: RootMotion): void {
-    this.rootMotion = rootMotion;
+  setTransformMotion(transformMotion: TransformMotion): void {
+    this.transformMotion = transformMotion;
   }
 
   /**
-   * ObjectA3に現在設定されているRootMotionの配列を返す。
-   * @return RootMotionの配列
+   * ObjectA3に現在設定されているTransformMotionを返す。
+   * @return 現在のTransformMotion
    */
-  getRootMotion(): RootMotion {
-    return this.rootMotion;
+  getTransformMotion(): TransformMotion {
+    return this.transformMotion;
   }
 
-  setRootMotionMode(mode: RootMotionMode,option?: any) {
+  setTransformMotionMode(mode: TransformMotionMode,option?: any) {
     if (mode === "Default")
-      this.setRootMotion(new DefaultRootMotion());
+      this.setTransformMotion(new DefaultTransformMotion());
     else if (mode === "Interpolation")
-      this.setRootMotion(new InterpolationRootMotion());
+      this.setTransformMotion(new InterpolationTransformMotion());
     else if (mode === "Billboard")
-      this.setRootMotion(new BillboardRootMotion(option));
+      this.setTransformMotion(new BillboardTransformMotion(option));
     else if (mode === "InterpolationBillboard")
-      this.setRootMotion(new InterpolationBillboardRootMotion(option));
+      this.setTransformMotion(new InterpolationBillboardTransformMotion(option));
     else if (mode === "SimplePhysics") {
       const opt = {
         ...defaultPhysicsMotionOption,
         ...option
       };
-      this.setRootMotion(new RapierRootMotion(this,opt));
+      this.setTransformMotion(new RapierTransformMotion(this,opt));
     }
   }
 
@@ -222,20 +222,20 @@ export abstract class ObjectA3 {
     }
   }
 
-  // setRootMotionModeでも同じことできるけど。。。
+  // setTransformMotionModeでも同じことできるけど。。。
   initSimplePhysics(option: PhysicsMotionOption) {
     const opt = {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    this.rootMotion = new RapierRootMotion(this,opt);
+    this.transformMotion = new RapierTransformMotion(this,opt);
     this.poseMotions = {};
   }
 
   pose: Pose = {};
   update(dt: number) {
-    //RootMosionを反映
-    this.rootMotion.update(dt,tmp.t0);
+    //TransformMosionを反映
+    this.transformMotion.update(dt,tmp.t0);
     tmp.t0.write(this);
     //PoseMosionを反映
     let pose;
@@ -340,7 +340,7 @@ export abstract class ObjectA3 {
 
   get trans(): Transform {
     const t = new Transform();
-    this.rootMotion.getTrans(t);
+    this.transformMotion.getTrans(t);
     return t;
   }
 
@@ -354,7 +354,7 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.rootMotion.setLocation(newLoc);
+    this.transformMotion.setLocation(newLoc);
   }
 
   setLocationNow(x: number, y: number, z: number): void;
@@ -366,7 +366,7 @@ export abstract class ObjectA3 {
     } else {
       newLoc.set(xOrV);
     }
-    this.rootMotion.setLocationNow(newLoc);
+    this.transformMotion.setLocationNow(newLoc);
   }
 
 
@@ -382,7 +382,7 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.rootMotion.setQuat(newQuat);
+    this.transformMotion.setQuat(newQuat);
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
@@ -394,7 +394,7 @@ export abstract class ObjectA3 {
     } else {
       newQuat.set(xOrQ);
     }
-    this.rootMotion.setQuatNow(newQuat);
+    this.transformMotion.setQuatNow(newQuat);
   }
 
   get scale(): Vec3 { return this.trans.scale; }
@@ -407,7 +407,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.rootMotion.setScale(newScale);
+    this.transformMotion.setScale(newScale);
   }
 
   setScaleNow(x: number, y: number, z: number): void;
@@ -419,7 +419,7 @@ export abstract class ObjectA3 {
     } else {
       newScale.set(xOrV);
     }
-    this.rootMotion.setScaleNow(newScale);
+    this.transformMotion.setScaleNow(newScale);
   }
 
   /**

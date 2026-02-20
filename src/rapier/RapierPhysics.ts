@@ -8,7 +8,7 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsMotionOption, Collision } from '../core/Physics';
-import type { RootMotion, PoseMotion } from '../core/Motion';
+import type { TransformMotion, PoseMotion } from '../core/Motion';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
@@ -72,11 +72,11 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(motion: RootMotion | PoseMotion) {
+  add(motion: TransformMotion | PoseMotion) {
     motion.addOneselfToPhysics(this);
   }
 
-  remove(motion: RootMotion | PoseMotion) {
+  remove(motion: TransformMotion | PoseMotion) {
     motion.removeOneselfFromPhysics(this);
   }
 
@@ -106,7 +106,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 }
 
-export class RapierRootMotion implements RootMotion {
+export class RapierTransformMotion implements TransformMotion {
   objectA3: ObjectA3;
   bodyDesc: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;

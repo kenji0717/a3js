@@ -3,7 +3,7 @@ import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import * as THREE from 'three';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { RootMotion } from '../core/Motion';
+import type { TransformMotion } from '../core/Motion';
 
 export interface CharactorMotionOption {
   offset: number,
@@ -19,7 +19,7 @@ export const defaultCharactorMotionOption = {
   radius: 0.3
 };
 
-export class CharactorRootMotion implements RootMotion {
+export class CharactorTransformMotion implements TransformMotion {
   objectA3: ObjectA3;
   completeOption: CharactorMotionOption;
   controller?: Rapier.KinematicCharacterController;

@@ -1,6 +1,6 @@
 
 import type { ObjectA3 } from './ObjectA3';
-import type { RootMotion, PoseMotion } from './Motion';
+import type { TransformMotion, PoseMotion } from './Motion';
 
 /*
  * 念のため、物理エンジンが変更されてもa3jsへの影響が少なくなるよう
@@ -45,8 +45,8 @@ export interface PhysicsWorldOption {
  * メソッドを持つ。
  */
 export interface PhysicsWorld {
-  add(motion: RootMotion | PoseMotion): void;
-  remove(motion: RootMotion | PoseMotion): void;
+  add(motion: TransformMotion | PoseMotion): void;
+  remove(motion: TransformMotion | PoseMotion): void;
   update(dt: number): void;
   getCollisions(): Collision[];
 }
