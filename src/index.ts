@@ -19,6 +19,7 @@ export type { SoundOptions, PositionalOptions, SoundType, SoundOptionInput } fro
 export { ThreeJS } from './three/ThreeJS';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
+export { StandardLights } from './three/StandardLights';
 export { HTML } from './three/HTML';
 export type { View, ViewBase } from './core/View';
 export type { PhysicsEngine,

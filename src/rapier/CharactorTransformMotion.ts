@@ -28,8 +28,10 @@ export class CharactorTransformMotion implements TransformMotion {
   body?: Rapier.RigidBody;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
+  capsuleCenter: Vec3;
   nextLocation: Vec3;
-  tmpVec3: Vec3;
+  tmpV1: Vec3;
+  tmpV2: Vec3;
 
   constructor(option: Partial<CharactorMotionOption> = {}) {
     this.completeOption = {
@@ -37,18 +39,22 @@ export class CharactorTransformMotion implements TransformMotion {
       ...option
     };
     this.trans = new Transform();
+    this.capsuleCenter = new Vec3();
     this.nextLocation = new Vec3();
-    this.tmpVec3 = new Vec3();
+    this.tmpV1 = new Vec3();
+    this.tmpV2 = new Vec3();
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
     this.trans.set(trans);
     if (this.completeOption.auto) {
       const box = new THREE.Box3().setFromObject(objectA3.object);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      this.completeOption.radius = Math.max(size.x, size.z) / 2;
-      this.completeOption.height = size.y - this.completeOption.radius * 2;
+      const tmpV = new THREE.Vector3();
+      box.getSize(tmpV);
+      this.completeOption.radius = Math.max(tmpV.x, tmpV.z) / 2;
+      this.completeOption.height = tmpV.y - this.completeOption.radius * 2;
+      box.getCenter(tmpV);
+      this.capsuleCenter.set(tmpV);
     }
     this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
     this.colliderDesc = RAPIER.ColliderDesc.capsule(
@@ -88,14 +94,20 @@ export class CharactorTransformMotion implements TransformMotion {
   }
 
   setLocation(v: Vec3): void {
-    this.nextLocation.set(v);
+    this.tmpV1.set(v);
+    this.tmpV1.add(this.capsuleCenter);
+    this.nextLocation.set(this.tmpV1);
   }
   setLocationNow(v: Vec3): void {
+    this.tmpV1.set(v);
+    this.tmpV1.add(this.capsuleCenter);
+    v = this.tmpV1;
     if (this.body)
       this.body.setNextKinematicTranslation(v); // こんなメソッドもあるのね
     else
       this.bodyDesc?.setTranslation(v.x,v.y,v.z);
     this.trans.loc.set(v);
+    this.nextLocation.set(v);
   }
 
   setQuat(q: Quat): void {
@@ -131,18 +143,21 @@ export class CharactorTransformMotion implements TransformMotion {
     if (!this.body || !this.controller || !this.collider)
       return;
 
-    this.tmpVec3.set(this.nextLocation);
-    this.tmpVec3.sub(this.trans.loc);
-    //this.tmpVec3.sub(this.body.translation()); // こっちは振動する
-    this.controller.computeColliderMovement(this.collider,this.tmpVec3);
+    this.trans.quat.set(this.body.rotation());
+
+    //this.tmpV1.set(this.trans.loc); // こっちはダメっぽい
+    this.tmpV1.set(this.body.translation());
+    this.tmpV2.set(this.nextLocation);
+    this.tmpV2.sub(this.tmpV1);
+    this.controller.computeColliderMovement(this.collider,this.tmpV2);
     const corrected = this.controller.computedMovement();
 
-    this.tmpVec3.set(this.trans.loc);
-    //this.tmpVec3.set(this.body.translation()); // こっちは振動する
-    this.tmpVec3.add(corrected.x,corrected.y,corrected.z);
-    this.body.setNextKinematicTranslation(this.tmpVec3);
+    this.tmpV1.add(corrected.x,corrected.y,corrected.z);
+    //this.body.setTranslation(this.tmpV1,true); // どっちが良い？
+    this.body.setNextKinematicTranslation(this.tmpV1); // どっちが良い？
 
-    this.trans.loc.set(this.body.translation());
-    this.trans.quat.set(this.body.rotation());
+    this.tmpV1.sub(this.capsuleCenter);
+    this.trans.loc.set(this.tmpV1);
+    this.nextLocation.set(this.tmpV1);
   }
 }

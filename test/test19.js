@@ -17,7 +17,7 @@ sound.play();
 
 let t=0;
 while (true) {
-  await a3.asyncSleep(1000/60);
+  await view.waitForRender();
   obj.setRotation(0,t,0);
   t+=0.5;
 }

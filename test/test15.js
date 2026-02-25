@@ -12,7 +12,7 @@ obj2.setRotation(0,0,90);
 
 
 for (let t=0;t<=360;t++) {
-  await a3.asyncSleep(1000/60);
+  await view.waitForRender();
   obj1.setRotation(0,0,t);
   obj2.setRotation(0,0,t);
 }

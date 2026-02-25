@@ -330,7 +330,16 @@ export class Window extends HTMLElement implements View {
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
     this.css2DRenderer.render(this.scene.scene, this.camera3js);
+    this.waitingRenderResolves.forEach((resolve)=>{resolve();});
+    this.waitingRenderResolves = [];
   };
+
+  waitingRenderResolves: (()=>void)[] = [];
+  waitForRender(): Promise<void> {
+    return new Promise((resolve)=>{
+      this.waitingRenderResolves.push(resolve);
+    });
+  }
 
   worldToScreen(loc: Vec3): { x: number, y: number } {
     const v = new THREE.Vector3(loc.x, loc.y, loc.z);
