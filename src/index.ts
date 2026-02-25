@@ -7,7 +7,7 @@ export { ObjectA3 } from './core/ObjectA3';
 export type { Dir, TransformMotionMode } from './core/ObjectA3';
 export type { TransformMotion, PoseMotion, Pose } from './core/Motion';
 export { ClipPoseMotion } from './three/ClipPoseMotion';
-export { ControllerBase, OrbitController, FollowAvatarController } from './core/Controller';
+export { ControllerBase, OrbitController, FollowAvatarController, AvatarController } from './core/Controller';
 export type { Controller } from './core/Controller';
 export { Test } from './core/Test';
 export type { TestOption } from './core/Test';

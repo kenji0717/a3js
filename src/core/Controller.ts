@@ -10,7 +10,8 @@ import { tmp } from '../utils/math';
  * 必要。
  */
 export interface Controller {
-  view: View;
+  view?: View;
+  setView(view: View): void;
   update(dt: number): void;
   activate(): void;
   deactivate(): void;
@@ -43,11 +44,9 @@ export interface Controller {
   * Controllerを作ると良い。
   */
 export class ControllerBase implements Controller {
-  view: View;
-  constructor(view: View) {
-    this.view = view;
-    view.setController(this);
-  }
+  view?: View;
+  constructor() {}
+  setView(view: View) { this.view = view; }
   update(dt: number): void {dt;}
   activate(): void {}
   deactivate(): void {}
@@ -84,10 +83,10 @@ export class OrbitController extends ControllerBase {
   cameraLoc: Vec3 = new Vec3(0,0,3);
   cameraQuat: Quat = new Quat(0,0,0,1);
 
-  constructor(view: View,target: Vec3);
-  constructor(view: View,tx: number, ty: number, tz: number);
-  constructor(view: View,xOrV: number | Vec3, y?: number, z?: number) {
-    super(view);
+  constructor(target: Vec3);
+  constructor(tx: number, ty: number, tz: number);
+  constructor(xOrV: number | Vec3, y?: number, z?: number) {
+    super();
     this.preMouse = {x:0,y:0};
     if (typeof xOrV === "number") {
       this.target = new Vec3(xOrV,y!,z!);
@@ -96,8 +95,8 @@ export class OrbitController extends ControllerBase {
     }
   }
 
-  update(dt: number): void {
-    dt;
+  update(_dt: number): void {
+    if (!this.view) return;
     this.view.camera.setLocation(this.cameraLoc);
     this.view.camera.setQuat(this.cameraQuat);
   }
@@ -114,6 +113,7 @@ export class OrbitController extends ControllerBase {
     }
   }
   mouseMove(e: MouseEvent): void {
+    if (!this.view) return;
     if (this.leftClick) {
       const epsilon = 0.01;
       const dx = epsilon*(e.clientX - this.preMouse.x);
@@ -193,48 +193,108 @@ console.log(`GAHA: touchStart()`,event);
   * 適当。
   */
 export class FollowAvatarController extends ControllerBase {
-  private _keyUp: boolean;
-  private _keyLeft: boolean;
-  private _keyDown: boolean;
-  private _keyRight: boolean;
-  private _cameraQuat: Quat;
   private _offset: Vec3;
 
-  constructor(view: View) {
-    super(view);
-    this._keyUp = this._keyLeft = this._keyDown = this._keyRight = false;
-    this._cameraQuat = new Quat();
+  constructor() {
+    super();
     this._offset = new Vec3(0,5,-10);
   }
 
-  keyDown(event: KeyboardEvent): void {
-    if (event.code === 'keyUp') this._keyUp = true;
-    else if (event.code === 'keyLeft') this._keyLeft = true;
-    else if (event.code === 'keyDown') this._keyDown = true;
-    else if (event.code === 'keyRgitht') this._keyRight = true;
-  }
-
-  keyUp(event: KeyboardEvent): void {
-    if (event.code === 'keyUp') this._keyUp = false;
-    else if (event.code === 'keyLeft') this._keyLeft = false;
-    else if (event.code === 'keyDown') this._keyDown = false;
-    else if (event.code === 'keyRgitht') this._keyRight = false;
-  }
-
   update(_dt: number): void {
+    if (!this.view) return;
     if (!this.view.scene.avatar) return;
-    if (this._keyUp) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0.1,0,0)))
-    if (this._keyLeft) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0,0.1,0)))
-    if (this._keyDown) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(-0.1,0,0)))
-    if (this._keyRight) this._cameraQuat.mul(vec3EulerToQuat(new Vec3(0,-0.1,0)))
     const aTrans = new Transform();
     aTrans.set(this.view.scene.avatar);
     tmp.v0.set(this._offset);
     tmp.v0.apply(aTrans.quat);
-    tmp.v0.apply(this._cameraQuat);
     tmp.v0.add(aTrans.loc);
     this.view.camera.setLocationNow(tmp.v0);
     this.view.camera.lookAt(this.view.scene.avatar);
+  }
+
+  //setCameraLocation(loc: Vec3): void {}
+  //setCameraLocationNow(loc: Vec3): void {}
+  //setCameraQuat(quat: Quat): void {}
+  //setCameraQuatNow(quat: Quat): void {}
+}
+
+
+/**
+  * 適当。
+  */
+export class AvatarController extends ControllerBase {
+  private _keyW: boolean;
+  private _keyA: boolean;
+  private _keyS: boolean;
+  private _keyD: boolean;
+  private _keyLeft: boolean;
+  private _keyRight: boolean;
+  private _keySpace: boolean;
+  private _offset: Vec3;
+  private _avatarNextLoc: Vec3;
+  private _avatarNextQuat: Quat;
+  private _velY: number;
+
+  constructor() {
+    super();
+    this._keyW = this._keyA = this._keyS = this._keyD = false;
+    this._keyLeft = this._keyRight = false;
+    this._keySpace = false;
+    this._offset = new Vec3(0,5,-10);
+    this._avatarNextLoc = new Vec3();
+    this._avatarNextQuat = new Quat();
+    this._velY = 0.0;
+  }
+
+  keyDown(event: KeyboardEvent): void {
+    if (event.code === 'KeyW') this._keyW = true;
+    else if (event.code === 'KeyA') this._keyA = true;
+    else if (event.code === 'KeyS') this._keyS = true;
+    else if (event.code === 'KeyD') this._keyD = true;
+    else if (event.code === 'ArrowLeft') this._keyLeft = true;
+    else if (event.code === 'ArrowRight') this._keyRight = true;
+    else if (event.code === 'Space') this._keySpace = true;
+  }
+
+  keyUp(event: KeyboardEvent): void {
+    if (event.code === 'KeyW') this._keyW = false;
+    else if (event.code === 'KeyA') this._keyA = false;
+    else if (event.code === 'KeyS') this._keyS = false;
+    else if (event.code === 'KeyD') this._keyD = false;
+    else if (event.code === 'ArrowLeft') this._keyLeft = false;
+    else if (event.code === 'ArrowRight') this._keyRight = false;
+    else if (event.code === 'Space') this._keySpace = false;
+  }
+
+  update(dt: number): void {
+    if (!this.view) return;
+    if (!this.view.scene.avatar) return;
+    const avatar = this.view.scene.avatar;
+    const aTrans = new Transform();
+    aTrans.set(avatar);
+    tmp.v0.set(this._offset);
+    tmp.v0.apply(aTrans.quat);
+    tmp.v0.add(aTrans.loc);
+    this.view.camera.setLocationNow(tmp.v0);
+    this.view.camera.lookAt(avatar);
+    this._avatarNextLoc.set(avatar.loc);
+    this._avatarNextQuat.set(avatar.quat);
+    const forward = avatar.getUnitVecZ().scale(0.1);
+    const left = avatar.getUnitVecX().scale(0.1);
+    if (this._keyW) this._avatarNextLoc.add(forward);
+    if (this._keyA) this._avatarNextLoc.add(left);
+    if (this._keyS) this._avatarNextLoc.sub(forward);
+    if (this._keyD) this._avatarNextLoc.sub(left);
+    if (avatar.isGrounded()) {
+      this._velY = 0.0;
+      if (this._keySpace) this._velY = 0.5;
+    }
+    this._velY += (-9.8*dt/100);
+    this._avatarNextLoc.add(0.0, this._velY, 0.0);
+    if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,0.01,0)));
+    if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-0.01,0)));
+    avatar.setLocationNow(this._avatarNextLoc);
+    avatar.setQuat(this._avatarNextQuat);
   }
 
   //setCameraLocation(loc: Vec3): void {}

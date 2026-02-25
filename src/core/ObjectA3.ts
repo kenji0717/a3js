@@ -7,6 +7,7 @@ import type { TransformMotion, PoseMotion, Pose } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
 import { RapierTransformMotion } from '../rapier/RapierPhysics';
+import { CharactorTransformMotion } from '../rapier/CharactorTransformMotion';
 import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
@@ -734,6 +735,19 @@ export abstract class ObjectA3 {
 
   rollLeftNow(l: number) {
     this.mulRotationNow(0,0,-l);
+  }
+
+  /**
+   * TransformMotionがCharactorTransformMotionに設定されている
+   * 時だけ、現在接地していうかどうかを判定してくれる。
+   * @returns 接地してるかどうか
+   */
+  isGrounded(): boolean {
+    if (this.transformMotion instanceof CharactorTransformMotion) {
+      return this.transformMotion.isGrounded();
+    } else {
+      return false;//falseということで。
+    }
   }
 }
 

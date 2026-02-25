@@ -5,7 +5,7 @@ const r = (n)=>Math.floor(n*Math.random());//0<=r<nの乱数
 
 const view = new a3.Window(600,300);
 // ↓デフォルトのOrbigControllerだとカメラを操作できないので
-view.setController(new a3.ControllerBase(view));
+view.setController(new a3.ControllerBase());
 
 for (let t=0;t<2*Math.PI;t+=Math.PI/4) {
   const obj = new a3.Box(`rgb(${r(256)},${r(256)},${r(256)})`);

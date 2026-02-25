@@ -7,7 +7,7 @@ view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
 view.scene.add(obj);
 view.scene.setAvatar(obj);
-view.setController(new a3.FollowAvatarController(view));
+view.setController(new a3.FollowAvatarController());
 
 document.addEventListener('keydown',(e)=>{
 //console.log(`GAHA: `,e.code);

@@ -55,7 +55,9 @@ export class ViewBase implements View {
     this.camera.setAudioListener(Sound.listener);
     this.scene.scene.add(this.camera.object);
     this.camera.setLocation(0, 0, 3);
-    this.controller = new OrbitController(this,0,0,0);
+    this.controller = new OrbitController(0,0,0);
+    this.controller.setView(this);
+    this.controller.activate();
     this.camera.setController(this.controller);
   }
 
@@ -74,8 +76,9 @@ export class ViewBase implements View {
   }
 
   setController(controller: Controller) {
-    this.controller?.deactivate();
+    this.controller.deactivate();
     this.controller = controller;
+    this.controller.setView(this);
     this.controller.activate();
     this.camera.setController(controller);
   }
