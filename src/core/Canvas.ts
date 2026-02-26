@@ -151,12 +151,12 @@ export class Canvas extends HTMLElement implements View {
     this.base.updateScene(dt);
     this.renderer.render(this.scene.scene, this.camera3js);
     this.css2DRenderer.render(this.scene.scene, this.camera3js);
-    this.waitingRenderResolves.forEach((resolve)=>{resolve();});
+    this.waitingRenderResolves.forEach((resolve)=>{resolve(dt);});
     this.waitingRenderResolves = [];
   };
 
-  waitingRenderResolves: (()=>void)[] = [];
-  waitForRender(): Promise<void> {
+  waitingRenderResolves: ((dt: number)=>void)[] = [];
+  waitForRender(): Promise<number> {
     return new Promise((resolve)=>{
       this.waitingRenderResolves.push(resolve);
     });

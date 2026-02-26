@@ -133,6 +133,15 @@ export class CharactorTransformMotion implements TransformMotion {
     // 簡単ではないのでとりあえず保留
   }
 
+  setLinvel(_vel: Vec3): void {}
+  setAngvel(_angvel: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  resetForce(): void {}
+  addTorque(_t: Vec3): void {}
+  resetTorque(): void {}
+  applyImpulse(_i: Vec3): void {}
+  applyTorqueImpulse(_ti: Vec3): void {}
+
   isGrounded(): boolean {
     if (this.controller)
       return this.controller.computedGrounded();

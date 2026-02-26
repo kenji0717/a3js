@@ -257,6 +257,44 @@ export class RapierTransformMotion implements TransformMotion {
     // 簡単ではないのでとりあえず保留
   }
 
+  setLinvel(vel: Vec3): void {
+    if (this.body)
+      this.body.setLinvel({x:vel.x, y:vel.y, z:vel.z},true);
+    else
+      this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
+  }
+
+  setAngvel(av: Vec3): void {
+    if (this.body)
+      this.body.setAngvel({x:av.x, y:av.y, z:av.z},true);
+    else
+      this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
+  }
+
+  addForce(f: Vec3): void {
+    this.body?.addForce({x:f.x, y:f.y, z:f.z},true);
+  }
+
+  resetForce(): void {
+    this.body?.resetForces(true);
+  }
+
+  addTorque(t: Vec3): void {
+    this.body?.addTorque({x:t.x, y:t.y, z:t.z},true);
+  }
+
+  resetTorque(): void {
+    this.body?.resetTorques(true);
+  }
+
+  applyImpulse(i: Vec3): void {
+    this.body?.applyImpulse({x:i.x, y:i.y, z:i.z},true);
+  }
+
+  applyTorqueImpulse(ti: Vec3): void {
+    this.body?.applyTorqueImpulse({x:ti.x, y:ti.y, z:ti.z},true);
+  }
+
   update(_dt: number): void {
     if (this.body) {
       const t = this.body.translation();

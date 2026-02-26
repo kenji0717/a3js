@@ -272,24 +272,27 @@ export class AvatarController extends ControllerBase {
     const avatar = this.view.scene.avatar;
     const aTrans = new Transform();
     aTrans.set(avatar);
+    const forward = avatar.getUnitVecZ().scale(0.1);
+    const left = avatar.getUnitVecX().scale(0.1);
+
     tmp.v0.set(this._offset);
     tmp.v0.apply(aTrans.quat);
     tmp.v0.add(aTrans.loc);
     this.view.camera.setLocationNow(tmp.v0);
-    this.view.camera.lookAt(avatar);
-    this._avatarNextLoc.set(avatar.loc);
-    this._avatarNextQuat.set(avatar.quat);
-    const forward = avatar.getUnitVecZ().scale(0.1);
-    const left = avatar.getUnitVecX().scale(0.1);
+    this.view.camera.lookAt(aTrans.loc);
+
+    this._avatarNextLoc.set(aTrans.loc);
+    this._avatarNextQuat.set(aTrans.quat);
     if (this._keyW) this._avatarNextLoc.add(forward);
     if (this._keyA) this._avatarNextLoc.add(left);
     if (this._keyS) this._avatarNextLoc.sub(forward);
     if (this._keyD) this._avatarNextLoc.sub(left);
+
+    this._velY += (-9.8*dt)*0.1;
     if (avatar.isGrounded()) {
       this._velY = 0.0;
       if (this._keySpace) this._velY = 0.5;
     }
-    this._velY += (-9.8*dt/100);
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
     if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,0.01,0)));
     if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-0.01,0)));

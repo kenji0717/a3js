@@ -349,25 +349,23 @@ export abstract class ObjectA3 {
   setLocation(x: number, y: number, z: number): void;
   setLocation(v: Vec3): void;
   setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
-    const newLoc = new Vec3();
     if (typeof xOrV === "number") {
-      newLoc.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     } else {
-      newLoc.set(xOrV);
+      tmp.v0.set(xOrV);
     }
-    this.transformMotion.setLocation(newLoc);
+    this.transformMotion.setLocation(tmp.v0);
   }
 
   setLocationNow(x: number, y: number, z: number): void;
   setLocationNow(v: Vec3): void;
   setLocationNow(xOrV: number | Vec3, y?: number, z?: number): void {
-    const newLoc = new Vec3();
     if (typeof xOrV === "number") {
-      newLoc.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     } else {
-      newLoc.set(xOrV);
+      tmp.v0.set(xOrV);
     }
-    this.transformMotion.setLocationNow(newLoc);
+    this.transformMotion.setLocationNow(tmp.v0);
   }
 
 
@@ -377,50 +375,46 @@ export abstract class ObjectA3 {
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
-    const newQuat = new Quat();
     if (typeof xOrQ === "number") {
-      newQuat.set(xOrQ, y!, z!, w!);
+      tmp.q0.set(xOrQ, y!, z!, w!);
     } else {
-      newQuat.set(xOrQ);
+      tmp.q0.set(xOrQ);
     }
-    this.transformMotion.setQuat(newQuat);
+    this.transformMotion.setQuat(tmp.q0);
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
   setQuatNow(q: Quat): void;
   setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
-    const newQuat = new Quat();
     if (typeof xOrQ === "number") {
-      newQuat.set(xOrQ, y!, z!, w!);
+      tmp.q0.set(xOrQ, y!, z!, w!);
     } else {
-      newQuat.set(xOrQ);
+      tmp.q0.set(xOrQ);
     }
-    this.transformMotion.setQuatNow(newQuat);
+    this.transformMotion.setQuatNow(tmp.q0);
   }
 
   get scale(): Vec3 { return this.trans.scale; }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
-    const newScale = new Vec3();
     if (typeof xOrV === "number") {
-      newScale.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     } else {
-      newScale.set(xOrV);
+      tmp.v0.set(xOrV);
     }
-    this.transformMotion.setScale(newScale);
+    this.transformMotion.setScale(tmp.v0);
   }
 
   setScaleNow(x: number, y: number, z: number): void;
   setScaleNow(v: Vec3): void;
   setScaleNow(xOrV: number | Vec3, y?: number, z?: number): void {
-    const newScale = new Vec3();
     if (typeof xOrV === "number") {
-      newScale.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     } else {
-      newScale.set(xOrV);
+      tmp.v0.set(xOrV);
     }
-    this.transformMotion.setScaleNow(newScale);
+    this.transformMotion.setScaleNow(tmp.v0);
   }
 
   /**
@@ -737,16 +731,93 @@ export abstract class ObjectA3 {
     this.mulRotationNow(0,0,-l);
   }
 
+  setLinvel(v: Vec3): void;
+  setLinvel(x: number, y: number, z: number): void;
+  setLinvel(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.setLinvel(tmp.v0);
+  }
+
+  setAngvel(v: Vec3): void;
+  setAngvel(x: number, y: number, z: number): void;
+  setAngvel(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.setAngvel(tmp.v0);
+  }
+
+  addForce(v: Vec3): void;
+  addForce(x: number, y: number, z: number): void;
+  addForce(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.addForce(tmp.v0);
+  }
+  resetForce(): void {
+    this.transformMotion.resetForce();
+  }
+
+  addTorque(v: Vec3): void;
+  addTorque(x: number, y: number, z: number): void;
+  addTorque(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.addTorque(tmp.v0);
+  }
+  resetTorque(): void {
+    this.transformMotion.resetTorque();
+  }
+
+  applyImpulse(v: Vec3): void;
+  applyImpulse(x: number, y: number, z: number): void;
+  applyImpulse(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.applyImpulse(tmp.v0);
+  }
+
+  applyTorqueImpulse(v: Vec3): void;
+  applyTorqueImpulse(x: number, y: number, z: number): void;
+  applyTorqueImpulse(xOrV: number | Vec3, y?: number, z?: number) {
+    if (typeof xOrV === "number") {
+      tmp.v0.set(xOrV, y!, z!);
+    } else {
+      tmp.v0.set(xOrV);
+    }
+    this.transformMotion.applyTorqueImpulse(tmp.v0);
+  }
+
   /**
    * TransformMotionがCharactorTransformMotionに設定されている
-   * 時だけ、現在接地していうかどうかを判定してくれる。
+   * 時だけ他のオブジェクトを考慮して現在接地していうかどうかを
+   * 判定してくれる。それ以外の時は、Y座標が0以下の時接地している
+   * と判定する。
    * @returns 接地してるかどうか
    */
   isGrounded(): boolean {
     if (this.transformMotion instanceof CharactorTransformMotion) {
       return this.transformMotion.isGrounded();
     } else {
-      return false;//falseということで。
+      if (this.loc.y<=0)
+        return true;
+      else
+        return false;
     }
   }
 }

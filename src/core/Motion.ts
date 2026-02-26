@@ -117,6 +117,61 @@ export interface TransformMotion {
   setScaleNow(scale: Vec3): void;
 
   /**
+   * 速度を設定する。物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  setLinvel(vel: Vec3): void;
+
+  /**
+   * 角速度を設定する。単位はラジアン/秒。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  setAngvel(angvel: Vec3): void;
+
+  /**
+   * 力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  addForce(f: Vec3): void;
+
+  /**
+   * addForceで加えられた力をリセットする。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  resetForce(): void;
+
+  /**
+   * トルク(回転力)を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  addTorque(t: Vec3): void;
+
+  /**
+   * addTorqueで加えられたトルクをリセットする。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  resetTorque(): void;
+
+  /**
+   * 一瞬、力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  applyImpulse(i: Vec3): void;
+
+  /**
+   * 一瞬、トルクを設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  applyTorqueImpulse(ti: Vec3): void;
+
+  /**
    * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
    * メソッド。毎フレーム呼び出される。その時点での位置、回転、
    * 拡大・縮小率は必ずthis.transに反映させなければならない。
@@ -172,6 +227,14 @@ export class DefaultTransformMotion implements TransformMotion {
   setScaleNow(scale: Vec3) {
     this.trans.scale.set(scale);
   }
+  setLinvel(_vel: Vec3): void {}
+  setAngvel(_angvel: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  resetForce(): void {}
+  addTorque(_t: Vec3): void {}
+  resetTorque(): void {}
+  applyImpulse(_i: Vec3): void {}
+  applyTorqueImpulse(_ti: Vec3): void {}
   update(_dt: number) {}
 }
 
@@ -231,6 +294,15 @@ export class InterpolationTransformMotion implements TransformMotion {
     this.setScale(newScale);
     this.nowTime = 1;
   }
+
+  setLinvel(_vel: Vec3): void {}
+  setAngvel(_angvel: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  resetForce(): void {}
+  addTorque(_t: Vec3): void {}
+  resetTorque(): void {}
+  applyImpulse(_i: Vec3): void {}
+  applyTorqueImpulse(_ti: Vec3): void {}
 
   // cssのanimation-timing-functionみたいに
   // 切り替えられるようにしたいね。

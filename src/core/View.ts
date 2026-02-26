@@ -33,7 +33,7 @@ export interface View {
   screenToWorld(x: number, y: number, depth: number): Vec3;
   cameraToScreen(loc: Vec3): { x: number, y: number };
   screenToCamera(x: number, y: number, depth: number): Vec3;
-  waitForRender(): Promise<void>;
+  waitForRender(): Promise<number>;
 }
 
 
@@ -124,8 +124,8 @@ export class ViewBase implements View {
     return new Vec3();
   }
 
-  async waitForRender(): Promise<void> {
+  async waitForRender(): Promise<number> {
     throw new Error(`ViewBaseはwaitForRender()は実装していません`);
-    return;
+    return 0;
   }
 }
