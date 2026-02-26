@@ -131,6 +131,7 @@ export class OrbitController extends ControllerBase {
       newCameraLoc.add(this.target);
       this.cameraLoc.set(newCameraLoc);
       const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
+      newCameraQuat.mul(new Quat(0,1,0,0)); // カメラは-Zが前なのでY軸まわりに180度回転！
       this.cameraQuat.set(newCameraQuat);
       this.preMouse.x = e.clientX;
       this.preMouse.y = e.clientY;

@@ -333,9 +333,20 @@ export class Quat {
   }
 }
 
-export function getQuatOfLookAt(camera: Vec3,target: Vec3,up: Vec3) {
+/**
+ * 自分(me)が対象(target)の方を向くための四元数を計算で出します。
+ * 3つ目の引数に上方向ベクトル(up)も与えて下さい。glTFのモデルを
+ * 基準にしたいので、これにあわせてZ軸の正の方向を自分の前方向と
+ * 考えて、これを対象に向ける回転を計算する。
+ *
+ * 直接、ここの計算とは関係ないがカメラだけはZ軸の負の方向を
+ * 前としなければならないので、a3.Camera.lookAt()は
+ * a3.ObjectA3.lookAt()をオーバーライドすることで反対方向を向く
+ * ようにしている。
+ */
+export function getQuatOfLookAt(me: Vec3,target: Vec3,up: Vec3) {
   up.normalize();
-  const forward = target.clone().sub(camera).normalize();
+  const forward = me.clone().sub(target).normalize();
   const right = new Vec3().cross(forward,up).normalize();
   const trueUp = new Vec3().cross(right, forward);
 

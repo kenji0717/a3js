@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { Controller } from './Controller';
-import { Vec3 } from './LinearMath';
+import { Vec3, Quat, getQuatOfLookAt } from './LinearMath';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -42,5 +42,41 @@ export abstract class Camera extends ObjectA3 {
       v.set(xOrV);
     }
     this.controller?.setCameraLocation(v);
+  }
+
+  lookAt(x: number, y: number, z: number): void;
+  lookAt(v: Vec3): void;
+  lookAt(o: ObjectA3): void;
+  lookAt(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
+    const target = new Vec3();
+    if (typeof xVO === "number") {
+      target.set(xVO,y!,z!);
+    } else if (xVO instanceof ObjectA3) {
+      target.set(xVO.loc);
+    } else {
+      target.set(xVO);
+    }
+    const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+    const newQuat = getQuatOfLookAt(this.loc,target,up);
+    newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
+    this.setQuat(newQuat);
+  }
+
+  lookAtNow(x: number, y: number, z: number): void;
+  lookAtNow(v: Vec3): void;
+  lookAtNow(o: ObjectA3): void;
+  lookAtNow(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
+    const target = new Vec3();
+    if (typeof xVO === "number") {
+      target.set(xVO,y!,z!);
+    } else if (xVO instanceof ObjectA3) {
+      target.set(xVO.loc);
+    } else {
+      target.set(xVO);
+    }
+    const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+    const newQuat = getQuatOfLookAt(this.loc,target,up);
+    newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
+    this.setQuatNow(newQuat);
   }
 }
