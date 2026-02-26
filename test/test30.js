@@ -34,9 +34,11 @@ while (true) {
     //v1.scale(5); obj.setLinvel(v1);
     //v1.scale(7); obj.setAngvel(v1);
     //v1.scale(7); obj.resetForce(); obj.addForce(v1);
-    //v1.scale(5);obj.resetTorque(); obj.addTorque(v1);
-    //v1.scale(5);obj.applyImpulse(v1);
-    v1.scale(3);obj.applyTorqueImpulse(v1);
+    //v1.scale(2); obj.resetForce(); obj.addForceAtPoint(v1,new a3.Vec3(0,0,1));
+    //v1.scale(5); obj.resetTorque(); obj.addTorque(v1);
+    //v1.scale(5); obj.applyImpulse(v1);
+    v1.scale(1); obj.applyImpulseAtPoint(v1,new a3.Vec3(0,0,1));
+    //v1.scale(3); obj.applyTorqueImpulse(v1);
   }
 }
 

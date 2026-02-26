@@ -135,11 +135,13 @@ export class CharactorTransformMotion implements TransformMotion {
 
   setLinvel(_vel: Vec3): void {}
   setAngvel(_angvel: Vec3): void {}
-  addForce(_f: Vec3): void {}
   resetForce(): void {}
-  addTorque(_t: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  addForceAtPoint(_v: Vec3, _p: Vec3): void {}
   resetTorque(): void {}
+  addTorque(_t: Vec3): void {}
   applyImpulse(_i: Vec3): void {}
+  applyImpulseAtPoint(_i: Vec3, _p: Vec3): void {}
   applyTorqueImpulse(_ti: Vec3): void {}
 
   isGrounded(): boolean {

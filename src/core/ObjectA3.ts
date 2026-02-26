@@ -753,6 +753,9 @@ export abstract class ObjectA3 {
     this.transformMotion.setAngvel(tmp.v0);
   }
 
+  resetForce(): void {
+    this.transformMotion.resetForce();
+  }
   addForce(v: Vec3): void;
   addForce(x: number, y: number, z: number): void;
   addForce(xOrV: number | Vec3, y?: number, z?: number) {
@@ -763,10 +766,33 @@ export abstract class ObjectA3 {
     }
     this.transformMotion.addForce(tmp.v0);
   }
-  resetForce(): void {
-    this.transformMotion.resetForce();
+
+  addForceAtPoint(f: Vec3, p: Vec3): void;
+  addForceAtPoint(fx: number, fy: number, fz: number, px: number, py: number, pz: number): void;
+  addForceAtPoint(fOrFx: Vec3 | number, pOrFy: Vec3 | number, fz?: number, px?: number, py?: number, pz?: number): void {
+    if (typeof fOrFx === "number") {
+      if (typeof pOrFy === "number") {
+        tmp.v0.set(fOrFx,pOrFy,fz!);
+        tmp.v1.set(px!,py!,pz!);
+      } else {
+        console.warn('ObjectA3.addForceAtPoint(): type of arguments mismatch.');
+        return;
+      }
+    } else {
+      if (typeof pOrFy === "number") {
+        console.warn('ObjectA3.addForceAtPoint(): type of arguments mismatch.');
+        return;
+      } else {
+        tmp.v0.set(fOrFx);
+        tmp.v1.set(pOrFy);
+      }
+    }
+    this.transformMotion.addForceAtPoint(tmp.v0,tmp.v1);
   }
 
+  resetTorque(): void {
+    this.transformMotion.resetTorque();
+  }
   addTorque(v: Vec3): void;
   addTorque(x: number, y: number, z: number): void;
   addTorque(xOrV: number | Vec3, y?: number, z?: number) {
@@ -776,9 +802,6 @@ export abstract class ObjectA3 {
       tmp.v0.set(xOrV);
     }
     this.transformMotion.addTorque(tmp.v0);
-  }
-  resetTorque(): void {
-    this.transformMotion.resetTorque();
   }
 
   applyImpulse(v: Vec3): void;
@@ -790,6 +813,29 @@ export abstract class ObjectA3 {
       tmp.v0.set(xOrV);
     }
     this.transformMotion.applyImpulse(tmp.v0);
+  }
+
+  applyImpulseAtPoint(i: Vec3, p: Vec3): void;
+  applyImpulseAtPoint(ix: number, iy: number, iz: number, px: number, py: number, pz: number): void;
+  applyImpulseAtPoint(iOrFx: Vec3 | number, pOrFy: Vec3 | number, iz?: number, px?: number, py?: number, pz?: number): void {
+    if (typeof iOrFx === "number") {
+      if (typeof pOrFy === "number") {
+        tmp.v0.set(iOrFx,pOrFy,iz!);
+        tmp.v1.set(px!,py!,pz!);
+      } else {
+        console.warn('ObjectA3.addForceAtPoint(): type of arguments mismatch.');
+        return;
+      }
+    } else {
+      if (typeof pOrFy === "number") {
+        console.warn('ObjectA3.addForceAtPoint(): type of arguments mismatch.');
+        return;
+      } else {
+        tmp.v0.set(iOrFx);
+        tmp.v1.set(pOrFy);
+      }
+    }
+    this.transformMotion.applyImpulseAtPoint(tmp.v0,tmp.v1);
   }
 
   applyTorqueImpulse(v: Vec3): void;

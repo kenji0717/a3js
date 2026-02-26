@@ -271,24 +271,32 @@ export class RapierTransformMotion implements TransformMotion {
       this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
   }
 
-  addForce(f: Vec3): void {
-    this.body?.addForce({x:f.x, y:f.y, z:f.z},true);
-  }
-
   resetForce(): void {
     this.body?.resetForces(true);
   }
 
-  addTorque(t: Vec3): void {
-    this.body?.addTorque({x:t.x, y:t.y, z:t.z},true);
+  addForce(f: Vec3): void {
+    this.body?.addForce({x:f.x, y:f.y, z:f.z},true);
+  }
+
+  addForceAtPoint(f: Vec3, p: Vec3) {
+    this.body?.addForceAtPoint({x:f.x, y:f.y, z:f.z},{x:p.x, y:p.y, z:p.z},true);
   }
 
   resetTorque(): void {
     this.body?.resetTorques(true);
   }
 
+  addTorque(t: Vec3): void {
+    this.body?.addTorque({x:t.x, y:t.y, z:t.z},true);
+  }
+
   applyImpulse(i: Vec3): void {
     this.body?.applyImpulse({x:i.x, y:i.y, z:i.z},true);
+  }
+
+  applyImpulseAtPoint(i: Vec3, p: Vec3): void {
+    this.body?.applyImpulseAtPoint({x:i.x, y:i.y, z:i.z},{x:p.x, y:p.y, z:p.z},true);
   }
 
   applyTorqueImpulse(ti: Vec3): void {

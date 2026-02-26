@@ -119,6 +119,7 @@ export interface TransformMotion {
   /**
    * 速度を設定する。物理系のTransformMotionのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param vel 速度。
    */
   setLinvel(vel: Vec3): void;
 
@@ -126,15 +127,9 @@ export interface TransformMotion {
    * 角速度を設定する。単位はラジアン/秒。
    * 物理系のTransformMotionのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @aram angvel 角速度
    */
   setAngvel(angvel: Vec3): void;
-
-  /**
-   * 力を設定する。
-   * 物理系のTransformMotionのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
-   */
-  addForce(f: Vec3): void;
 
   /**
    * addForceで加えられた力をリセットする。
@@ -144,11 +139,21 @@ export interface TransformMotion {
   resetForce(): void;
 
   /**
-   * トルク(回転力)を設定する。
+   * 力を設定する。
    * 物理系のTransformMotionのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param f 力
    */
-  addTorque(t: Vec3): void;
+  addForce(f: Vec3): void;
+
+  /**
+   * 力点を指定して力を設定する。力点は世界座標での座標。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param f 力
+   * @param p 力点
+   */
+  addForceAtPoint(f: Vec3, p: Vec3): void;
 
   /**
    * addTorqueで加えられたトルクをリセットする。
@@ -158,11 +163,29 @@ export interface TransformMotion {
   resetTorque(): void;
 
   /**
+   * トルク(回転力)を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param t トルク
+   */
+  addTorque(t: Vec3): void;
+
+  /**
    * 一瞬、力を設定する。
    * 物理系のTransformMotionのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param i インパルス
    */
   applyImpulse(i: Vec3): void;
+
+  /**
+   * 力点を指定して、一瞬、力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param i インパルス
+   * @param p 力点
+   */
+  applyImpulseAtPoint(i: Vec3, p: Vec3): void;
 
   /**
    * 一瞬、トルクを設定する。
@@ -229,11 +252,13 @@ export class DefaultTransformMotion implements TransformMotion {
   }
   setLinvel(_vel: Vec3): void {}
   setAngvel(_angvel: Vec3): void {}
-  addForce(_f: Vec3): void {}
   resetForce(): void {}
-  addTorque(_t: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  addForceAtPoint(_v: Vec3, _p: Vec3): void {}
   resetTorque(): void {}
+  addTorque(_t: Vec3): void {}
   applyImpulse(_i: Vec3): void {}
+  applyImpulseAtPoint(_i: Vec3, _p: Vec3): void {}
   applyTorqueImpulse(_ti: Vec3): void {}
   update(_dt: number) {}
 }
@@ -297,11 +322,13 @@ export class InterpolationTransformMotion implements TransformMotion {
 
   setLinvel(_vel: Vec3): void {}
   setAngvel(_angvel: Vec3): void {}
-  addForce(_f: Vec3): void {}
   resetForce(): void {}
-  addTorque(_t: Vec3): void {}
+  addForce(_f: Vec3): void {}
+  addForceAtPoint(_v: Vec3, _p: Vec3): void {}
   resetTorque(): void {}
+  addTorque(_t: Vec3): void {}
   applyImpulse(_i: Vec3): void {}
+  applyImpulseAtPoint(_i: Vec3, _p: Vec3): void {}
   applyTorqueImpulse(_ti: Vec3): void {}
 
   // cssのanimation-timing-functionみたいに
