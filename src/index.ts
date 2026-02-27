@@ -5,6 +5,7 @@ export { Scene } from './core/Scene';
 export { Camera } from './core/Camera';
 export { ObjectA3 } from './core/ObjectA3';
 export type { Dir, TransformMotionMode } from './core/ObjectA3';
+export { DefaultTransformMotion, FixedTransformMotion } from './core/Motion';
 export type { TransformMotion, PoseMotion, Pose } from './core/Motion';
 export { ClipPoseMotion } from './three/ClipPoseMotion';
 export { ControllerBase, OrbitController, FollowAvatarController, AvatarController } from './core/Controller';
@@ -31,10 +32,10 @@ export type { PhysicsEngine,
               MeshColliderKind,
               RigidBodyType,
               Collision } from './core/Physics';
-export { initPhysics, RapierPhysicsEngine } from './rapier/RapierPhysics';
+export { initPhysics, RapierPhysicsEngine, collisionMap } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { CharactorTransformMotion } from './rapier/CharactorTransformMotion';
-export { Vec3, Quat, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';
+export { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';
 export type { RotationOrder } from './core/LinearMath';
 export { GeneralCamera } from './core/GeneralCamera';
 export type { AsyncInitRequired } from './core/AsyncInitRequired';

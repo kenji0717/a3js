@@ -263,6 +263,50 @@ export class DefaultTransformMotion implements TransformMotion {
   update(_dt: number) {}
 }
 
+/**
+ * まったく動かすことができないTransformMotion。物理エンジン
+ * でコントロールするTransformMotionでは、DefaultTransformMotion
+ * よりも、こちらの方をベースにした方がやりやすい場合があると
+ * 思う。
+ */
+export class FixedTransformMotion implements TransformMotion {
+  trans: Transform;
+
+  /**
+   * コンストラクタ。生成する段階ではObjectA3と独立に
+   * 生成できるようにするのが理想。実際に使うにはsetObject()を
+   * してから使うことになる。
+   */
+  constructor() {
+    this.trans = new Transform();
+  }
+
+  init(trans: Transform, _objectA3: ObjectA3) {
+    this.trans.set(trans);
+  }
+
+  addOneselfToPhysics(_world: PhysicsWorld): void {}
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+
+  setLocation(_loc: Vec3) {}
+  setLocationNow(_loc: Vec3) {}
+  setQuat(_quat: Quat) {}
+  setQuatNow(_quat: Quat) {}
+  setScale(_scale: Vec3) {}
+  setScaleNow(_scale: Vec3) {}
+  setLinvel(_vel: Vec3): void {}
+  setAngvel(_angvel: Vec3): void {}
+  resetForce(): void {}
+  addForce(_f: Vec3): void {}
+  addForceAtPoint(_v: Vec3, _p: Vec3): void {}
+  resetTorque(): void {}
+  addTorque(_t: Vec3): void {}
+  applyImpulse(_i: Vec3): void {}
+  applyImpulseAtPoint(_i: Vec3, _p: Vec3): void {}
+  applyTorqueImpulse(_ti: Vec3): void {}
+  update(_dt: number) {}
+}
+
 export class InterpolationTransformMotion implements TransformMotion {
   firstTrans: Transform;
   trans: Transform; // 現在のTransform
@@ -459,7 +503,7 @@ export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs
  */
 export interface PoseMotion {
   /**
-   * このPoseMotionにつける名前。
+   * このPoseMotionにつける名前。「GAHA不要である可能性」
    */
   name: string;
 
@@ -473,6 +517,19 @@ export interface PoseMotion {
    * 現在再生中のモーションがスータトから何秒経過した状態かを示す。
    */
   time: number;
+
+  /**
+   * このPoseMotionが再生の前に、3Dの表示についての追加処理が
+   * 必要な場合に引数のObjectA3にアクセスして準備する。
+   */
+  prepare3D(objectA3: ObjectA3): void;
+
+  /**
+   * このPoseMotionが再生停止した後に、3Dの表示についての
+   * 後片付けの処理が必要な場合に引数のObjectA3にアクセス
+   * して後片付けする。
+   */
+  cleanup3D(objectA3: ObjectA3): void;
 
   /**
    * 物理演算が必要な場合にRigidBodyやColliderを
@@ -489,19 +546,6 @@ export interface PoseMotion {
    * @param world 解除対象のPhysicsWorld
    */
   removeOneselfFromPhysics(world: PhysicsWorld): void;
-
-  /**
-   * このPoseMotionが再生の前に、3Dの表示についての追加処理が
-   * 必要な場合に引数のObjectA3にアクセスして準備する。
-   */
-  prepare3D(objectA3: ObjectA3): void;
-
-  /**
-   * このPoseMotionが再生停止した後に、3Dの表示についての
-   * 後片付けの処理が必要な場合に引数のObjectA3にアクセス
-   * して後片付けする。
-   */
-  cleanup3D(objectA3: ObjectA3): void;
 
   /**
    * 動きをコントロールするための情報を引数に与えて呼び出す
