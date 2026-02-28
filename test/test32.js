@@ -25,16 +25,12 @@ class JointTest extends a3.ObjectA3 {
     const chassis = new THREE.Mesh(
       new THREE.BoxGeometry(1.0,0.2,2.0),
       new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
-    chassis.position.set(0,0.5,0);
-    const chassisWrapper = new THREE.Object3D();
-    chassisWrapper.add(chassis);
-    root.add(chassisWrapper);
-    this.bones['chassis'] = chassisWrapper;
+    root.add(chassis);
+    this.bones['chassis'] = chassis;
 
     const rightWheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.5, 0.1),
+      new THREE.CylinderGeometry(0.5, 0.5, 0.2),
       new THREE.MeshStandardMaterial({ color: 0xff0000 }));
-    rightWheel.position.set(-0.55,0.5,0.0);
     rightWheel.quaternion.set(0,0,Math.sin(Math.PI/4),Math.cos(Math.PI/4));
     const rightWheelWrapper = new THREE.Object3D();
     rightWheelWrapper.add(rightWheel);
@@ -42,9 +38,8 @@ class JointTest extends a3.ObjectA3 {
     this.bones['rightWheel'] = rightWheelWrapper;
 
     const leftWheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.5, 0.1),
+      new THREE.CylinderGeometry(0.5, 0.5, 0.2),
       new THREE.MeshStandardMaterial({ color: 0xff0000 }));
-    leftWheel.position.set(0.55,0.5,0.0);
     leftWheel.quaternion.set(0,0,Math.sin(Math.PI/4),Math.cos(Math.PI/4));
     const leftWheelWrapper = new THREE.Object3D();
     leftWheelWrapper.add(leftWheel);
@@ -53,16 +48,19 @@ class JointTest extends a3.ObjectA3 {
 
     return root;
   }
+
+  rightWheelAngvel(an) {
+    this.poseMotions['JointTest'].rightWheelAngvel(an);
+  }
+  leftWheelAngvel(an) {
+    this.poseMotions['JointTest'].leftWheelAngvel(an);
+  }
 }
 
 class JointTestTransformMotion extends a3.FixedTransformMotion {
-  trans;
   poseMotion;
-  objectA3;
   constructor(objectA3) {
     super();
-    this.objectA3 = objectA3;
-    this.trans = new a3.Transform();
     this.poseMotion = new JointTestPoseMotion(objectA3);
   }
 }
@@ -100,26 +98,25 @@ class JointTestPoseMotion {
   }
 
   prepare3D(objectA3) {
-    this.chassisColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.1, 1);
-    this.chassisColliderDesc.setTranslation(0,0.5,0);
     this.chassisRigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
-    this.rightWheelColliderDesc = RAPIER.ColliderDesc.cylinder(0.1, 0.5).setFriction(0.9);
-    this.rightWheelColliderDesc.setTranslation(-0.55,0.5,0);
-    this.rightWheelColliderDesc.setRotation({x:0,y:0,z:Math.sin(Math.PI/4),w:Math.cos(Math.PI/4)});
+    this.chassisColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.1, 1);
+
     this.rightWheelRigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
-    this.leftWheelColliderDesc = RAPIER.ColliderDesc.cylinder(0.1, 0.5).setFriction(0.9);
-    this.leftWheelColliderDesc.setTranslation(0.55,0.5,0);
-    this.leftWheelColliderDesc.setRotation({x:0,y:0,z:Math.sin(Math.PI/4),w:Math.cos(Math.PI/4)});
+    this.rightWheelColliderDesc = RAPIER.ColliderDesc.cylinder(0.1, 0.5).setFriction(0.9);
+    this.rightWheelColliderDesc.setRotation({x:0,y:0,z:Math.sin(Math.PI/4),w:Math.cos(Math.PI/4)});
+
     this.leftWheelRigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
+    this.leftWheelColliderDesc = RAPIER.ColliderDesc.cylinder(0.1, 0.5).setFriction(0.9);
+    this.leftWheelColliderDesc.setRotation({x:0,y:0,z:Math.sin(Math.PI/4),w:Math.cos(Math.PI/4)});
 
     this.rightRevoluteJointData = RAPIER.JointData.revolute(
       { x:-0.6, y:0, z:0 },
       { x:0, y:0, z:0 },
-      { x:1, y:1, z:0 });
+      { x:1, y:0, z:0 });
     this.leftRevoluteJointData = RAPIER.JointData.revolute(
       { x:0.6, y:0, z:0 },
       { x:0, y:0, z:0 },
-      { x:1, y:1, z:0 });
+      { x:1, y:0, z:0 });
   }
   cleanup3D(objectA3) {}
   addOneselfToPhysics(world) {
@@ -141,13 +138,13 @@ class JointTestPoseMotion {
       this.chassisRigidBody,
       this.rightWheelRigidBody,
       true);
-    //this.rightRevoluteJoint.setContactsEnabled(false);
+    this.rightRevoluteJoint.setContactsEnabled(false);
     this.leftRevoluteJoint = world.world.createImpulseJoint(
       this.leftRevoluteJointData,
       this.chassisRigidBody,
       this.leftWheelRigidBody,
       true);
-    //this.leftRevoluteJoint.setContactsEnabled(false);
+    this.leftRevoluteJoint.setContactsEnabled(false);
   }
   removeOneselfFromPhysics(world) {
     world.world.removeRigidBody(this.chassisRigidBody);
@@ -183,25 +180,35 @@ class JointTestPoseMotion {
     }
   }
 
-  rightWheel
+  rightWheelAngvel(av) {
+    this.rightRevoluteJoint.configureMotorVelocity(av,1);
+  }
+  leftWheelAngvel(av) {
+    this.leftRevoluteJoint.configureMotorVelocity(av,1);
+  }
 }
 
 await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.scene.rapierDebug(true);
-view.camera.setLocationNow(0,10,20);
-view.camera.lookAtNow(0,-3,0);
 const ground = new a3.Box(10,1,10);
 ground.initSimplePhysics({rigidBody: 'fixed'});
-ground.setLocationNow(0,-3,0);
+ground.setLocationNow(0,-2,0);
 view.scene.add(ground);
 const obj = new JointTest();
 view.scene.add(obj);
+view.camera.setLocationNow(0,10,20);
+view.camera.lookAtNow(0,-3,0);
 
-let t=0,i=0;
+let t=0;
 while (true) {
   t += await view.waitForRender();
-  //console.log(`GAHA: y=`,obj.loc.y);
-  //console.log(`GAHA: y=`,obj.bones['rightWheel']);
-  //i++;if (i===100) console.log(`GAHA: y=`,obj.bones['rightWheel']);
+  if (Math.floor(t/5)%2===0) {
+    obj.rightWheelAngvel(20.0);
+    obj.leftWheelAngvel(-20.0);
+  } else {
+    obj.rightWheelAngvel(-20.0);
+    obj.leftWheelAngvel(20.0);
+  }
 }
+
