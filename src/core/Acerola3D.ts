@@ -129,7 +129,6 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           offset,
           parts
         };
-console.log(`actionName=${actionName}`);
         a3PoseMotions[actionName] = new Acerola3DPoseMotion(bvh.clip,actionName);
       }
     }

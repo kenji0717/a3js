@@ -176,8 +176,8 @@ export abstract class ObjectA3 {
    * ObjectA3生成後に、使用されるPoseMotionの辞書に
    * 追加でPoseMotionを1つ加える。
    */
-  addPoseMotion(poseMotion: PoseMotion): void {
-    this.poseMotions[poseMotion.name] = poseMotion;
+  addPoseMotion(name: string, poseMotion: PoseMotion): void {
+    this.poseMotions[name] = poseMotion;
   }
 
   /**
@@ -190,9 +190,14 @@ export abstract class ObjectA3 {
     return pm;
   }
 
+  getPoseMotionNames() {
+    return Object.keys(this.poseMotions);
+  }
+
   setState(name: string) {
-    this.statePoseMotion = this.poseMotions[name];
-    if (this.statePoseMotion) {
+    const pm = this.poseMotions[name];
+    if (pm) {
+      this.statePoseMotion = pm;
       this.currentPoseMotion?.cleanup3D(this);
       this.statePoseMotion.prepare3D(this);
       this.statePoseMotion.playCount = 0;
@@ -223,6 +228,10 @@ export abstract class ObjectA3 {
       const { array, idx } = this.morphs[name];
       array[idx] = value;
     }
+  }
+
+  getMorphNames() {
+    return Object.keys(this.morphs);
   }
 
   // setTransformMotionModeでも同じことできるけど。。。

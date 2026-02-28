@@ -90,7 +90,6 @@ export class GLTF extends ObjectA3 implements AsyncInitRequired<GLTF> {
 
   async asyncInit(data: any) {
     if (isString(data)) {
-console.log(`File: ${data}`);
       this.gltf = await gltfLoader.loadAsync(data);
       this.bones = {};
       this.skeletons = [];
@@ -103,7 +102,6 @@ console.log(`File: ${data}`);
             const morphName = o.name+'.'+e; // 一意の名前になんない可能性少しある
             const idx = morphTargetDictionary[e];
             this.morphs[morphName] = {array: morphTargetInfluences, idx: idx};
-console.log(`morphName="${morphName}"`);
           });
         }
         if (o instanceof THREE.Bone)
@@ -115,7 +113,6 @@ console.log(`morphName="${morphName}"`);
       const poseMotions: Record<string,PoseMotion> = {};
       this.gltf.animations.forEach((anim)=>{
         poseMotions[anim.name] = new ClipPoseMotion(anim);
-console.log(`anim.name="${anim.name}"`);
       });
       this.setPoseMotions(poseMotions);
       this.object.add(this.gltf.scene);

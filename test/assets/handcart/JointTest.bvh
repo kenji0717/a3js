@@ -1,0 +1,37 @@
+HIERARCHY
+ROOT RootBone
+{
+  OFFSET 0 0 0
+  CHANNELS 3 Zrotation Xrotation Yrotation
+  JOINT chassis
+  {
+    OFFSET 0 0.5 0
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 1 0 0
+    }
+  }
+  JOINT rightWheel
+  {
+    OFFSET -0.6 0.5 0
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 1 0 0
+    }
+  }
+  JOINT leftWheel
+  {
+    OFFSET 0.6 0.5 0
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 1 0 0
+    }
+  }
+}
+MOTION
+Frames: 1
+Frame Time: 0.0333
+0 0 0 0 0 0 0 0 0 0 0 0

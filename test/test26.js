@@ -5,12 +5,12 @@ import * as a3 from 'a3js';
 const view = new a3.Window(600,300);
 view.camera.setLocation(0,0,5);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
+console.log(obj.getPoseMotionNames());
 obj.setLocation(0,-2,0);
 const motion1 = obj.removePoseMotion('Running');
 obj.setState('Walking');
 view.scene.add(obj);
 
 await a3.asyncSleep(3000);
-motion1.name = '走る';
-obj.addPoseMotion(motion1);
+obj.addPoseMotion('走る',motion1);
 obj.setState('走る');

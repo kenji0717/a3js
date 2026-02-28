@@ -1,61 +1,9 @@
-// RapierのJointのプログラム方法
-// モデリング無しで、プログラミングのみで対処する。
-// リヤカーっぽい物にしてみる。
-// いや、面倒すぎるな。
+// RapierのJointのプログラム方法(3Dモデル使用)
+// Acerola3Dのモデルを使ってリヤカー作る。
+// 一つクラス作らなくて済むので少しだけ楽。
 import * as a3 from 'a3js';
 import * as THREE from 'three';
 import RAPIER from "@dimforge/rapier3d-compat";
-
-// Z軸の正の方向を前とするので、リヤカーの右車輪はX軸のマイナス
-// の方向にある。つまり、向って左側の車輪が右の車輪ということにする。
-class JointTest extends a3.ObjectA3 {
-  constructor() {
-    super();
-    const jointTestTransformMotion = new JointTestTransformMotion(this);
-    this.setTransformMotion(jointTestTransformMotion);
-    this.setPoseMotions({
-      'JointTest': jointTestTransformMotion.poseMotion
-    });
-    this.setState('JointTest');
-  }
-
-  initObject() {
-    const root = new THREE.Object3D();
-
-    const chassis = new THREE.Mesh(
-      new THREE.BoxGeometry(1.0,0.2,2.0),
-      new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
-    root.add(chassis);
-    this.bones['chassis'] = chassis;
-
-    const rightWheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.5, 0.2),
-      new THREE.MeshStandardMaterial({ color: 0xff0000 }));
-    rightWheel.quaternion.set(0,0,Math.sin(Math.PI/4),Math.cos(Math.PI/4));
-    const rightWheelWrapper = new THREE.Object3D();
-    rightWheelWrapper.add(rightWheel);
-    root.add(rightWheelWrapper);
-    this.bones['rightWheel'] = rightWheelWrapper;
-
-    const leftWheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.5, 0.2),
-      new THREE.MeshStandardMaterial({ color: 0xff0000 }));
-    leftWheel.quaternion.set(0,0,Math.sin(Math.PI/4),Math.cos(Math.PI/4));
-    const leftWheelWrapper = new THREE.Object3D();
-    leftWheelWrapper.add(leftWheel);
-    root.add(leftWheelWrapper);
-    this.bones['leftWheel'] = leftWheelWrapper;
-
-    return root;
-  }
-
-  rightWheelAngvel(an) {
-    this.poseMotions['JointTest'].rightWheelAngvel(an);
-  }
-  leftWheelAngvel(an) {
-    this.poseMotions['JointTest'].leftWheelAngvel(an);
-  }
-}
 
 class JointTestTransformMotion extends a3.FixedTransformMotion {
   poseMotion;
@@ -117,8 +65,16 @@ class JointTestPoseMotion {
       { x:1, y:0, z:0 });
   }
 
-  prepare3D(objectA3) {}
-  cleanup3D(objectA3) {}
+  prepare3D(objectA3) {
+    if (objectA3 instanceof a3.Acerola3D) {
+      objectA3.addActionRoot('JointTest');
+    }
+  }
+  cleanup3D(objectA3) {
+    if (objectA3 instanceof a3.Acerola3D) {
+      objectA3.removeActionRoot('JointTest');
+    }
+  }
   addOneselfToPhysics(world) {
     this.chassisRigidBody = world.world.createRigidBody(this.chassisRigidBodyDesc);
     this.chassisCollider = world.world.createCollider(this.chassisColliderDesc,
@@ -195,7 +151,11 @@ const ground = new a3.Box(10,1,10);
 ground.initSimplePhysics({rigidBody: 'fixed'});
 ground.setLocationNow(0,-2,0);
 view.scene.add(ground);
-const obj = new JointTest();
+const obj = await new a3.Acerola3D('./assets/handcart/handcart.a3').ready;
+const jointTestTransformMotion = new JointTestTransformMotion(this);
+obj.setTransformMotion(jointTestTransformMotion);
+obj.addPoseMotion('JointTest', jointTestTransformMotion.poseMotion);
+obj.setState('JointTest');
 view.scene.add(obj);
 view.camera.setLocationNow(0,10,20);
 view.camera.lookAtNow(0,-3,0);
@@ -204,11 +164,10 @@ let t=0;
 while (true) {
   t += await view.waitForRender();
   if (Math.floor(t/5)%2===0) {
-    obj.rightWheelAngvel(20.0);
-    obj.leftWheelAngvel(-20.0);
+    jointTestTransformMotion.poseMotion.rightWheelAngvel(20.0);
+    jointTestTransformMotion.poseMotion.leftWheelAngvel(-20.0);
   } else {
-    obj.rightWheelAngvel(-20.0);
-    obj.leftWheelAngvel(20.0);
+    jointTestTransformMotion.poseMotion.rightWheelAngvel(-20.0);
+    jointTestTransformMotion.poseMotion.leftWheelAngvel(20.0);
   }
 }
-
