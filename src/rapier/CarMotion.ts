@@ -104,12 +104,12 @@ export class CarTransformMotion implements TransformMotion {
     return g;
   }
 
-  update(_dt: number): void {
-    if (!this.chassisBody || !this.controller || !this.chassisCollider)
-      return;
-
-    this.trans.loc.set(this.chassisBody.translation());
-    this.trans.quat.set(this.chassisBody.rotation());
+  update(dt: number): void {
+    this.controller?.updateVehicle(dt);
+    if (this.chassisBody)
+      this.trans.loc.set(this.chassisBody.translation());
+    if (this.chassisBody)
+      this.trans.quat.set(this.chassisBody.rotation());
   }
 }
 
@@ -141,8 +141,12 @@ export class CarPoseMotion implements PoseMotion {
   setTime(_time: number) {}
   update(_dt: number): Pose {
     if (!this.cm.transformMotion.chassisBody) return {};
+    const rootLoc = new Vec3(this.cm.transformMotion.chassisBody.translation());
+    const rootQuat = new Quat(this.cm.transformMotion.chassisBody.rotation()).conjugate();
     const chassisLoc = new Vec3(this.cm.transformMotion.chassisBody.translation());
+    chassisLoc.sub(rootLoc);
     const chassisQuat = new Quat(this.cm.transformMotion.chassisBody.rotation());
+    chassisQuat.mul(rootQuat);
     const frLoc = new Vec3();
     const frQuat = new Quat();
     const flLoc = new Vec3();
