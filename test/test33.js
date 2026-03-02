@@ -133,7 +133,7 @@ class JointTestPoseMotion {
         loc: new a3.Vec3(this.leftWheelRigidBody.translation()),
         quat: new a3.Quat(this.leftWheelRigidBody.rotation())
       }
-    }
+    };
   }
 
   rightWheelAngvel(av) {

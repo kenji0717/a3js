@@ -35,6 +35,7 @@ export type { PhysicsEngine,
 export { initPhysics, RapierPhysicsEngine, collisionMap } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
 export { CharactorTransformMotion } from './rapier/CharactorTransformMotion';
+export { CarMotion } from './rapier/CarMotion';
 export { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';
 export type { RotationOrder } from './core/LinearMath';
 export { GeneralCamera } from './core/GeneralCamera';
