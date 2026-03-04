@@ -1,3 +1,12 @@
+
+Acerola3Dを検討してみて、この構成をObjectA3に導入して
+しまうのが良い気がしてきた。GLTFはActionが無いけど
+むしろ同じActionが複数あるとすればすっきりする。そう
+しないとPoseMotionのprepare3D()とcleanup3D()を撲滅
+できない。
+
+-----
+
 skeletonが入っていないのに、アニメーションがある
 glTFファイルある(例えば`Parrot.glb`)。その他、
 アニメーション情報の中にモーフィングの情報も入って

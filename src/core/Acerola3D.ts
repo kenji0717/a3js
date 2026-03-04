@@ -66,7 +66,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     if (cs[0]) this.comment = cs[0].textContent;
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
     const actions: Record<string,Action> = {};
-    const a3PoseMotions: Record<string,Acerola3DPoseMotion> = {};
+    const a3PoseMotions: Record<string,ClipPoseMotion> = {};
     let firstActionName;
     for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
@@ -111,7 +111,13 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
         }
         const root = new THREE.Object3D();
         root.add(bvh.skeleton.bones[0]);
-        appendPartToBone(root,parts);
+        if (!(bvh instanceof DummyBVH)) {
+          appendPartToBone(root,parts);
+        } else {
+          Object.values(parts).forEach((p)=>{
+            root.add(p);
+          });
+        }
         root.position.add(offset);
         root.scale.set(scale,scale,scale);
         // クリックなどへの対応
@@ -129,7 +135,7 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
           offset,
           parts
         };
-        a3PoseMotions[actionName] = new Acerola3DPoseMotion(bvh.clip,actionName);
+        a3PoseMotions[actionName] = new ClipPoseMotion(bvh.clip,actionName);
       }
     }
     this.actions = actions;
@@ -166,6 +172,30 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
       this.skeletons = [];
     }
   }
+
+  setState(name: string) {
+    const pm = this.poseMotions[name];
+    const a = this.actions[name];
+    if (pm && a) {
+      const oldName = this.currentPoseMotion?.name;
+      if (oldName)
+        this.removeActionRoot(oldName);
+      this.addActionRoot(name);
+      super.setState(name);
+    }
+  }
+
+  setEmote(name: string) {
+    const pm = this.poseMotions[name];
+    const a = this.actions[name];
+    if (pm && a) {
+      const oldName = this.currentPoseMotion?.name;
+      if (oldName)
+        this.removeActionRoot(oldName);
+      this.addActionRoot(name);
+      super.setEmote(name);
+    }
+  }
 }
 
 function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object3D>) {
@@ -178,18 +208,5 @@ function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object
     obj.children.forEach( o => {
       appendPartToBone(o,parts);
     });
-  }
-}
-
-class Acerola3DPoseMotion extends ClipPoseMotion {
-  prepare3D(objectA3: ObjectA3) {
-    if (objectA3 instanceof Acerola3D) {
-      objectA3.addActionRoot(this.name);
-    }
-  }
-  cleanup3D(objectA3: ObjectA3) {
-    if (objectA3 instanceof Acerola3D) {
-      objectA3.removeActionRoot(this.name);
-    }
   }
 }

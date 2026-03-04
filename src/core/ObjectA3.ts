@@ -198,8 +198,6 @@ export abstract class ObjectA3 {
     const pm = this.poseMotions[name];
     if (pm) {
       this.statePoseMotion = pm;
-      this.currentPoseMotion?.cleanup3D(this);
-      this.statePoseMotion.prepare3D(this);
       this.statePoseMotion.playCount = 0;
       this.statePoseMotion.time = 0;
       this.currentPoseMotion = this.statePoseMotion;
@@ -209,8 +207,6 @@ export abstract class ObjectA3 {
   setEmote(name: string) {
     this.emotePoseMotion = this.poseMotions[name];
     if (this.emotePoseMotion) {
-      this.currentPoseMotion?.cleanup3D(this);
-      this.emotePoseMotion.prepare3D(this);
       this.emotePoseMotion.playCount = 0;
       this.emotePoseMotion.time = 0;
       this.currentPoseMotion = this.emotePoseMotion;
