@@ -23,6 +23,7 @@ export { Sphere } from './three/Sphere';
 export { StandardLights } from './three/StandardLights';
 export { Image } from './three/Image';
 export { HTML } from './three/HTML';
+export { GameCanvas } from './core/GameCanvas';
 export type { View, ViewBase } from './core/View';
 export type { PhysicsEngine,
               PhysicsWorld,

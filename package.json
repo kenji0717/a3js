@@ -1,6 +1,6 @@
 {
   "name": "a3js",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "type": "module",
   "main": "dist/a3js.cjs.js",
   "module": "dist/a3js.es.js",

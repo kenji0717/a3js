@@ -319,7 +319,6 @@ export class CarPoseMotion implements PoseMotion {
       const wheelAxleCs = new Vec3(this.cm.opt.wheelFLAxle);
       const connection = new Vec3(this.cm.opt.wheelFLPosition);
       const suspension = this.cm.trans.controller.wheelSuspensionLength(0) || 0;
-console.log(`GAHA: `,suspension);
       const steering = this.cm.trans.controller.wheelSteering(0) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(0) || 0;
       flLoc.set(connection);
