@@ -8,25 +8,23 @@ import RAPIER from "@dimforge/rapier3d-compat";
 
 // Z軸の正の方向を前とするので、リヤカーの右車輪はX軸のマイナス
 // の方向にある。つまり、向って左側の車輪が右の車輪ということにする。
-class JointTest extends a3.ObjectA3 {
+class JointTest extends a3.ActionObject {
   constructor() {
     super();
-    const jointTestTransformMotion = new JointTestTransformMotion(this);
-    this.setTransformMotion(jointTestTransformMotion);
-    this.setPoseMotions({
-      'JointTest': jointTestTransformMotion.poseMotion
-    });
-    this.setState('JointTest');
   }
 
-  initObject() {
+  async asyncInit() {
+    const jointTestTransformMotion = new JointTestTransformMotion(this);
+    this.setTransformMotion(jointTestTransformMotion);
+
+    const bones = {};
     const root = new THREE.Object3D();
 
     const chassis = new THREE.Mesh(
       new THREE.BoxGeometry(1.0,0.2,2.0),
       new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
     root.add(chassis);
-    this.bones['chassis'] = chassis;
+    bones['chassis'] = chassis;
 
     const rightWheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.5, 0.5, 0.2),
@@ -35,7 +33,7 @@ class JointTest extends a3.ObjectA3 {
     const rightWheelWrapper = new THREE.Object3D();
     rightWheelWrapper.add(rightWheel);
     root.add(rightWheelWrapper);
-    this.bones['rightWheel'] = rightWheelWrapper;
+    bones['rightWheel'] = rightWheelWrapper;
 
     const leftWheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.5, 0.5, 0.2),
@@ -44,16 +42,23 @@ class JointTest extends a3.ObjectA3 {
     const leftWheelWrapper = new THREE.Object3D();
     leftWheelWrapper.add(leftWheel);
     root.add(leftWheelWrapper);
-    this.bones['leftWheel'] = leftWheelWrapper;
+    bones['leftWheel'] = leftWheelWrapper;
 
-    return root;
+    const actions = {};
+    actions['JointTest'] = {
+      name: 'JointTest',
+      shape: { root, bones },
+      motion: jointTestTransformMotion.poseMotion
+    };
+    this.syncInit('JointTest',actions);
+    return this;
   }
 
   rightWheelAngvel(an) {
-    this.poseMotions['JointTest'].rightWheelAngvel(an);
+    this.actions['JointTest'].motion.rightWheelAngvel(an);
   }
   leftWheelAngvel(an) {
-    this.poseMotions['JointTest'].leftWheelAngvel(an);
+    this.actions['JointTest'].motion.leftWheelAngvel(an);
   }
 }
 

@@ -1,6 +1,7 @@
 
 import type { ObjectA3 } from './ObjectA3';
-import type { TransformMotion, PoseMotion } from './Motion';
+import type { TransformMotion } from './ObjectA3';
+import type { PoseMotion } from './ActionObject';
 
 /*
  * 念のため、物理エンジンが変更されてもa3jsへの影響が少なくなるよう

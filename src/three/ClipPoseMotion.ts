@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Pose, PoseMotion } from '../core/Motion';
+import type { Pose, PoseMotion } from '../core/ActionObject';
 import { ObjectA3 } from '../core/ObjectA3';
 import { Quat, Vec3 } from '../core/LinearMath';
 import type { PhysicsWorld } from '../core/Physics';

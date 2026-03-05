@@ -38,12 +38,10 @@ const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まない
  * まだ適当。
  */
 export class Acerola3D extends ActionObject<Acerola3D> {
-  readonly ready: Promise<Acerola3D>;
   comment: string | null = null; // CATALOG.XMLの<c>の中
 
   constructor(url: string) {
-    super();
-    this.ready = this.asyncInit(url);
+    super(url);
   }
 
   async asyncInit(url: string) {

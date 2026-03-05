@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { ObjectA3, a3jsLoading } from './ObjectA3';
-import type { PoseMotion, Pose } from './Motion';
 import type { AsyncInitRequired } from './AsyncInitRequired';
+import { Vec3, Quat } from './LinearMath';
+import type { PhysicsWorld } from './Physics';
 
 export interface Action {
-  name: string;
+  name: string; // 本当はこのnameを取り除きたい。GAHA
   shape: Shape;
   motion: PoseMotion;
 }
@@ -62,7 +63,8 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
    */
   syncInit(defaultName: string, actions: Record<string,Action>, morphs: Record<string, {array: Array<number>, idx: number}> = {}): void {
     this.actions = actions;
-    this.currentAction = this.actions[defaultName];
+    this.stateAction = this.actions[defaultName];
+    this.currentAction = this.stateAction;
     this.object.remove(a3jsLoading); // 無い時エラー出る？
     this.object.add(this.currentAction.shape.root);
     this.morphs = morphs;
@@ -206,5 +208,128 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     if (this.currentAction)
       this.currentAction.shape.skeleton?.update(); // 必要なのか？
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+type Morph = {
+  name: string,
+  vals: number[]
+}
+/**
+ * キャラクタのポーズを表すインターフェース。主に3Dキャラクタ
+ * を想定しているが、車のシャーシーやタイヤの動きも、このPose
+ * インターフェースで表現することができ、PoseMotionインターフェース
+ * は、このPoseインターフェースを用いることで、モーションキャプチャー
+ * データも物理演算結果も、その他の動きも統一して扱えるようになる。
+ * 例えば、モーションキャプチャデータに並進移動のデータが含まれていない
+ * 場合、(0,0,0)を仮定してはいけない、そのような場合はundefinedとしておく。
+ * またglTFのモデルではモーフィングのデータも含めてるものが多くあったので、
+ * それも忘れずに。
+ */
+export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs?: Morph[]}>;
+
+
+/**
+ * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
+ * インスタンスには影響を与えないけど、その中に含まれている
+ * 要素をコントロールするモーションインターフェース。
+ * キャラクターの様々なジェスチャーを表すようなモーションを
+ * コントロールすることなどに使われる。
+ * 
+ * このインタフェースにはcontrolMotion()や、setPause()、
+ * setTime()などのメソッドがある。update()はPose型の情報を
+ * 返すことで3Dの要素に動きを与えるメソッド。どのメソッドも、
+ * 原則そのメソッドが示す処理を実装することになるが、どのような
+ * InnerMotionかによって、その処理内容は様々な場合がありうる。
+  *
+ * Three.jsではTHREE.AnimationClipに対応する対象と考えてもらいたい。
+ */
+export interface PoseMotion {
+  /**
+   * このPoseMotionにつける名前。「GAHA不要である可能性」
+   */
+  name: string;
+
+  /**
+   * このPoseMotionが何回再生されたかを保存している。
+   *
+   */
+  playCount: number;
+  
+  /**
+   * 現在再生中のモーションがスータトから何秒経過した状態かを示す。
+   */
+  time: number;
+
+  /**
+   * 物理演算が必要な場合にRigidBodyやColliderを
+   * PhysicsWorldに登録する必要があるので、このメソッドで
+   * 対応する。
+   * @param world 登録対象のPhysicsWorld
+   */
+  addOneselfToPhysics(world: PhysicsWorld): void;
+
+  /**
+   * このPoseMotionが不必要となった時に、PhysicsWorldに
+   * 登録していたRigidBodyやColliderを、登録解除する
+   * 処理を行うメソッド。
+   * @param world 解除対象のPhysicsWorld
+   */
+  removeOneselfFromPhysics(world: PhysicsWorld): void;
+
+  /**
+   * 動きをコントロールするための情報を引数に与えて呼び出す
+   * メソッド。典型的には一部のglTFファイルに内在するモーフ
+   * (Morh)などのコントロールをする時に使われる。
+   * @param args 動きをコントロールするための情報
+   */
+  //controlMotion(...args: string[]): void;
+
+  /**
+   * このモーションの動作を一時停止させたり、停止状態を
+   * 解除したりするためのメソッド。
+   * @param p trueの時停止、falseの時停止解除する
+   */
+  setPause(p: boolean): void;
+
+  /**
+   * モーションがデータを再生させるような種類の物であれば、
+   * そのデータの再生時間を設定する。
+   * @param time 時間(秒)
+   */
+  setTime(time: number): void;
+
+  /**
+   * 経過時間に応じて対象のObjectA3の内部の動きをおこす。
+   * 毎フレーム呼び出されることで、アニメーションを作り出す。
+   * @param dt 経過時間(秒)
+   */
+  update(dt: number): Pose;
+}
+
+export class DummyPoseMotion implements PoseMotion {
+  name: string;
+  playCount: number;
+  time: number;
+  constructor() {
+    this.name = 'dummy';
+    this.playCount = 0;
+    this.time = 0;
+  }
+  addOneselfToPhysics(_world: PhysicsWorld): void {}
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+  setPause(_p: boolean): void {}
+  setTime(_time: number): void {}
+  update(_dt: number): Pose { return {};}
 }
 

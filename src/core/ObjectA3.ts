@@ -1,12 +1,11 @@
 
 import * as THREE from 'three';
-import { Scene } from './Scene';
+import type { Scene } from './Scene'; // ここをtypeにしないと循環参照になる。
 import { DefaultTransformMotion, InterpolationTransformMotion,
          BillboardTransformMotion, InterpolationBillboardTransformMotion,
        } from './Motion';
-import type { TransformMotion } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
-import type { PhysicsMotionOption } from './Physics';
+import type { PhysicsMotionOption, PhysicsWorld } from './Physics';
 import { RapierTransformMotion } from '../rapier/RapierPhysics';
 import { CharactorTransformMotion } from '../rapier/CharactorTransformMotion';
 import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
@@ -747,4 +746,207 @@ class BalloonInfo {
     this.offsetLeft = {x:-1,y:1};
     this.offsetBottom = {x:0,y:0};
   }
+}
+
+
+/**
+ * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
+ * position,quaternion(rotation),scaleのみをコントロールする
+ * モーションのインタフェース。コントロールするというだけでなく、
+ * ObjectA3の位置、回転、拡大・縮小率に関する情報はこの
+ * インタフェースのインスタンスが管理しており、これがObjectA3の
+ * 正式な情報で、ObjectA3.object.positionなどは表示の都合で
+ * 管理されている情報という位置付けとなる。
+ * 
+ * ObjectA3に各種方法で登録されることで、そのObjectA3の
+ * 移動などに関する処理に影響を与える。ObjectA3に登録することが
+ * できるTransformMotionは必ず一つである。
+ * 
+ * このインタフェースにはsetLocation()やsetQuat()などの外部の
+ * プログラムから位置や回転を指定す要求を受け付けるメソッドが
+ * あるが、これらは必ずしも要求に応答しなければならないという
+ * わけではない。例えばInterpolationTransformMotionでは、移動が
+ * 目視できるように1秒ほど時間をかけて移動するし、物理系の
+ * TransformMotionの場合は、基本的に要求を無視して物理法則通りに
+ * 移動させるというのが正解の場合もある。ただし、setLocationNow()や
+ * setQuatNow()のようにメソッドの最後にNowが付いている物については
+ * 可能なかぎり要求に即座に答えなければならない。
+ * 
+ * このTransformMotionを実装することでInterpolateTransformMotion、
+ * BillboardTransformMotion、CharactorTransformMotionなどが作られる。
+ */
+export interface TransformMotion {
+  /**
+   * このTransformMotionが管理している位置、回転、拡大・縮小率。
+   * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
+   * ならない。
+   */
+  trans: Transform;
+
+  /**
+   * このTransformMotionの動作に必要な初期化処理を実装する
+   * メソッド。引数にコントロール対象のa3.ObjectA3(中に
+   * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
+   * それをスキャンして情報を得ることは許可されるが、変更を
+   * 加えてはならない。特に初期の位置、回転、拡大・縮小率は、
+   * 第一引数のtransから得なければならず、objectA3.object
+   * (THREE.Object3D)から得てはならない。すでに設定されている
+   * 状態で呼び出された場合には、再設定という意味で対応しなければ
+   * ならない。
+   * @param trans 初期位置、回転、拡大・縮小率
+   * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
+   */
+  init(trans: Transform, objectA3: ObjectA3): void;
+
+  /**
+   * 物理演算が必要な場合にRigidBodyやColliderを
+   * PhysicsWorldに登録する必要があるので、このメソッドで
+   * 対応する。必要無い場合は何もしなくてOK。
+   * @param world 登録対象のPhysicsWorld
+   */
+  addOneselfToPhysics(world: PhysicsWorld): void;
+
+  /**
+   * このTransformMotionが不必要となった時に、PhysicsWorldに
+   * 登録していたRigidBodyやColliderを、登録解除する
+   * 処理を行うメソッド。
+   * @param world 解除対象のPhysicsWorld
+   */
+  removeOneselfFromPhysics(world: PhysicsWorld): void;
+
+  /**
+   * 指定の場所に移動せよとの外部からの要求を受け付ける
+   * ためのメソッド。実際にそれを反映させる処理はupdate()
+   * メソッドに書く。
+   * @param loc 指定場所
+   */
+  setLocation(loc: Vec3): void;
+
+  /**
+   * 指定の場所に直ちに移動せよとの外部からの要求を受け付ける
+   * ためのメソッド。実際にそれを反映させる処理はupdate()
+   * メソッドに書く。
+   * @param loc 指定場所
+   */
+  setLocationNow(loc: Vec3): void;
+
+  /**
+   * 指定の角度に回転せよとの外部からの要求を受け付ける
+   * ためのメソッド。実際にそれを反映させる処理はupdate()
+   * メソッドに書く。
+   * @param quat 指定の回転
+   */
+  setQuat(quat: Quat): void;
+
+  /**
+   * 指定の角度に直ちに回転せよとの外部からの要求を受け付ける
+   * ためのメソッド。実際にそれを反映させる処理はupdate()
+   * メソッドに書く。
+   * @param quat 指定の回転
+   */
+  setQuatNow(quat: Quat): void;
+
+  /**
+   * 指定の大きさ(拡大・縮小率)に変形せよとの外部からの要求を
+   * 受け付けるためのメソッド。実際にそれを反映させる処理は
+   * update()メソッドに書く。
+   * @param scale 指定の大きさ
+   */
+  setScale(scale: Vec3): void;
+
+  /**
+   * 指定の大きさ(拡大・縮小率)に直ちに変形せよとの外部からの
+   * 要求を受け付けるためのメソッド。実際にそれを反映させる処理は
+   * update()メソッドに書く。
+   * @param scale 指定の大きさ
+   */
+  setScaleNow(scale: Vec3): void;
+
+  /**
+   * 速度を設定する。物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param vel 速度。
+   */
+  setLinvel(vel: Vec3): void;
+
+  /**
+   * 角速度を設定する。単位はラジアン/秒。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @aram angvel 角速度
+   */
+  setAngvel(angvel: Vec3): void;
+
+  /**
+   * addForceで加えられた力をリセットする。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  resetForce(): void;
+
+  /**
+   * 力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param f 力
+   */
+  addForce(f: Vec3): void;
+
+  /**
+   * 力点を指定して力を設定する。力点は世界座標での座標。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param f 力
+   * @param p 力点
+   */
+  addForceAtPoint(f: Vec3, p: Vec3): void;
+
+  /**
+   * addTorqueで加えられたトルクをリセットする。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  resetTorque(): void;
+
+  /**
+   * トルク(回転力)を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param t トルク
+   */
+  addTorque(t: Vec3): void;
+
+  /**
+   * 一瞬、力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param i インパルス
+   */
+  applyImpulse(i: Vec3): void;
+
+  /**
+   * 力点を指定して、一瞬、力を設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * @param i インパルス
+   * @param p 力点
+   */
+  applyImpulseAtPoint(i: Vec3, p: Vec3): void;
+
+  /**
+   * 一瞬、トルクを設定する。
+   * 物理系のTransformMotionのみ対応すれば
+   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   */
+  applyTorqueImpulse(ti: Vec3): void;
+
+  /**
+   * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
+   * メソッド。毎フレーム呼び出される。その時点での位置、回転、
+   * 拡大・縮小率は必ずthis.transに反映させなければならない。
+   * 外部からの指示がなくても自動的に移動するようなことが実現
+   * される。
+   * @param dt 経過時間(秒)
+   */
+  update(dt: number): void;
 }

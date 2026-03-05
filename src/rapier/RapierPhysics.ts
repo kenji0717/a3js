@@ -4,11 +4,12 @@ import * as THREE from 'three';
 import * as TG from '../utils/TypeGuard';
 
 import { ObjectA3 } from '../core/ObjectA3';
+import type { TransformMotion } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsMotionOption, Collision } from '../core/Physics';
-import type { TransformMotion, PoseMotion } from '../core/Motion';
+import type { PoseMotion } from '../core/ActionObject';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 

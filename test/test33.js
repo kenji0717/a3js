@@ -154,7 +154,7 @@ view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/handcart/handcart.a3').ready;
 const jointTestTransformMotion = new JointTestTransformMotion(this);
 obj.setTransformMotion(jointTestTransformMotion);
-obj.addPoseMotion('JointTest', jointTestTransformMotion.poseMotion);
+obj.getAction('JointTest').motion = jointTestTransformMotion.poseMotion;
 obj.setState('JointTest');
 view.scene.add(obj);
 view.camera.setLocationNow(0,10,20);

@@ -3,7 +3,7 @@ import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import * as THREE from 'three';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { TransformMotion } from '../core/Motion';
+import type { TransformMotion } from '../core/ObjectA3';
 
 export interface CharactorMotionOption {
   offset: number,

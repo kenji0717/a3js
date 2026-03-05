@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
+import type { TransformMotion } from './ObjectA3';
 import { Vec3, vec3EulerToQuat } from './LinearMath';
 import { DefaultTransformMotion } from './Motion';
-import type { TransformMotion } from './Motion';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { deepMerge } from '../utils/math';
 import type { DeepPartial } from '../utils/math';

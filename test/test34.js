@@ -44,7 +44,7 @@ view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/stk_tux.a3').ready;
 const cm = new a3.CarMotion(stk_kart);
 obj.setTransformMotion(cm.trans);
-obj.addPoseMotion('default', cm.pose);
+obj.getAction('default').motion = cm.pose;
 obj.setState('default');
 view.scene.add(obj);
 view.scene.setAvatar(obj);

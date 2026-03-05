@@ -4,7 +4,8 @@ import type { PhysicsWorld } from "../core/Physics";
 import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { TransformMotion, PoseMotion, Pose } from '../core/Motion';
+import type { TransformMotion } from '../core/ObjectA3';
+import type { PoseMotion, Pose } from '../core/ActionObject';
 
 /*
  * タイヤの順番なんだけど、混乱しないように書いておくと、
