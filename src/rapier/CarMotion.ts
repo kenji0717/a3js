@@ -5,7 +5,6 @@ import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { TransformMotion, PoseMotion, Pose } from '../core/Motion';
-import { Acerola3D } from '../core/Acerola3D';
 
 /*
  * タイヤの順番なんだけど、混乱しないように書いておくと、
@@ -283,15 +282,6 @@ export class CarPoseMotion implements PoseMotion {
     this.name = 'default';
     this.playCount = 0;
     this.time = 0;
-  }
-
-  prepare3D(objectA3: ObjectA3) {
-    if (objectA3 instanceof Acerola3D)
-      objectA3.addActionRoot('default');
-  }
-  cleanup3D(objectA3: ObjectA3) {
-    if (objectA3 instanceof Acerola3D)
-      objectA3.removeActionRoot('default');
   }
 
   addOneselfToPhysics(_world: PhysicsWorld) {}

@@ -3,9 +3,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { ObjectA3 } from './ObjectA3';
-import type { AsyncInitRequired } from './AsyncInitRequired';
-import type { PoseMotion } from './Motion';
+import { ActionObject } from './ActionObject';
+import type { Action, Shape } from './ActionObject';
+import { DummyPoseMotion } from './Motion';
 import { ClipPoseMotion } from '../three/ClipPoseMotion';
 import { isString } from '../utils/TypeGuard';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -73,27 +73,24 @@ gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 /**
  * glTFモデルを読み込み表示するためのクラス。
  */
-export class GLTF extends ObjectA3 implements AsyncInitRequired<GLTF> {
-  readonly ready: Promise<GLTF>;
+export class GLTF extends ActionObject<GLTF> {
   gltf?: THREE_GLTF;
 
   constructor(data: any) {
-    super();
-    this.ready = this.asyncInit(data);
-  }
-
-  initObject() {
-    // ルートとなるObject3Dだけ用意して後でその中に
-    // ロードしたglTFのscene(モデル)をaddする。
-    return new THREE.Object3D();
+    super(data);
   }
 
   async asyncInit(data: any) {
     if (isString(data)) {
+      let firstActionName: string | null = null;
       this.gltf = await gltfLoader.loadAsync(data);
-      this.bones = {};
-      this.skeletons = [];
-      this.morphs = {};
+      const actions: Record<string,Action> = {};
+      const shape: Shape = {
+        root: this.gltf.scene,
+        bones: {},
+        skeleton: undefined
+      };
+      const morphs: Record<string, {array: Array<number>, idx: number}> = {};
       this.gltf.scene.traverse((o: THREE.Object3D)=>{
         o.userData['a3js'] = { objectA3: this };
         if (hasMorphTargets(o)) {
@@ -101,26 +98,49 @@ export class GLTF extends ObjectA3 implements AsyncInitRequired<GLTF> {
           Object.keys(morphTargetDictionary).forEach((e)=>{
             const morphName = o.name+'.'+e; // 一意の名前になんない可能性少しある
             const idx = morphTargetDictionary[e];
-            this.morphs[morphName] = {array: morphTargetInfluences, idx: idx};
+            morphs[morphName] = {array: morphTargetInfluences, idx: idx};
           });
         }
-        if (o instanceof THREE.Bone)
-          this.bones[o.name] = o;
+        if (o instanceof THREE.Bone && shape.bones)
+          shape.bones[o.name] = o;
         if (o instanceof THREE.SkinnedMesh) {
-          this.skeletons.push(o.skeleton);
+          shape.skeleton = o.skeleton;
         }
       });
-      const poseMotions: Record<string,PoseMotion> = {};
       this.gltf.animations.forEach((anim)=>{
-        poseMotions[anim.name] = new ClipPoseMotion(anim);
+        if (!firstActionName)
+          firstActionName = anim.name;
+        actions[anim.name] = {
+          name: anim.name,
+          shape,
+          motion: new ClipPoseMotion(anim)
+        };
       });
-      this.setPoseMotions(poseMotions);
-      this.object.add(this.gltf.scene);
+      if (firstActionName) {
+        this.syncInit(firstActionName,actions,morphs);
+      } else {
+        firstActionName = 'dummy';
+        actions['dummy'] = {
+          name: 'dummy',
+          shape,
+          motion: new DummyPoseMotion()
+        };
+        this.syncInit(firstActionName,actions,morphs);
+      }
     } else {
       const geo = new THREE.BoxGeometry();
       const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
       const mesh = new THREE.Mesh(geo, mat);
-      this.object.add(mesh);
+
+      const firstActionName = 'dummy';
+      const actions: Record<string,Action> = {};
+      actions['dummy'] = {
+        name: 'dummy',
+        shape: {root: mesh},
+        motion: new DummyPoseMotion()
+      };
+      this.syncInit(firstActionName,actions);
+      
     }
     return this;
   }

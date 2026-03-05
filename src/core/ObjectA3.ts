@@ -2,8 +2,9 @@
 import * as THREE from 'three';
 import { Scene } from './Scene';
 import { DefaultTransformMotion, InterpolationTransformMotion,
-         BillboardTransformMotion, InterpolationBillboardTransformMotion } from './Motion';
-import type { TransformMotion, PoseMotion, Pose } from './Motion';
+         BillboardTransformMotion, InterpolationBillboardTransformMotion,
+       } from './Motion';
+import type { TransformMotion } from './Motion';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption } from './Physics';
 import { RapierTransformMotion } from '../rapier/RapierPhysics';
@@ -37,6 +38,13 @@ export type TransformMotionMode =
   | "InterpolationBillboard"
   | "SimplePhysics";
 
+const geo = new THREE.SphereGeometry();
+const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+/**
+ * 以下、loadingの状態であることを表すTHREE.Mesh。
+ * 書き換え可能。
+ */
+export let a3jsLoading = new THREE.Mesh(geo,mat);
 
 
 /**
@@ -47,7 +55,7 @@ export type TransformMotionMode =
  * クラスでは、3D空間内での移動や、物理演算に関する
  * 必要なメソッドを実装する。
  */
-export abstract class ObjectA3 {
+export class ObjectA3 {
   static defaultRotationOrder: RotationOrder = "XYZ";
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
   rotationOrder?: RotationOrder;
@@ -56,36 +64,28 @@ export abstract class ObjectA3 {
   scene?: Scene;
   private balloon?: BalloonInfo;
   transformMotion: TransformMotion;
-  poseMotions: Record<string,PoseMotion>;
-  statePoseMotion?: PoseMotion;
-  emotePoseMotion?: PoseMotion;
-  currentPoseMotion?: PoseMotion;
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
-  //以下PoseMotionを処理するための情報。一部スーパークラスでの対応が必要。
-  skeletons: THREE.Skeleton[];
-  bones: Record<string,THREE.Object3D>;
-  morphs: Record<string, {array: Array<number>, idx: number}>;
-  morphsOverwrite: boolean;
 
   constructor(data?: any) {
-    this.skeletons = [];
-    this.bones = {};
-    this.morphs = {};
-    this.morphsOverwrite = false;
-    this.object = this.initObject(data);
+    this.transformMotion = this.initTransformMotion(data);
+    this.object = new THREE.Object3D();
+    const r = this.initObject(data);
+    if (r)
+      this.object.add(r);
     this.object.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
-    this.transformMotion = this.initTransformMotion(data);
-    this.poseMotions = this.initPoseMotions(data);
   }
 
   // 非同期でないと無理な場合などはとりあえず
-  // 空のTHREE.Object3Dだけ返しておいて後で、
-  // そのObject3DにaddすればOK。
-  abstract initObject(data?: any): THREE.Object3D;
+  // 以下のように読み込み中を表すa3jsLoadingを
+  // 返しておいて、後でa3jsLoadingを削除して
+  // this.objectにaddすればOK。
+  initObject(_data?: any): THREE.Object3D {
+    return a3jsLoading;
+  };
 
   /**
    * このObjectA3のコンストラクタから呼び出され、デフォルトで
@@ -135,101 +135,6 @@ export abstract class ObjectA3 {
     }
   }
 
-  /**
-   * このObjectA3のコンストラクタから呼び出され、デフォルトで
-   * 使用されるPoseMotionの辞書を返す。ただObjectA3の実装では
-   * 空の辞書を返すだけ。このメソッドをオーバーライドすることで
-   * デフォルトのPoseMotionを変更することが可能。
-   * @param _data コンストラクタから渡された情報
-   * @returns このObjectA3で使用されるPoseMotionの辞書
-   */
-  initPoseMotions(_data?: any): Record<string,PoseMotion> {
-    return {};
-  }
-
-  /**
-   * ObjectA3生成後に使用されるPoseMotionの辞書を設定する。
-   * @param poseMotions PoseMotionの辞書
-   */
-  setPoseMotions(poseMotions: Record<string,PoseMotion>): void {
-    this.poseMotions = poseMotions;
-  }
-
-  /**
-   * ObjectA3に現在設定されているPoseMotionの辞書を返す。
-   * @return PoseMotionの辞書
-   */
-  getPoseMotions(): Record<string,PoseMotion> {
-    return this.poseMotions;
-  }
-
-  /**
-   * 引数の名前でObjectA3に現在設定されているPoseMotion
-   * を返す。
-   * @return PoseMotion
-   */
-  getPoseMotion(name: string): PoseMotion {
-    return this.poseMotions[name];
-  }
-
-  /**
-   * ObjectA3生成後に、使用されるPoseMotionの辞書に
-   * 追加でPoseMotionを1つ加える。
-   */
-  addPoseMotion(name: string, poseMotion: PoseMotion): void {
-    this.poseMotions[name] = poseMotion;
-  }
-
-  /**
-   * ObjectA3に設定されているPoseMotionを名前を指定して
-   * 削除する。
-   */
-  removePoseMotion(name: string): PoseMotion {
-    const pm = this.poseMotions[name];
-    delete this.poseMotions[name];
-    return pm;
-  }
-
-  getPoseMotionNames() {
-    return Object.keys(this.poseMotions);
-  }
-
-  setState(name: string) {
-    const pm = this.poseMotions[name];
-    if (pm) {
-      this.statePoseMotion = pm;
-      this.statePoseMotion.playCount = 0;
-      this.statePoseMotion.time = 0;
-      this.currentPoseMotion = this.statePoseMotion;
-    }
-  }
-
-  setEmote(name: string) {
-    this.emotePoseMotion = this.poseMotions[name];
-    if (this.emotePoseMotion) {
-      this.emotePoseMotion.playCount = 0;
-      this.emotePoseMotion.time = 0;
-      this.currentPoseMotion = this.emotePoseMotion;
-    }
-  }
-
-  // 今のところ、こんな感じでにげる。AnimationMixerを
-  // 完全に真似するまでは時間がかかりそう。
-  setMorphsOverwrite(b: boolean) {
-    this.morphsOverwrite = b;
-  }
-
-  morph(name: string, value: number) {
-    if (name in this.morphs) {
-      const { array, idx } = this.morphs[name];
-      array[idx] = value;
-    }
-  }
-
-  getMorphNames() {
-    return Object.keys(this.morphs);
-  }
-
   // setTransformMotionModeでも同じことできるけど。。。
   initSimplePhysics(option: PhysicsMotionOption) {
     const opt = {
@@ -237,60 +142,12 @@ export abstract class ObjectA3 {
       ...option
     };
     this.setTransformMotion(new RapierTransformMotion(opt));
-    this.poseMotions = {};
   }
-
-  pose: Pose = {};
+  
   update(dt: number) {
     //TransformMosionを反映
     this.transformMotion.update(dt);
     this.transformMotion.trans.write(this);
-    //PoseMosionを反映
-    let pose;
-    if (this.emotePoseMotion && this.emotePoseMotion.playCount<=0) {
-      pose = this.emotePoseMotion.update(dt);
-      if (this.emotePoseMotion.playCount>0) {
-        this.emotePoseMotion.cleanup3D(this);
-        this.emotePoseMotion = undefined;
-        if (this.statePoseMotion)
-          this.statePoseMotion.prepare3D(this);
-      }
-    } else if (this.statePoseMotion) {
-      pose = this.statePoseMotion.update(dt);
-    }
-    if (pose && this.bones) {
-      for (const [boneName,data] of Object.entries(pose)) {
-        //位置、回転、拡大率対応
-        const bone = this.bones[boneName];
-        if (bone) {
-          if (data.loc) bone.position.set(data.loc.x,data.loc.y,data.loc.z);
-          if (data.quat) bone.quaternion.set(data.quat.x,data.quat.y,data.quat.z,data.quat.w);
-          if (data.scale) bone.scale.set(data.scale.x,data.scale.y,data.scale.z);
-        }
-        // モーフィング対応。無いと動かないglTFもある。
-        // モーフィングのデータの保存のしかた失敗してる説ある。GAHA
-        if (!this.morphsOverwrite) {
-          if (data.morphs) {
-            for (const pMorph of data.morphs) {
-              for (const myMName of Object.keys(this.morphs)) {
-                if (myMName.startsWith(pMorph.name)) {
-                  const {array} = this.morphs[myMName];
-                  for (let i=0;i<array.length;i++) {
-                    array[i] = pMorph.vals[i];
-                  }
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    this.object.updateMatrixWorld(true); // 必要なのか？
-    this.skeletons.forEach((skeleton)=> { // 必要なのか？
-      skeleton.update();
-    });
-
     this.children.forEach((child)=>{
       child.update(dt);
     });
@@ -372,9 +229,6 @@ export abstract class ObjectA3 {
     }
     this.transformMotion.setLocationNow(tmp.v0);
   }
-
-
-
 
   get quat(): Quat { return this.trans.quat; }
   setQuat(x: number, y: number, z: number, w: number): void;

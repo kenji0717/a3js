@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { ObjectA3 } from './ObjectA3';
-import type { AsyncInitRequired } from './AsyncInitRequired';
+import { ActionObject } from './ActionObject';
+import type { Action } from './ActionObject';
 import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3,
@@ -17,6 +17,7 @@ class DummyBVH implements BVH {
   clip = new THREE.AnimationClip('dummy');
 };
 
+/*
 interface Action {
   name: string;
   root: THREE.Object3D;
@@ -28,6 +29,7 @@ interface Action {
   offset: Vec3;
   parts: Record<string,THREE.Object3D>;
 }
+*/
 
 const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
 const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
@@ -35,21 +37,13 @@ const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まない
 /**
  * まだ適当。
  */
-export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> {
+export class Acerola3D extends ActionObject<Acerola3D> {
   readonly ready: Promise<Acerola3D>;
-  actions: Record<string,Action>;
   comment: string | null = null; // CATALOG.XMLの<c>の中
 
   constructor(url: string) {
     super();
-    this.actions = {};
     this.ready = this.asyncInit(url);
-  }
-
-  initObject() {
-    // ルートとなるObject3Dだけ用意して後でその中に
-    // ロードしたモデルをaddする。
-    return new THREE.Object3D();
   }
 
   async asyncInit(url: string) {
@@ -66,7 +60,6 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
     if (cs[0]) this.comment = cs[0].textContent;
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
     const actions: Record<string,Action> = {};
-    const a3PoseMotions: Record<string,ClipPoseMotion> = {};
     let firstActionName;
     for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
@@ -127,74 +120,14 @@ export class Acerola3D extends ObjectA3 implements AsyncInitRequired<Acerola3D> 
 //root.add(new THREE.SkeletonHelper(bvh.skeleton.bones[0])); // GAHA!
         actions[actionName] = {
           name: actionName,
-          root,
-          bones,
-          skeleton: bvh.skeleton,
-          bvh,
-          scale,
-          offset,
-          parts
+          shape: { root, bones, skeleton: bvh.skeleton },
+          motion: new ClipPoseMotion(bvh.clip,actionName)
         };
-        a3PoseMotions[actionName] = new ClipPoseMotion(bvh.clip,actionName);
       }
     }
-    this.actions = actions;
-    this.setPoseMotions(a3PoseMotions);
     if (firstActionName)
-      this.setState(firstActionName);
+      this.syncInit(firstActionName,actions);
     return this;
-  }
-
-  addAction(action: Action) {
-    this.actions[action.name] = action;
-  }
-
-  removeAction(name: string): Action {
-    const a = this.actions[name];
-    delete this.actions[name];
-    return a;
-  }
-
-  addActionRoot(name: string) {
-    const action = this.actions[name];
-    if (action) {
-      this.object.add(action.root);
-      this.bones = action.bones;
-      this.skeletons = [action.skeleton];
-    }
-  }
-
-  removeActionRoot(name: string) {
-    const action = this.actions[name];
-    if (action) {
-      this.object.remove(action.root);
-      this.bones = {};
-      this.skeletons = [];
-    }
-  }
-
-  setState(name: string) {
-    const pm = this.poseMotions[name];
-    const a = this.actions[name];
-    if (pm && a) {
-      const oldName = this.currentPoseMotion?.name;
-      if (oldName)
-        this.removeActionRoot(oldName);
-      this.addActionRoot(name);
-      super.setState(name);
-    }
-  }
-
-  setEmote(name: string) {
-    const pm = this.poseMotions[name];
-    const a = this.actions[name];
-    if (pm && a) {
-      const oldName = this.currentPoseMotion?.name;
-      if (oldName)
-        this.removeActionRoot(oldName);
-      this.addActionRoot(name);
-      super.setEmote(name);
-    }
   }
 }
 

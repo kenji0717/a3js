@@ -50,8 +50,6 @@ export class ClipPoseMotion implements PoseMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld) {}
   removeOneselfFromPhysics(_world: PhysicsWorld) {}
-  prepare3D(_objectA3: ObjectA3) {}
-  cleanup3D(_objectA3: ObjectA3) {}
 
   setPause(p: boolean) {
     this.isPaused = p;

@@ -519,19 +519,6 @@ export interface PoseMotion {
   time: number;
 
   /**
-   * このPoseMotionが再生の前に、3Dの表示についての追加処理が
-   * 必要な場合に引数のObjectA3にアクセスして準備する。
-   */
-  prepare3D(objectA3: ObjectA3): void;
-
-  /**
-   * このPoseMotionが再生停止した後に、3Dの表示についての
-   * 後片付けの処理が必要な場合に引数のObjectA3にアクセス
-   * して後片付けする。
-   */
-  cleanup3D(objectA3: ObjectA3): void;
-
-  /**
    * 物理演算が必要な場合にRigidBodyやColliderを
    * PhysicsWorldに登録する必要があるので、このメソッドで
    * 対応する。
@@ -576,3 +563,30 @@ export interface PoseMotion {
    */
   update(dt: number): Pose;
 }
+
+export class DummyPoseMotion implements PoseMotion {
+  name: string;
+  playCount: number;
+  time: number;
+  constructor() {
+    this.name = 'dummy';
+    this.playCount = 0;
+    this.time = 0;
+  }
+  addOneselfToPhysics(_world: PhysicsWorld): void {
+    throw new Error('Method not implemented.');
+  }
+  removeOneselfFromPhysics(_world: PhysicsWorld): void {
+    throw new Error('Method not implemented.');
+  }
+  setPause(_p: boolean): void {
+    throw new Error('Method not implemented.');
+  }
+  setTime(_time: number): void {
+    throw new Error('Method not implemented.');
+  }
+  update(_dt: number): Pose {
+    throw new Error('Method not implemented.');
+  }
+}
+

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
+import { ActionObject } from './ActionObject';
 import { physicsEngineInstance, RapierPhysicsWorld } from '../rapier/RapierPhysics';
 import type { PhysicsWorld, Collision } from './Physics';
 
@@ -33,8 +34,10 @@ export class Scene {
     object.scene = this;
     if (this.physicsWorld) {
       object.transformMotion.addOneselfToPhysics(this.physicsWorld);
-      for (const pm of Object.values(object.poseMotions)) {
-        pm.addOneselfToPhysics(this.physicsWorld);
+      if (object instanceof ActionObject) {
+        for (const a of Object.values(object.actions)) {
+          a.motion.addOneselfToPhysics(this.physicsWorld);
+        }
       }
     }
   }
@@ -52,8 +55,10 @@ export class Scene {
     object.scene = undefined;
     if (this.physicsWorld) {
       object.transformMotion.removeOneselfFromPhysics(this.physicsWorld);
-      for (const pm of Object.values(object.poseMotions)) {
-        pm.removeOneselfFromPhysics(this.physicsWorld);
+      if (object instanceof ActionObject) {
+        for (const a of Object.values(object.actions)) {
+          a.motion.removeOneselfFromPhysics(this.physicsWorld);
+        }
       }
     }
   }

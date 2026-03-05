@@ -4,6 +4,7 @@ export { Window } from './core/Window';
 export { Scene } from './core/Scene';
 export { Camera } from './core/Camera';
 export { ObjectA3 } from './core/ObjectA3';
+export { ActionObject } from './core/ActionObject';
 export type { Dir, TransformMotionMode } from './core/ObjectA3';
 export { DefaultTransformMotion, FixedTransformMotion } from './core/Motion';
 export type { TransformMotion, PoseMotion, Pose } from './core/Motion';
