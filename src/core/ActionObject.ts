@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ObjectA3, a3jsLoading } from './ObjectA3';
+import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
@@ -7,7 +7,7 @@ import type { PhysicsWorld } from './Physics';
 export interface Action {
   name: string; // 本当はこのnameを取り除きたい。GAHA
   shape: Shape;
-  motion: PoseMotion;
+  motion: Motion;
 }
 
 export interface Shape {
@@ -65,7 +65,7 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.actions = actions;
     this.stateAction = this.actions[defaultName];
     this.currentAction = this.stateAction;
-    this.object.remove(a3jsLoading); // 無い時エラー出る？
+    this.object.clear();
     this.object.add(this.currentAction.shape.root);
     this.morphs = morphs;
   }
@@ -228,7 +228,7 @@ type Morph = {
 /**
  * キャラクタのポーズを表すインターフェース。主に3Dキャラクタ
  * を想定しているが、車のシャーシーやタイヤの動きも、このPose
- * インターフェースで表現することができ、PoseMotionインターフェース
+ * インターフェースで表現することができ、Motionインターフェース
  * は、このPoseインターフェースを用いることで、モーションキャプチャー
  * データも物理演算結果も、その他の動きも統一して扱えるようになる。
  * 例えば、モーションキャプチャデータに並進移動のデータが含まれていない
@@ -254,14 +254,14 @@ export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs
   *
  * Three.jsではTHREE.AnimationClipに対応する対象と考えてもらいたい。
  */
-export interface PoseMotion {
+export interface Motion {
   /**
-   * このPoseMotionにつける名前。「GAHA不要である可能性」
+   * このMotionにつける名前。「GAHA不要である可能性」
    */
   name: string;
 
   /**
-   * このPoseMotionが何回再生されたかを保存している。
+   * このMotionが何回再生されたかを保存している。
    *
    */
   playCount: number;
@@ -280,7 +280,7 @@ export interface PoseMotion {
   addOneselfToPhysics(world: PhysicsWorld): void;
 
   /**
-   * このPoseMotionが不必要となった時に、PhysicsWorldに
+   * このMotionが不必要となった時に、PhysicsWorldに
    * 登録していたRigidBodyやColliderを、登録解除する
    * 処理を行うメソッド。
    * @param world 解除対象のPhysicsWorld
@@ -317,7 +317,7 @@ export interface PoseMotion {
   update(dt: number): Pose;
 }
 
-export class DummyPoseMotion implements PoseMotion {
+export class DummyMotion implements Motion {
   name: string;
   playCount: number;
   time: number;

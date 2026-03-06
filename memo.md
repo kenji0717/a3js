@@ -1,9 +1,15 @@
 
+TransformMotionをTransformerに、PoseMotionをMotionに
+改名する。CarMotionをCarControl。
+後でgrepでチェックしよう。
+
+-----
+
 Acerola3Dを検討してみて、この構成をObjectA3に導入して
 しまうのが良い気がしてきた。GLTFはActionが無いけど
 むしろ同じActionが複数あるとすればすっきりする。そう
 しないとPoseMotionのprepare3D()とcleanup3D()を撲滅
-できない。
+できない。2026,03/05: DONE。
 
 -----
 

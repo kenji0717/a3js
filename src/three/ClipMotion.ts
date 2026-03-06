@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Pose, PoseMotion } from '../core/ActionObject';
+import type { Pose, Motion } from '../core/ActionObject';
 import { ObjectA3 } from '../core/ObjectA3';
 import { Quat, Vec3 } from '../core/LinearMath';
 import type { PhysicsWorld } from '../core/Physics';
@@ -9,7 +9,7 @@ import type { PhysicsWorld } from '../core/Physics';
  * データなどから生成されるTHREE.AnimationClipに含まれる
  * 1つのアニメーションを表すクラス。
   */
-export class ClipPoseMotion implements PoseMotion {
+export class ClipMotion implements Motion {
   name: string;
   time: number;
   duration: number;
@@ -86,7 +86,7 @@ export class ClipPoseMotion implements PoseMotion {
         const vals:number[] = Array.from(res);
         data.morphs.push({name: nodeName,vals});
       } else {
-        console.warn(`ClipPoseMotion: update. unknown property(${property})`);
+        console.warn(`ClipMotion: update. unknown property(${property})`);
       }
     }
     return pose;

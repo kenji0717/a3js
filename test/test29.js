@@ -5,6 +5,7 @@ const view = new a3.Window(600,300);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
+obj.setState('Idle');
 view.scene.add(obj);
 view.scene.setAvatar(obj);
 view.setController(new a3.FollowAvatarController());

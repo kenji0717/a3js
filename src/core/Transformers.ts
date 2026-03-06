@@ -1,19 +1,19 @@
 import { Vec3, Quat, getQuatOfLookAt, Transform } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
-import type { TransformMotion } from "./ObjectA3";
+import type { Transforer } from "./ObjectA3";
 
 
 
 
 /**
- * 最も簡単なTransformMotionの実装クラス。座標、回転、拡大率の
+ * 最も簡単なTransformerの実装クラス。座標、回転、拡大率の
  * 指定を即座に反映する。その他の機能は無い。ただ、メソッドは
- * 全て実装されているので、ちょっとしたTransformMotionを作りたい
+ * 全て実装されているので、ちょっとしたTransformerを作りたい
  * 時は、このクラスを拡張して必要なところだけオーバーライド
  * するのがお勧め。
  */
-export class DefaultTransformMotion implements TransformMotion {
+export class DefaultTransformer implements Transforer {
   trans: Transform;
 
   /**
@@ -31,6 +31,7 @@ export class DefaultTransformMotion implements TransformMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+  isGrounded(): boolean { return this.trans.loc.y <= 0; }
 
   setLocation(loc: Vec3) {
     this.trans.loc.set(loc);
@@ -64,12 +65,12 @@ export class DefaultTransformMotion implements TransformMotion {
 }
 
 /**
- * まったく動かすことができないTransformMotion。物理エンジン
- * でコントロールするTransformMotionでは、DefaultTransformMotion
+ * まったく動かすことができないTransformer。物理エンジン
+ * でコントロールするTransformerでは、DefaultTransformer
  * よりも、こちらの方をベースにした方がやりやすい場合があると
  * 思う。
  */
-export class FixedTransformMotion implements TransformMotion {
+export class FixedTransformer implements Transforer {
   trans: Transform;
 
   /**
@@ -87,6 +88,7 @@ export class FixedTransformMotion implements TransformMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+  isGrounded(): boolean { return this.trans.loc.y <= 0; }
 
   setLocation(_loc: Vec3) {}
   setLocationNow(_loc: Vec3) {}
@@ -107,7 +109,7 @@ export class FixedTransformMotion implements TransformMotion {
   update(_dt: number) {}
 }
 
-export class InterpolationTransformMotion implements TransformMotion {
+export class InterpolationTransformer implements Transforer {
   firstTrans: Transform;
   trans: Transform; // 現在のTransform
   lastTrans: Transform;
@@ -130,6 +132,7 @@ export class InterpolationTransformMotion implements TransformMotion {
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
+  isGrounded(): boolean { return this.trans.loc.y <= 0; }
 
   setLocation(newLoc: Vec3) {
     this.firstTrans.set(this.trans);
@@ -196,12 +199,12 @@ const tmpObjLoc: Vec3 = new Vec3();
 const tmpTargetLoc: Vec3 = new Vec3();
 /**
  * targetで指定した物の方を正面として向き続けるための
- * TransformMotion。特にtargetをカメラにするような使い方を
+ * Transformer。特にtargetをカメラにするような使い方を
  * 想定しているけど、実際には何をtargetにしても良い。
  * 外部からの要求は全て無視して向きをtargetに向けるだけ
- * のTransformMotionとなっている。
+ * のTransformerとなっている。
   */
-export class BillboardTransformMotion extends DefaultTransformMotion {
+export class BillboardTransformer extends DefaultTransformer {
   up: Vec3;
   target: ObjectA3;
 
@@ -237,7 +240,7 @@ export class BillboardTransformMotion extends DefaultTransformMotion {
   }
 }
 
-export class InterpolationBillboardTransformMotion extends InterpolationTransformMotion {
+export class InterpolationBillboardTransformer extends InterpolationTransformer {
   up: Vec3;
   target: ObjectA3;
 

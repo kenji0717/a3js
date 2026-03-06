@@ -3,26 +3,26 @@ import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import * as THREE from 'three';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { TransformMotion } from '../core/ObjectA3';
+import type { Transforer } from '../core/ObjectA3';
 
-export interface CharactorMotionOption {
+export interface CharactorTransOption {
   offset: number,
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharactorMotionOption = {
+export const defaultCharactorTransOption = {
   offset: 0.01,
   auto: true,
   height: 1.5,
   radius: 0.3
 };
 
-export class CharactorTransformMotion implements TransformMotion {
+export class CharactorTransformer implements Transforer {
   trans: Transform;
   objectA3?: ObjectA3;
-  completeOption: CharactorMotionOption;
+  completeOption: CharactorTransOption;
   controller?: Rapier.KinematicCharacterController;
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
@@ -33,9 +33,9 @@ export class CharactorTransformMotion implements TransformMotion {
   tmpV1: Vec3;
   tmpV2: Vec3;
 
-  constructor(option: Partial<CharactorMotionOption> = {}) {
+  constructor(option: Partial<CharactorTransOption> = {}) {
     this.completeOption = {
-      ...defaultCharactorMotionOption,
+      ...defaultCharactorTransOption,
       ...option
     };
     this.trans = new Transform();

@@ -14,8 +14,8 @@ class JointTest extends a3.ActionObject {
   }
 
   async asyncInit() {
-    const jointTestTransformMotion = new JointTestTransformMotion(this);
-    this.setTransformMotion(jointTestTransformMotion);
+    const jointTestTransformer = new JointTestTransformer(this);
+    this.setTransformer(jointTestTransformer);
 
     const bones = {};
     const root = new THREE.Object3D();
@@ -48,7 +48,7 @@ class JointTest extends a3.ActionObject {
     actions['JointTest'] = {
       name: 'JointTest',
       shape: { root, bones },
-      motion: jointTestTransformMotion.poseMotion
+      motion: jointTestTransformer.motion
     };
     this.syncInit('JointTest',actions);
     return this;
@@ -62,15 +62,15 @@ class JointTest extends a3.ActionObject {
   }
 }
 
-class JointTestTransformMotion extends a3.FixedTransformMotion {
-  poseMotion;
+class JointTestTransformer extends a3.FixedTransformer {
+  motion;
   constructor(objectA3) {
     super();
-    this.poseMotion = new JointTestPoseMotion(objectA3);
+    this.motion = new JointTestMotion(objectA3);
   }
 }
 
-class JointTestPoseMotion {
+class JointTestMotion {
   name;
   playCount;
   time;

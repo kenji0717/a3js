@@ -4,12 +4,12 @@ import * as THREE from 'three';
 import * as TG from '../utils/TypeGuard';
 
 import { ObjectA3 } from '../core/ObjectA3';
-import type { TransformMotion } from '../core/ObjectA3';
+import type { Transforer } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { defaultPhysicsMotionOption } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
               PhysicsMotionOption, Collision } from '../core/Physics';
-import type { PoseMotion } from '../core/ActionObject';
+import type { Motion } from '../core/ActionObject';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
@@ -73,11 +73,11 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(motion: TransformMotion | PoseMotion) {
+  add(motion: Transforer | Motion) {
     motion.addOneselfToPhysics(this);
   }
 
-  remove(motion: TransformMotion | PoseMotion) {
+  remove(motion: Transforer | Motion) {
     motion.removeOneselfFromPhysics(this);
   }
 
@@ -107,7 +107,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 }
 
-export class RapierTransformMotion implements TransformMotion {
+export class RapierTransformer implements Transforer {
   trans: Transform;
   objectA3?: ObjectA3;
   bodyDesc?: Rapier.RigidBodyDesc;
@@ -228,6 +228,8 @@ export class RapierTransformMotion implements TransformMotion {
       collisionMap.delete(collider.handle);
     });
   }
+  // ここはなんとかできそうな気もするけど、とりあえず。
+  isGrounded(): boolean { return this.trans.loc.y <= 0; }
 
   setLocation(_: Vec3): void {
     // これはできない物とする

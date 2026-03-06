@@ -5,15 +5,15 @@ import * as a3 from 'a3js';
 import * as THREE from 'three';
 import RAPIER from "@dimforge/rapier3d-compat";
 
-class JointTestTransformMotion extends a3.FixedTransformMotion {
-  poseMotion;
+class JointTestTransformer extends a3.FixedTransformer {
+  motion;
   constructor(objectA3) {
     super();
-    this.poseMotion = new JointTestPoseMotion(objectA3);
+    this.motion = new JointTestMotion(objectA3);
   }
 }
 
-class JointTestPoseMotion {
+class JointTestMotion {
   name;
   playCount;
   time;
@@ -152,9 +152,9 @@ ground.initSimplePhysics({rigidBody: 'fixed'});
 ground.setLocationNow(0,-2,0);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/handcart/handcart.a3').ready;
-const jointTestTransformMotion = new JointTestTransformMotion(this);
-obj.setTransformMotion(jointTestTransformMotion);
-obj.getAction('JointTest').motion = jointTestTransformMotion.poseMotion;
+const jointTestTransformer = new JointTestTransformer(this);
+obj.setTransformer(jointTestTransformer);
+obj.getAction('JointTest').motion = jointTestTransformer.motion;
 obj.setState('JointTest');
 view.scene.add(obj);
 view.camera.setLocationNow(0,10,20);
@@ -164,10 +164,10 @@ let t=0;
 while (true) {
   t += await view.waitForRender();
   if (Math.floor(t/5)%2===0) {
-    jointTestTransformMotion.poseMotion.rightWheelAngvel(20.0);
-    jointTestTransformMotion.poseMotion.leftWheelAngvel(-20.0);
+    jointTestTransformer.motion.rightWheelAngvel(20.0);
+    jointTestTransformer.motion.leftWheelAngvel(-20.0);
   } else {
-    jointTestTransformMotion.poseMotion.rightWheelAngvel(-20.0);
-    jointTestTransformMotion.poseMotion.leftWheelAngvel(20.0);
+    jointTestTransformer.motion.rightWheelAngvel(-20.0);
+    jointTestTransformer.motion.leftWheelAngvel(20.0);
   }
 }

@@ -3,9 +3,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { ActionObject, DummyPoseMotion } from './ActionObject';
+import { ActionObject, DummyMotion } from './ActionObject';
 import type { Action, Shape } from './ActionObject';
-import { ClipPoseMotion } from '../three/ClipPoseMotion';
+import { ClipMotion } from '../three/ClipMotion';
 import { isString } from '../utils/TypeGuard';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 //import { MeshoptDecoder } from 'meshoptimizer';
@@ -112,7 +112,7 @@ export class GLTF extends ActionObject<GLTF> {
         actions[anim.name] = {
           name: anim.name,
           shape,
-          motion: new ClipPoseMotion(anim)
+          motion: new ClipMotion(anim)
         };
       });
       if (firstActionName) {
@@ -122,7 +122,7 @@ export class GLTF extends ActionObject<GLTF> {
         actions['dummy'] = {
           name: 'dummy',
           shape,
-          motion: new DummyPoseMotion()
+          motion: new DummyMotion()
         };
         this.syncInit(firstActionName,actions,morphs);
       }
@@ -136,7 +136,7 @@ export class GLTF extends ActionObject<GLTF> {
       actions['dummy'] = {
         name: 'dummy',
         shape: {root: mesh},
-        motion: new DummyPoseMotion()
+        motion: new DummyMotion()
       };
       this.syncInit(firstActionName,actions);
       

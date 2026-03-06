@@ -6,7 +6,7 @@ import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3,
          loadBvhInUnzippedA3,
          cloneBVH } from '../three/threeUtils';
-import { ClipPoseMotion } from '../three/ClipPoseMotion';
+import { ClipMotion } from '../three/ClipMotion.js';
 import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
 //import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -119,7 +119,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         actions[actionName] = {
           name: actionName,
           shape: { root, bones, skeleton: bvh.skeleton },
-          motion: new ClipPoseMotion(bvh.clip,actionName)
+          motion: new ClipMotion(bvh.clip,actionName)
         };
       }
     }

@@ -4,15 +4,15 @@ import type { PhysicsWorld } from "../core/Physics";
 import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { TransformMotion } from '../core/ObjectA3';
-import type { PoseMotion, Pose } from '../core/ActionObject';
+import type { Transforer } from '../core/ObjectA3';
+import type { Motion, Pose } from '../core/ActionObject';
 
 /*
  * タイヤの順番なんだけど、混乱しないように書いておくと、
  * FL(0),FR(1),RL(2),RR(3)という順番で統一する。
  */
 
-export interface CarMotionOption {
+export interface CarControlOption {
   mass: number;
   defaultLocation: {x: number, y: number, z: number };
   defaultQuat: {x: number, y: number, z: number, w: number };
@@ -53,7 +53,7 @@ export interface CarMotionOption {
   wheelRRWheelFrictionSlip: number;
 }
 
-export const defaultCarMotionOption = {
+export const defaultCarControlOption = {
   mass: 1000.0,
   defaultLocation: {x: 0.0, y: 1.0, z: 0.0},
   defaultQuat: {x: 0.0, y: 0.0, z: 0.0, w: 1.0},
@@ -94,18 +94,18 @@ export const defaultCarMotionOption = {
   wheelRRWheelFrictionSlip: 1000.0
 };
 
-export class CarMotion {
-  opt: CarMotionOption;
-  trans: CarTransformMotion;
-  pose: CarPoseMotion;
+export class CarControl {
+  opt: CarControlOption;
+  trans: CarTransformer;
+  motion: CarMotion;
 
-  constructor(option: Partial<CarMotionOption>) {
+  constructor(option: Partial<CarControlOption>) {
     this.opt = {
-      ...defaultCarMotionOption,
+      ...defaultCarControlOption,
       ...option
     };
-    this.trans = new CarTransformMotion(this);
-    this.pose = new CarPoseMotion(this);
+    this.trans = new CarTransformer(this);
+    this.motion = new CarMotion(this);
   }
 
   handle(h: number) {
@@ -143,8 +143,8 @@ export class CarMotion {
   }
 }
 
-export class CarTransformMotion implements TransformMotion {
-  cm: CarMotion;
+export class CarTransformer implements Transforer {
+  cm: CarControl;
   trans: Transform;
   objectA3?: ObjectA3;
   controller?: Rapier.DynamicRayCastVehicleController;
@@ -154,7 +154,7 @@ export class CarTransformMotion implements TransformMotion {
   chassisColliderDesc?: Rapier.ColliderDesc;
   chassisCollider?: Rapier.Collider;
 
-  constructor(cm: CarMotion) {
+  constructor(cm: CarControl) {
     this.cm = cm;
     this.trans = new Transform();
   }
@@ -272,13 +272,13 @@ export class CarTransformMotion implements TransformMotion {
   }
 }
 
-export class CarPoseMotion implements PoseMotion {
-  cm: CarMotion;
+export class CarMotion implements Motion {
+  cm: CarControl;
   name: string;
   playCount: number;
   time: number;
 
-  constructor(cm: CarMotion) {
+  constructor(cm: CarControl) {
     this.cm = cm;
     this.name = 'default';
     this.playCount = 0;
@@ -292,7 +292,7 @@ export class CarPoseMotion implements PoseMotion {
   update(_dt: number): Pose {
     if (!this.cm.trans.chassisBody) return {};
     if (!this.cm.trans.controller) return {};
-    // CarTransformMotionでrootを動かしてしまっているので、
+    // CarTransformerでrootを動かしてしまっているので、
     // 座標や回転は補正しないといけない。
     const rootLoc = new Vec3(this.cm.trans.chassisBody.translation());
     const rootQuat = new Quat(this.cm.trans.chassisBody.rotation());

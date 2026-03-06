@@ -1,13 +1,12 @@
 
 import * as THREE from 'three';
 import type { Scene } from './Scene'; // ここをtypeにしないと循環参照になる。
-import { DefaultTransformMotion, InterpolationTransformMotion,
-         BillboardTransformMotion, InterpolationBillboardTransformMotion,
-       } from './Motion';
+import { DefaultTransformer, InterpolationTransformer,
+         BillboardTransformer, InterpolationBillboardTransformer,
+       } from './Transformers';
 import { defaultPhysicsMotionOption } from './Physics';
 import type { PhysicsMotionOption, PhysicsWorld } from './Physics';
-import { RapierTransformMotion } from '../rapier/RapierPhysics';
-import { CharactorTransformMotion } from '../rapier/CharactorTransformMotion';
+import { RapierTransformer } from '../rapier/RapierPhysics';
 import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
@@ -25,12 +24,12 @@ export type Dir =
 
 /**
  * ObjectA3の位置、回転、拡大・縮小率をコントロール
- * するモードの選択。setTransformMotionMode()メソッドの
+ * するモードの選択。setTransformMode()メソッドの
  * 引数として使用する。ここで示される選択肢以外の
- * モードもあるが、それらはsetTransfromMotion()メソッド
+ * モードもあるが、それらはsetTransfromer()メソッド
  * を用いて指定することになる。
  */
-export type TransformMotionMode =
+export type TransformMode =
   | "Default"
   | "Interpolation"
   | "Billboard"
@@ -62,13 +61,13 @@ export class ObjectA3 {
   object: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
-  transformMotion: TransformMotion;
+  transformer: Transforer;
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
 
   constructor(data?: any) {
-    this.transformMotion = this.initTransformMotion(data);
+    this.transformer = this.initTransformer(data);
     this.object = new THREE.Object3D();
     const r = this.initObject(data);
     if (r)
@@ -79,74 +78,74 @@ export class ObjectA3 {
   }
 
   // 非同期でないと無理な場合などはとりあえず
-  // 以下のように読み込み中を表すa3jsLoadingを
+  // 以下のように読み込み中を表すa3jsLoadingのcloneを
   // 返しておいて、後でa3jsLoadingを削除して
   // this.objectにaddすればOK。
   initObject(_data?: any): THREE.Object3D {
-    return a3jsLoading;
+    return a3jsLoading.clone();
   };
 
   /**
    * このObjectA3のコンストラクタから呼び出され、デフォルトで
-   * 使用されるTransformMotionの配列を返す。
+   * 使用されるTransformerの配列を返す。
    * このメソッドをオーバーライドすることでデフォルトの
-   * TransformMotionを変更することが可能。
+   * Transformerを変更することが可能。
    * @param _data コンストラクタから渡された情報
-   * @returns このObjectA3で使用されるTransformMotionの配列
+   * @returns このObjectA3で使用されるTransformerの配列
    */
-  initTransformMotion(_data?: any): TransformMotion {
-    return new DefaultTransformMotion();
+  initTransformer(_data?: any): Transforer {
+    return new DefaultTransformer();
   }
 
   /**
-   * ObjectA3生成後に使用されるTransformMotionを変更する。
-   * @param transformMotion 新しいTransformMotion
+   * ObjectA3生成後に使用されるTransformerを変更する。
+   * @param transformer 新しいTransformer
    */
-  setTransformMotion(transformMotion: TransformMotion): void {
-    tmp.t0.set(this.transformMotion.trans);
-    transformMotion.init(tmp.t0, this);
-    this.transformMotion = transformMotion;
+  setTransformer(transformer: Transforer): void {
+    tmp.t0.set(this.transformer.trans);
+    transformer.init(tmp.t0, this);
+    this.transformer = transformer;
   }
 
   /**
-   * ObjectA3に現在設定されているTransformMotionを返す。
-   * @return 現在のTransformMotion
+   * ObjectA3に現在設定されているTransformerを返す。
+   * @return 現在のTransformer
    */
-  getTransformMotion(): TransformMotion {
-    return this.transformMotion;
+  getTransformer(): Transforer {
+    return this.transformer;
   }
 
-  setTransformMotionMode(mode: TransformMotionMode,option?: any) {
+  setTransformMode(mode: TransformMode,option?: any) {
     if (mode === "Default")
-      this.setTransformMotion(new DefaultTransformMotion());
+      this.setTransformer(new DefaultTransformer());
     else if (mode === "Interpolation")
-      this.setTransformMotion(new InterpolationTransformMotion());
+      this.setTransformer(new InterpolationTransformer());
     else if (mode === "Billboard")
-      this.setTransformMotion(new BillboardTransformMotion(option));
+      this.setTransformer(new BillboardTransformer(option));
     else if (mode === "InterpolationBillboard")
-      this.setTransformMotion(new InterpolationBillboardTransformMotion(option));
+      this.setTransformer(new InterpolationBillboardTransformer(option));
     else if (mode === "SimplePhysics") {
       const opt = {
         ...defaultPhysicsMotionOption,
         ...option
       };
-      this.setTransformMotion(new RapierTransformMotion(opt));
+      this.setTransformer(new RapierTransformer(opt));
     }
   }
 
-  // setTransformMotionModeでも同じことできるけど。。。
+  // setTransformModeでも同じことできるけど。。。
   initSimplePhysics(option: PhysicsMotionOption) {
     const opt = {
       ...defaultPhysicsMotionOption,
       ...option
     };
-    this.setTransformMotion(new RapierTransformMotion(opt));
+    this.setTransformer(new RapierTransformer(opt));
   }
   
   update(dt: number) {
     //TransformMosionを反映
-    this.transformMotion.update(dt);
-    this.transformMotion.trans.write(this);
+    this.transformer.update(dt);
+    this.transformer.trans.write(this);
     this.children.forEach((child)=>{
       child.update(dt);
     });
@@ -203,7 +202,7 @@ export class ObjectA3 {
   }
 
   get trans(): Transform {
-    return this.transformMotion.trans.clone();
+    return this.transformer.trans.clone();
   }
 
   get loc(): Vec3 { return this.trans.loc; }
@@ -215,7 +214,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setLocation(tmp.v0);
+    this.transformer.setLocation(tmp.v0);
   }
 
   setLocationNow(x: number, y: number, z: number): void;
@@ -226,7 +225,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setLocationNow(tmp.v0);
+    this.transformer.setLocationNow(tmp.v0);
   }
 
   get quat(): Quat { return this.trans.quat; }
@@ -238,7 +237,7 @@ export class ObjectA3 {
     } else {
       tmp.q0.set(xOrQ);
     }
-    this.transformMotion.setQuat(tmp.q0);
+    this.transformer.setQuat(tmp.q0);
   }
 
   setQuatNow(x: number, y: number, z: number, w: number): void;
@@ -249,7 +248,7 @@ export class ObjectA3 {
     } else {
       tmp.q0.set(xOrQ);
     }
-    this.transformMotion.setQuatNow(tmp.q0);
+    this.transformer.setQuatNow(tmp.q0);
   }
 
   get scale(): Vec3 { return this.trans.scale; }
@@ -261,7 +260,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setScale(tmp.v0);
+    this.transformer.setScale(tmp.v0);
   }
 
   setScaleNow(x: number, y: number, z: number): void;
@@ -272,7 +271,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setScaleNow(tmp.v0);
+    this.transformer.setScaleNow(tmp.v0);
   }
 
   /**
@@ -597,7 +596,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setLinvel(tmp.v0);
+    this.transformer.setLinvel(tmp.v0);
   }
 
   setAngvel(v: Vec3): void;
@@ -608,11 +607,11 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.setAngvel(tmp.v0);
+    this.transformer.setAngvel(tmp.v0);
   }
 
   resetForce(): void {
-    this.transformMotion.resetForce();
+    this.transformer.resetForce();
   }
   addForce(v: Vec3): void;
   addForce(x: number, y: number, z: number): void;
@@ -622,7 +621,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.addForce(tmp.v0);
+    this.transformer.addForce(tmp.v0);
   }
 
   addForceAtPoint(f: Vec3, p: Vec3): void;
@@ -645,11 +644,11 @@ export class ObjectA3 {
         tmp.v1.set(pOrFy);
       }
     }
-    this.transformMotion.addForceAtPoint(tmp.v0,tmp.v1);
+    this.transformer.addForceAtPoint(tmp.v0,tmp.v1);
   }
 
   resetTorque(): void {
-    this.transformMotion.resetTorque();
+    this.transformer.resetTorque();
   }
   addTorque(v: Vec3): void;
   addTorque(x: number, y: number, z: number): void;
@@ -659,7 +658,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.addTorque(tmp.v0);
+    this.transformer.addTorque(tmp.v0);
   }
 
   applyImpulse(v: Vec3): void;
@@ -670,7 +669,7 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.applyImpulse(tmp.v0);
+    this.transformer.applyImpulse(tmp.v0);
   }
 
   applyImpulseAtPoint(i: Vec3, p: Vec3): void;
@@ -693,7 +692,7 @@ export class ObjectA3 {
         tmp.v1.set(pOrFy);
       }
     }
-    this.transformMotion.applyImpulseAtPoint(tmp.v0,tmp.v1);
+    this.transformer.applyImpulseAtPoint(tmp.v0,tmp.v1);
   }
 
   applyTorqueImpulse(v: Vec3): void;
@@ -704,25 +703,18 @@ export class ObjectA3 {
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformMotion.applyTorqueImpulse(tmp.v0);
+    this.transformer.applyTorqueImpulse(tmp.v0);
   }
 
   /**
-   * TransformMotionがCharactorTransformMotionに設定されている
-   * 時だけ他のオブジェクトを考慮して現在接地していうかどうかを
+   * TransformerがCharactorTransformerなどの場合だけ
+   * 他のオブジェクトを考慮して現在接地していうかどうかを
    * 判定してくれる。それ以外の時は、Y座標が0以下の時接地している
-   * と判定する。
+   * と判定するのが普通。
    * @returns 接地してるかどうか
    */
   isGrounded(): boolean {
-    if (this.transformMotion instanceof CharactorTransformMotion) {
-      return this.transformMotion.isGrounded();
-    } else {
-      if (this.loc.y<=0)
-        return true;
-      else
-        return false;
-    }
+    return this.transformer.isGrounded();
   }
 }
 
@@ -760,31 +752,31 @@ class BalloonInfo {
  * 
  * ObjectA3に各種方法で登録されることで、そのObjectA3の
  * 移動などに関する処理に影響を与える。ObjectA3に登録することが
- * できるTransformMotionは必ず一つである。
+ * できるTransformerは必ず一つである。
  * 
  * このインタフェースにはsetLocation()やsetQuat()などの外部の
  * プログラムから位置や回転を指定す要求を受け付けるメソッドが
  * あるが、これらは必ずしも要求に応答しなければならないという
- * わけではない。例えばInterpolationTransformMotionでは、移動が
+ * わけではない。例えばInterpolationTransformerでは、移動が
  * 目視できるように1秒ほど時間をかけて移動するし、物理系の
- * TransformMotionの場合は、基本的に要求を無視して物理法則通りに
+ * Transformerの場合は、基本的に要求を無視して物理法則通りに
  * 移動させるというのが正解の場合もある。ただし、setLocationNow()や
  * setQuatNow()のようにメソッドの最後にNowが付いている物については
  * 可能なかぎり要求に即座に答えなければならない。
  * 
- * このTransformMotionを実装することでInterpolateTransformMotion、
- * BillboardTransformMotion、CharactorTransformMotionなどが作られる。
+ * このTransformerを実装することでInterpolateTransformer、
+ * BillboardTransformer、CharactorTransformerなどが作られる。
  */
-export interface TransformMotion {
+export interface Transforer {
   /**
-   * このTransformMotionが管理している位置、回転、拡大・縮小率。
+   * このTransformerが管理している位置、回転、拡大・縮小率。
    * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
    * ならない。
    */
   trans: Transform;
 
   /**
-   * このTransformMotionの動作に必要な初期化処理を実装する
+   * このTransformerの動作に必要な初期化処理を実装する
    * メソッド。引数にコントロール対象のa3.ObjectA3(中に
    * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
    * それをスキャンして情報を得ることは許可されるが、変更を
@@ -807,12 +799,21 @@ export interface TransformMotion {
   addOneselfToPhysics(world: PhysicsWorld): void;
 
   /**
-   * このTransformMotionが不必要となった時に、PhysicsWorldに
+   * このTransformerが不必要となった時に、PhysicsWorldに
    * 登録していたRigidBodyやColliderを、登録解除する
    * 処理を行うメソッド。
    * @param world 解除対象のPhysicsWorld
    */
   removeOneselfFromPhysics(world: PhysicsWorld): void;
+
+  /**
+   * このTransformerがコントロールする3Dオブジェクトが
+   * 地面に接地しているかどうかを返す。実際には
+   * CharactorTransformerのようなTransfomerだけが意味の
+   * ある応答が可能だが、それ以外の場合は
+   * 「return this.trans.loc.y <= 0;」で良し。
+   */
+  isGrounded(): boolean;
 
   /**
    * 指定の場所に移動せよとの外部からの要求を受け付ける
@@ -863,7 +864,7 @@ export interface TransformMotion {
   setScaleNow(scale: Vec3): void;
 
   /**
-   * 速度を設定する。物理系のTransformMotionのみ対応すれば
+   * 速度を設定する。物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param vel 速度。
    */
@@ -871,7 +872,7 @@ export interface TransformMotion {
 
   /**
    * 角速度を設定する。単位はラジアン/秒。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @aram angvel 角速度
    */
@@ -879,14 +880,14 @@ export interface TransformMotion {
 
   /**
    * addForceで加えられた力をリセットする。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    */
   resetForce(): void;
 
   /**
    * 力を設定する。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param f 力
    */
@@ -894,7 +895,7 @@ export interface TransformMotion {
 
   /**
    * 力点を指定して力を設定する。力点は世界座標での座標。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param f 力
    * @param p 力点
@@ -903,14 +904,14 @@ export interface TransformMotion {
 
   /**
    * addTorqueで加えられたトルクをリセットする。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    */
   resetTorque(): void;
 
   /**
    * トルク(回転力)を設定する。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param t トルク
    */
@@ -918,7 +919,7 @@ export interface TransformMotion {
 
   /**
    * 一瞬、力を設定する。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param i インパルス
    */
@@ -926,7 +927,7 @@ export interface TransformMotion {
 
   /**
    * 力点を指定して、一瞬、力を設定する。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param i インパルス
    * @param p 力点
@@ -935,7 +936,7 @@ export interface TransformMotion {
 
   /**
    * 一瞬、トルクを設定する。
-   * 物理系のTransformMotionのみ対応すれば
+   * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    */
   applyTorqueImpulse(ti: Vec3): void;
