@@ -221,7 +221,7 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
 
 
 
-type Morph = {
+export type Morph = {
   name: string,
   vals: number[]
 }

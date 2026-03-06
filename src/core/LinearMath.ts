@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 
-interface MutableVec3 {
+export interface MutableVec3 {
     x: number;
     y: number;
     z: number;
@@ -9,7 +9,7 @@ interface MutableVec3 {
 
 type Arg1Vec3 = number | Vec3 | MutableVec3;
 
-interface MutableQuat {
+export interface MutableQuat {
     x: number;
     y: number;
     z: number;

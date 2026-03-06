@@ -6,7 +6,7 @@ export { Camera } from './core/Camera';
 export { ObjectA3 } from './core/ObjectA3';
 export type { Dir, Transforer, TransformMode } from './core/ObjectA3';
 export { ActionObject } from './core/ActionObject';
-export type { Motion, Pose } from './core/ActionObject';
+export type { Action, Shape, Motion, Pose, Morph } from './core/ActionObject';
 export { DefaultTransformer, FixedTransformer } from './core/Transformers';
 export { ClipMotion } from './three/ClipMotion';
 export { ControllerBase, OrbitController, FollowAvatarController, AvatarController } from './core/Controller';
@@ -24,7 +24,8 @@ export { Sphere } from './three/Sphere';
 export { StandardLights } from './three/StandardLights';
 export { Image } from './three/Image';
 export { HTML } from './three/HTML';
-export { GameCanvas } from './core/GameCanvas';
+export { GameCanvas, defaultGameCanvasOption } from './core/GameCanvas';
+export type { GameCanvasOption } from './core/GameCanvas';
 export type { View, ViewBase } from './core/View';
 export type { PhysicsEngine,
               PhysicsWorld,
@@ -34,12 +35,14 @@ export type { PhysicsEngine,
               MeshColliderKind,
               RigidBodyType,
               Collision } from './core/Physics';
-export { initPhysics, RapierPhysicsEngine, collisionMap } from './rapier/RapierPhysics';
+export { initPhysics, RapierPhysicsEngine, collisionMap, RapierPhysicsWorld } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOption } from './rapier/RapierPhysics';
-export { CharactorTransformer } from './rapier/CharactorTransformer';
-export { CarControl as CarMotion } from './rapier/CarControl';
+export { CharactorTransformer, defaultCharactorTransOption } from './rapier/CharactorTransformer';
+export type { CharactorTransOption } from './rapier/CharactorTransformer';
+export { CarControl, CarTransformer, CarMotion, defaultCarControlOption } from './rapier/CarControl';
+export type { CarControlOption } from './rapier/CarControl';
 export { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';
-export type { RotationOrder } from './core/LinearMath';
+export type { RotationOrder, MutableVec3, MutableQuat } from './core/LinearMath';
 export { GeneralCamera } from './core/GeneralCamera';
 export type { AsyncInitRequired } from './core/AsyncInitRequired';
 export { asyncSleep, deepMerge } from './utils/math';
