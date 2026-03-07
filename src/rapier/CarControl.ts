@@ -10,6 +10,9 @@ import type { Motion, Pose } from '../core/ActionObject';
 /*
  * タイヤの順番なんだけど、混乱しないように書いておくと、
  * FL(0),FR(1),RL(2),RR(3)という順番で統一する。
+ * あと、CarMotionは、シャーシとして表示する3Dメッシュが、
+ * その原点がシャーシの直方体の底の中心が原点となるように
+ * 調整してPose情報を生成する。
  */
 
 export interface CarControlOption {
@@ -47,6 +50,14 @@ export interface CarControlOption {
   wheelFRSuspensionStiffness: number;
   wheelRLSuspensionStiffness: number;
   wheelRRSuspensionStiffness: number;
+  wheelFLSuspensionCompression: number;
+  wheelFRSuspensionCompression: number;
+  wheelRLSuspensionCompression: number;
+  wheelRRSuspensionCompression: number;
+  wheelFLSuspensionRelaxation: number;
+  wheelFRSuspensionRelaxation: number;
+  wheelRLSuspensionRelaxation: number;
+  wheelRRSuspensionRelaxation: number;
   wheelFLWheelFrictionSlip: number;
   wheelFRWheelFrictionSlip: number;
   wheelRLWheelFrictionSlip: number;
@@ -88,6 +99,14 @@ export const defaultCarControlOption = {
   wheelFRSuspensionStiffness: 24.0,
   wheelRLSuspensionStiffness: 24.0,
   wheelRRSuspensionStiffness: 24.0,
+  wheelFLSuspensionCompression: 4.0,
+  wheelFRSuspensionCompression: 4.0,
+  wheelRLSuspensionCompression: 4.0,
+  wheelRRSuspensionCompression: 4.0,
+  wheelFLSuspensionRelaxation: 3.0,
+  wheelFRSuspensionRelaxation: 3.0,
+  wheelRLSuspensionRelaxation: 3.0,
+  wheelRRSuspensionRelaxation: 3.0,
   wheelFLWheelFrictionSlip: 1000.0,
   wheelFRWheelFrictionSlip: 1000.0,
   wheelRLWheelFrictionSlip: 1000.0,
@@ -133,10 +152,16 @@ export class CarControl {
     }
   }
 
-  reset() {
+  reset(loc?: Vec3, quat?: Quat) {
     if (this.trans.chassisBody) {
-      this.trans.chassisBody.setTranslation(this.opt.defaultLocation,true);
-      this.trans.chassisBody.setRotation(this.opt.defaultQuat,true);
+      if (loc)
+        this.trans.chassisBody.setTranslation({x:loc.x, y:loc.y,z:loc.z},true);
+      else
+        this.trans.chassisBody.setTranslation(this.opt.defaultLocation,true);
+      if (quat)
+        this.trans.chassisBody.setRotation({x:quat.x,y:quat.y,z:quat.z,w:quat.w},true);
+      else
+        this.trans.chassisBody.setRotation(this.opt.defaultQuat,true);
       this.trans.chassisBody.setLinvel({x:0,y:0,z:0},true);
       this.trans.chassisBody.setAngvel({x:0,y:0,z:0},true);
     }
@@ -193,6 +218,8 @@ export class CarTransformer implements Transforer {
         this.cm.opt.wheelFLRadius
       );
       this.controller.setWheelSuspensionStiffness(0,this.cm.opt.wheelFLSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(0,this.cm.opt.wheelFLSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(0,this.cm.opt.wheelFLSuspensionRelaxation);
       this.controller.setWheelFrictionSlip(0,this.cm.opt.wheelFLWheelFrictionSlip);
       // 右の前輪
       this.controller.addWheel(
@@ -203,6 +230,8 @@ export class CarTransformer implements Transforer {
         this.cm.opt.wheelFRRadius
       );
       this.controller.setWheelSuspensionStiffness(1,this.cm.opt.wheelFRSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(1,this.cm.opt.wheelFRSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(1,this.cm.opt.wheelFRSuspensionRelaxation);
       this.controller.setWheelFrictionSlip(1,this.cm.opt.wheelFRWheelFrictionSlip);
       // 左の後輪
       this.controller.addWheel(
@@ -213,6 +242,8 @@ export class CarTransformer implements Transforer {
         this.cm.opt.wheelRLRadius
       );
       this.controller.setWheelSuspensionStiffness(2,this.cm.opt.wheelRLSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(2,this.cm.opt.wheelRLSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(2,this.cm.opt.wheelRLSuspensionRelaxation);
       this.controller.setWheelFrictionSlip(2,this.cm.opt.wheelRLWheelFrictionSlip);
       // 右の後輪
       this.controller.addWheel(
@@ -223,6 +254,8 @@ export class CarTransformer implements Transforer {
         this.cm.opt.wheelRRRadius
       );
       this.controller.setWheelSuspensionStiffness(3,this.cm.opt.wheelRRSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(3,this.cm.opt.wheelRRSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(3,this.cm.opt.wheelRRSuspensionRelaxation);
       this.controller.setWheelFrictionSlip(3,this.cm.opt.wheelRRWheelFrictionSlip);
     }
   }
@@ -299,6 +332,7 @@ export class CarMotion implements Motion {
     const rootQuatInv = rootQuat.clone().conjugate();
     // シャーシ
     const chassisLoc = new Vec3(this.cm.trans.chassisBody.translation());
+    chassisLoc.sub(0,this.cm.opt.chassisHeight/2,0);
     chassisLoc.sub(rootLoc);
     const chassisQuat = new Quat(this.cm.trans.chassisBody.rotation());
     chassisQuat.mul(rootQuatInv);

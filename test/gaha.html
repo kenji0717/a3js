@@ -20,6 +20,7 @@
     </script>
     <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.29/+esm" -->
     <script type="module">
+import * as THREE from 'three';
 import * as a3 from 'a3js';
 
 const stk_kart = {
@@ -27,29 +28,40 @@ const stk_kart = {
   chassisWidth: 0.7,
   chassisHeight: 0.5,
   chassisLength: 1.5,
-  wheelFLPosition: {x:  0.3, y: 0.0,  z:  0.3 },
-  wheelFRPosition: {x: -0.3, y: 0.0,  z:  0.3 },
-  wheelRLPosition: {x:  0.3, y: 0.0, z: -0.35 },
-  wheelRRPosition: {x: -0.3, y: 0.0, z: -0.35 },
-  wheelFLRadius: 0.15,
-  wheelFRRadius: 0.15,
-  wheelRLRadius: 0.2,
-  wheelRRRadius: 0.2,
-  wheelFLWidth: 0.15,
-  wheelFRWidth: 0.15,
-  wheelRLWidth: 0.2,
-  wheelRRWidth: 0.2,
-  wheelFLSuspensionRestLength: 0.3,
-  wheelFRSuspensionRestLength: 0.3,
+  wheelFLPosition: {x:  0.30, y: -0.15,  z:  0.40 },
+  wheelFRPosition: {x: -0.30, y: -0.15,  z:  0.40 },
+  wheelRLPosition: {x:  0.35, y: -0.10,   z: -0.35 },
+  wheelRRPosition: {x: -0.35, y: -0.10,   z: -0.35 },
+  wheelFLRadius: 0.1,
+  wheelFRRadius: 0.1,
+  wheelRLRadius: 0.15,
+  wheelRRRadius: 0.15,
+  wheelFLWidth: 0.19,
+  wheelFRWidth: 0.19,
+  wheelRLWidth: 0.24,
+  wheelRRWidth: 0.24,
+  wheelFLSuspensionRestLength: 0.32,
+  wheelFRSuspensionRestLength: 0.32,
   wheelRLSuspensionRestLength: 0.3,
   wheelRRSuspensionRestLength: 0.3,
   wheelFLSuspensionStiffness: 20.0,
   wheelFRSuspensionStiffness: 20.0,
-  wheelRLSuspensionStiffness: 20.0,
-  wheelRRSuspensionStiffness: 20.0
+  wheelRLSuspensionStiffness: 25.0,
+  wheelRRSuspensionStiffness: 25.0,
+  wheelFLSuspensionCompression: 4.0,
+  wheelFRSuspensionCompression: 4.0,
+  wheelRLSuspensionCompression: 4.0,
+  wheelRRSuspensionCompression: 4.0,
+  wheelFLSuspensionRelaxation: 10.0,
+  wheelFRSuspensionRelaxation: 10.0,
+  wheelRLSuspensionRelaxation: 10.0,
+  wheelRRSuspensionRelaxation: 10.0
 };
 
 await a3.initPhysics();
+//const oc = new THREE.OrthographicCamera(-2,2,1,-1,0.1,1000);
+//const gc = new a3.GeneralCamera(oc);
+//const view = new a3.Window(600,300,{camera:gc});
 //const view = new a3.GameCanvas();
 const view = new a3.GameCanvas({touchDevice:true});
 view.scene.rapierDebug(true);
@@ -68,14 +80,22 @@ obj.setTransformer(cc.trans);
 obj.getAction('default').motion = cc.motion;
 obj.setState('default');
 view.scene.add(obj);
+cc.reset(new a3.Vec3(0,0.5,0));
 
 view.scene.setAvatar(obj);
-view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:0}}));
+view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:-1}}));
+//view.setController(new a3.FollowAvatarController({offset:{x:0,y:1.5,z:-3}}));
 
 while (true) {
   await view.waitForRender();
-  cc.accelerator(view.leftJoystick.y*150);
-  cc.handle(-view.leftJoystick.x*0.2);
+  cc.handle(-view.leftJoystick.x*0.1);
+  cc.accelerator(view.leftJoystick.y*100);
+  if (view.leftButton)
+    cc.brake(100000);
+  else
+    cc.brake(0);
+  if (view.rightButton)
+    cc.reset(obj.loc);
 }
 
     </script>
