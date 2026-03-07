@@ -12,15 +12,22 @@ import { tmp } from '../utils/math';
 import { regenerateGLTFLoader } from './GLTF';
 
 export interface CanvasOption {
-  camera?: THREE.Camera;
-  antialias?: boolean;
-  transparent?: boolean;
+  camera: GeneralCamera | undefined;
+  antialias: boolean;
+  transparent: boolean;
 }
+
+export const defaultCanvasOption: CanvasOption = {
+  camera: undefined,
+  antialias: false,
+  transparent: false
+};
 
 /**
  * HTMLのエレメント(a3-canvas)として使えるView。
  */
 export class Canvas extends HTMLElement implements View {
+  option: CanvasOption;
   private ro?: ResizeObserver;
   base: ViewBase;
   renderer;
@@ -33,7 +40,7 @@ export class Canvas extends HTMLElement implements View {
   private _canvas: HTMLCanvasElement;
   private _css2DCanvas: HTMLElement;
   
-  constructor(opt?: CanvasOption) {
+  constructor(option?: Partial<CanvasOption>) {
     super();
 
     // ########## WebComponent関係のセットアップ ##########
@@ -63,24 +70,33 @@ export class Canvas extends HTMLElement implements View {
   <slot></slog>
 `;
 
-    if (!opt) opt = {};
-    if (!opt.camera) opt.camera = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
-    this.camera3js = opt.camera;
-    const camera = new GeneralCamera(opt.camera);
-    this.base = new ViewBase(camera);
+    this.option = {
+      ...defaultCanvasOption,
+      ...option
+    };
+    if (this.option.camera) {
+      this.camera3js = this.option.camera.camera;
+      this.camera = this.option.camera;
+    } else {
+      const camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
+      camera3js.aspect = 300 / 150;
+      this.camera3js = camera3js;
+      this.camera = new GeneralCamera(this.camera3js);
+    }
+    this.base = new ViewBase(this.camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
     this.timer.connect(document);
     const o = {
-      antialias: (opt.antialias?opt.antialias:false),
-      alpha: (opt.transparent?opt.transparent:false)
+      antialias: this.option.antialias,
+      alpha: this.option.transparent
     };
     this.renderer = new THREE.WebGLRenderer(o);
     regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(600,300);
-    if ('opaque' in opt) this.renderer.setClearAlpha(0);
+    //if ('opaque' in opt) this.renderer.setClearAlpha(0);
     this._canvas = this.renderer.domElement;
     this._canvas.width = 600;
     this._canvas.height = 300;
@@ -121,6 +137,8 @@ export class Canvas extends HTMLElement implements View {
         this._canvas.height = h;
         if (isPerspectiveCamera(this.camera3js)) {
           this.camera3js.aspect = w / h;
+          this.camera3js.updateProjectionMatrix();
+        } else if (isOrthographicCamera(this.camera3js)) {
           this.camera3js.updateProjectionMatrix();
         }
         this.renderer.setSize(w, h);
@@ -253,4 +271,8 @@ customElements.define("canvas-a3", Canvas);
 // TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
 function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {
   return (obj as any).isPerspectiveCamera === true;
+}
+// TypeScriptにobjがOrthographicCameraであることを教えてあげる関数。
+function isOrthographicCamera(obj: THREE.Camera): obj is THREE.OrthographicCamera {
+  return (obj as any).isOrthographicCamera === true;
 }

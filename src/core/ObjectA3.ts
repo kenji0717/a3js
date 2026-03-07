@@ -143,6 +143,9 @@ export class ObjectA3 {
   }
   
   update(dt: number) {
+//console.log(`GAHA:a `,this.transformer.trans.loc);
+//console.log(`GAHA:f `,this.transformer.trans.quat);
+//console.log(`GAHA:g `,(this.transformer instanceof DefaultTransformer));
     //TransformMosionを反映
     this.transformer.update(dt);
     this.transformer.trans.write(this);

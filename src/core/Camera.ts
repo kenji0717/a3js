@@ -30,8 +30,14 @@ export abstract class Camera extends ObjectA3 {
     this.controller = controller;
   }
 
-  setLocation(x: number, y: number, z: number): void;
+  /**
+   * カメラの位置指定は最終的にはカメラに設定されている
+   * コントローラ(Controller)が決めるので、設定されている
+   * コントローラによって挙動が異なる。
+   * @param v 座標
+   */
   setLocation(v: Vec3): void;
+  setLocation(x: number, y: number, z: number): void;
   setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
     const v = new Vec3();
     if (typeof xOrV === 'number') {
@@ -41,12 +47,86 @@ export abstract class Camera extends ObjectA3 {
       super.setLocation(xOrV);
       v.set(xOrV);
     }
-    this.controller?.setCameraLocation(v);
+    if (this.controller)
+      this.controller.setCameraLocation(v);
+    else
+      super.setLocation(v);
   }
 
-  lookAt(x: number, y: number, z: number): void;
+  /**
+   * カメラの位置指定は最終的にはカメラに設定されている
+   * コントローラ(Controller)が決めるので、設定されている
+   * コントローラによって挙動が異なる。
+   * @param v 座標
+   */
+  setLocationNow(v: Vec3): void;
+  setLocationNow(x: number, y: number, z: number): void;
+  setLocationNow(xOrV: number | Vec3, y?: number, z?: number): void {
+    const v = new Vec3();
+    if (typeof xOrV === 'number') {
+      super.setLocation(xOrV,y!,z!);
+      v.set(xOrV,y!,z!);
+    } else {
+      super.setLocation(xOrV);
+      v.set(xOrV);
+    }
+    if (this.controller)
+      this.controller.setCameraLocationNow(v);
+    else
+      super.setLocationNow(v);
+  }
+
+  /**
+   * カメラの回転指定は最終的にはカメラに設定されている
+   * コントローラ(Controller)が決めるので、設定されている
+   * コントローラによって挙動が異なる。
+   * @param q 回転
+   */
+  setQuat(q: Quat): void;
+  setQuat(x: number, y: number, z: number, w: number): void;
+  setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+    const q = new Quat();
+    if (typeof xOrQ === "number") {
+      q.set(xOrQ, y!, z!, w!);
+    } else {
+      q.set(xOrQ);
+    }
+    if (this.controller)
+      this.controller.setCameraQuat(q);
+    else
+      this.transformer.setQuat(q);
+  }
+
+  /**
+   * カメラの回転指定は最終的にはカメラに設定されている
+   * コントローラ(Controller)が決めるので、設定されている
+   * コントローラによって挙動が異なる。
+   * @param q 回転
+   */
+  setQuatNow(q: Quat): void;
+  setQuatNow(x: number, y: number, z: number, w: number): void;
+  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+    const q = new Quat();
+    if (typeof xOrQ === "number") {
+      q.set(xOrQ, y!, z!, w!);
+    } else {
+      q.set(xOrQ);
+    }
+    if (this.controller)
+      this.controller.setCameraQuatNow(q);
+    else
+      this.transformer.setQuatNow(q);
+  }
+
+
+  /**
+   * カメラのlookAtは通常のObjectA3のlookAtと異なり、
+   * Z軸の負の方向を正面として処理される。
+   * @param v ターゲットの座標
+   */
   lookAt(v: Vec3): void;
   lookAt(o: ObjectA3): void;
+  lookAt(x: number, y: number, z: number): void;
   lookAt(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();
     if (typeof xVO === "number") {
@@ -62,9 +142,14 @@ export abstract class Camera extends ObjectA3 {
     this.setQuat(newQuat);
   }
 
-  lookAtNow(x: number, y: number, z: number): void;
+  /**
+   * カメラのlookAtNowは通常のObjectA3のlookAtNowと異なり、
+   * Z軸の負の方向を正面として処理される。
+   * @param v ターゲットの座標
+   */
   lookAtNow(v: Vec3): void;
   lookAtNow(o: ObjectA3): void;
+  lookAtNow(x: number, y: number, z: number): void;
   lookAtNow(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();
     if (typeof xVO === "number") {

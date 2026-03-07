@@ -14,8 +14,13 @@ import { regenerateGLTFLoader } from './GLTF';
 export interface WindowOption {
   width: number;
   height: number;
-  top: number;
-  left: number;
+  camera: GeneralCamera | undefined;
+}
+
+export const defaultWindowOption: WindowOption = {
+  width: 600,
+  height: 300,
+  camera: undefined
 }
 
 //type ResizeDir = "" | "n" | "s" | "e" | "w" | "ne" | "sw" | "nw" | "se";
@@ -40,18 +45,23 @@ export class Window extends HTMLElement implements View {
   private _closeBtn: HTMLElement | null = null;
   // ########## WebComponent関係のセットアップ終り ##########
 
+  option: WindowOption;
   base: ViewBase;
   renderer;
   css2DRenderer: CSS2DRenderer;
   scene: Scene;
   camera: Camera;
   controller: Controller;
-  camera3js: THREE.PerspectiveCamera;
+  camera3js: THREE.Camera;
   timer: THREE.Timer;
 
-  constructor(width=600, height=300) {
+  constructor(width=600, height=300, option: Partial<WindowOption> = {}) {
     super();
-
+    this.option = {
+      ...defaultWindowOption,
+      ...option,
+      ...{width,height}
+    };
     // ########## WebComponent関係のセットアップ ##########
     this.attachShadow({ mode: "open" });
     this.shadowRoot!.innerHTML = `
@@ -103,10 +113,16 @@ export class Window extends HTMLElement implements View {
     // ########## WebComponent関係のセットアップ終り ##########
 
     // ここからようやく3D関係
-    this.camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
-    this.camera3js.aspect = width / height;
-    const camera = new GeneralCamera(this.camera3js);
-    this.base = new ViewBase(camera);
+    if (this.option.camera) {
+      this.camera3js = this.option.camera.camera;
+      this.camera = this.option.camera;
+    } else {
+      const camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
+      camera3js.aspect = width / height;
+      this.camera3js = camera3js;
+      this.camera = new GeneralCamera(this.camera3js);
+    }
+    this.base = new ViewBase(this.camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
@@ -181,8 +197,12 @@ export class Window extends HTMLElement implements View {
     if (this._canvas.width !== w || this._canvas.height !== h) {
       this._canvas.width  = w;
       this._canvas.height = h;
-      this.camera3js.aspect = w / h;
-      this.camera3js.updateProjectionMatrix();
+      if (isPerspectiveCamera(this.camera3js)) {
+        this.camera3js.aspect = w / h;
+        this.camera3js.updateProjectionMatrix();
+      } else if (isOrthographicCamera(this.camera3js)) {
+        this.camera3js.updateProjectionMatrix();
+      }
       this.renderer.setSize(w, h);
       //-----
       this.css2DRenderer.setSize(w, h);
@@ -428,3 +448,12 @@ export class Window extends HTMLElement implements View {
 }
 
 customElements.define("window-a3", Window);
+
+// TypeScriptにobjがPerspectiveCameraであることを教えてあげる関数。
+function isPerspectiveCamera(obj: THREE.Camera): obj is THREE.PerspectiveCamera {
+  return (obj as any).isPerspectiveCamera === true;
+}
+// TypeScriptにobjがOrthographicCameraであることを教えてあげる関数。
+function isOrthographicCamera(obj: THREE.Camera): obj is THREE.OrthographicCamera {
+  return (obj as any).isOrthographicCamera === true;
+}

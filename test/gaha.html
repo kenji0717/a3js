@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>gaha</title>
+  </head>
+  <body>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+         "meshoptimizer": "https://unpkg.com/meshoptimizer@1.0.1/meshopt_decoder.module.js",
+         "a3js": "../dist/a3js.es.js"
+       }
+     }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.29/+esm" -->
+    <script type="module">
+import * as a3 from 'a3js';
+
+const stk_kart = {
+  mass: 100.0,
+  chassisWidth: 0.7,
+  chassisHeight: 0.5,
+  chassisLength: 1.5,
+  wheelFLPosition: {x:  0.3, y: 0.0,  z:  0.3 },
+  wheelFRPosition: {x: -0.3, y: 0.0,  z:  0.3 },
+  wheelRLPosition: {x:  0.3, y: 0.0, z: -0.35 },
+  wheelRRPosition: {x: -0.3, y: 0.0, z: -0.35 },
+  wheelFLRadius: 0.15,
+  wheelFRRadius: 0.15,
+  wheelRLRadius: 0.2,
+  wheelRRRadius: 0.2,
+  wheelFLWidth: 0.15,
+  wheelFRWidth: 0.15,
+  wheelRLWidth: 0.2,
+  wheelRRWidth: 0.2,
+  wheelFLSuspensionRestLength: 0.3,
+  wheelFRSuspensionRestLength: 0.3,
+  wheelRLSuspensionRestLength: 0.3,
+  wheelRRSuspensionRestLength: 0.3,
+  wheelFLSuspensionStiffness: 20.0,
+  wheelFRSuspensionStiffness: 20.0,
+  wheelRLSuspensionStiffness: 20.0,
+  wheelRRSuspensionStiffness: 20.0
+};
+
+await a3.initPhysics();
+//const view = new a3.GameCanvas();
+const view = new a3.GameCanvas({touchDevice:true});
+view.scene.rapierDebug(true);
+document.body.appendChild(view);
+view.camera.setHeadLightEnable(false);
+const lights = new a3.StandardLights();
+lights.setLocation(100,100,100);
+view.scene.add(lights);
+const ground = await new a3.Acerola3D('./assets/A3/supertuxkart/tracks/city/stk_city.a3').ready;
+ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody:'fixed'});
+view.scene.add(ground);
+
+const obj = await new a3.Acerola3D('./assets/A3/supertuxkart/karts/tux/stk_tux.a3').ready;
+const cc = new a3.CarControl(stk_kart);
+obj.setTransformer(cc.trans);
+obj.getAction('default').motion = cc.motion;
+obj.setState('default');
+view.scene.add(obj);
+
+view.scene.setAvatar(obj);
+view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:0}}));
+
+while (true) {
+  await view.waitForRender();
+  cc.accelerator(view.leftJoystick.y*150);
+  cc.handle(-view.leftJoystick.x*0.2);
+}
+
+    </script>
+  </body>
+</html>

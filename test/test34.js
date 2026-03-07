@@ -1,4 +1,4 @@
-// CarMotionのテスト
+// CarControlのテスト
 // RapierのDynamicRayCastVehicleController
 // を使っている。
 import * as a3 from 'a3js';
@@ -42,9 +42,9 @@ ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
 ground.setLocationNow(0,0,0);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/stk_tux.a3').ready;
-const cm = new a3.CarMotion(stk_kart);
-obj.setTransformer(cm.trans);
-obj.getAction('default').motion = cm.motion;
+const cc = new a3.CarControl(stk_kart);
+obj.setTransformer(cc.trans);
+obj.getAction('default').motion = cc.motion;
 obj.setState('default');
 view.scene.add(obj);
 view.scene.setAvatar(obj);
@@ -54,8 +54,8 @@ let t=0;
 while (true) {
   t += await view.waitForRender();
   if (Math.floor(t/5)%2===0) {
-    cm.accelerator(200);
+    cc.accelerator(200);
   } else {
-    cm.accelerator(-200);
+    cc.accelerator(-200);
   }
 }

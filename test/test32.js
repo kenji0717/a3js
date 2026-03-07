@@ -202,8 +202,8 @@ ground.setLocationNow(0,-2,0);
 view.scene.add(ground);
 const obj = new JointTest();
 view.scene.add(obj);
-view.camera.setLocationNow(0,10,20);
-view.camera.lookAtNow(0,-3,0);
+view.camera.setLocationNow(0,3,5);
+view.camera.lookAtNow(0,-1,0);
 
 let t=0;
 while (true) {

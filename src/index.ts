@@ -1,6 +1,7 @@
-export { Canvas } from './core/Canvas';
+export { Canvas, defaultCanvasOption } from './core/Canvas';
 export type { CanvasOption } from './core/Canvas';
-export { Window } from './core/Window';
+export { Window, defaultWindowOption } from './core/Window';
+export type { WindowOption } from './core/Window';
 export { Scene } from './core/Scene';
 export { Camera } from './core/Camera';
 export { ObjectA3 } from './core/ObjectA3';

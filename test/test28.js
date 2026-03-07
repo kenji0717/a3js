@@ -1,4 +1,4 @@
-// a3.CharactorMotionとAvatarControllerのテスト
+// a3.CharactorTransformerとAvatarControllerのテスト
 import * as a3 from 'a3js';
 
 await a3.initPhysics();

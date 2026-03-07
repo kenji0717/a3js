@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>gaha2</title>
+  </head>
+  <body>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+         "meshoptimizer": "https://unpkg.com/meshoptimizer@1.0.1/meshopt_decoder.module.js",
+         "a3js": "../dist/a3js.es.js"
+       }
+     }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.29/+esm" -->
+    <script type="module">
+import * as THREE from 'three';
+import * as a3 from 'a3js';
+
+const oc = new THREE.OrthographicCamera(-2,2,1,-1,0.1,1000);
+const gc = new a3.GeneralCamera(oc);
+const view = new a3.Window(600,300,{camera:gc});
+view.camera.setHeadLightEnable(false);
+view.camera.setLocation(3,0,0);
+view.camera.lookAt(0,0,0);
+
+const sl = new a3.StandardLights();
+sl.setLocation(100,100,100);
+view.scene.add(sl);
+
+const back = new a3.Box(1,50,50,'red');
+back.setLocation(-1,0,0);
+view.scene.add(back);
+
+const measure = await new a3.Acerola3D('./assets/A3/measure/measure.a3').ready;
+measure.setRotation(0,90,0);
+view.scene.add(measure);
+
+const obj = await new a3.Acerola3D('./assets/A3/supertuxkart/karts/tux/stk_tux.a3').ready;
+obj.setRotation(0,90,0);
+view.scene.add(obj);
+
+//view.scene.setAvatar(obj);
+//view.setController(new a3.FollowAvatarController({offset:{x:10,y:0,z:0}}));
+
+    </script>
+  </body>
+</html>
