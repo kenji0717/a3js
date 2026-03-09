@@ -16,9 +16,13 @@ export class GeneralCamera extends Camera {
     super();
     this.camera = camera;
     this.headLight = new THREE.SpotLight(0xffffff,1,0,Math.PI/3,0,0);
-    this.headLight.rotation.x = 3.14/2;
+    this.headLight.position.set(0,0,0);
+    const lightTarget = new THREE.Object3D();
+    lightTarget.position.set(0,0,-10);
+    this.headLight.target = lightTarget;
     this.object.add(this.camera);
     this.object.add(this.headLight);
+    this.object.add(lightTarget);
   }
 
   initObject() {

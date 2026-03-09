@@ -71,7 +71,7 @@ export interface CarControlOption {
 }
 
 export const defaultCarControlOption = {
-  mass: 1000.0,
+  mass: 10.0, // ブレーキが弱いのでこうするしかない
   defaultLocation: {x: 0.0, y: 1.0, z: 0.0},
   defaultQuat: {x: 0.0, y: 0.0, z: 0.0, w: 1.0},
   chassisWidth: 2.0,

@@ -174,17 +174,15 @@ export class OrbitController extends ControllerBase {
       this.preMouse.y = e.clientY;
     } else if (this.leftClick) {
       tmp.v0.set(this.target);
-      tmp.v0.sub(this.view.camera.loc);
+      tmp.v0.sub(this.cameraLoc);
       const dist = tmp.v0.length();
       const epsilon = 0.005*dist;
       const dx = epsilon*(e.clientX - this.preMouse.x);
       const dy = epsilon*(e.clientY - this.preMouse.y);
-      this.view.camera.moveRight(dx);
-      this.view.camera.moveUp(dy);
-      const left = this.view.camera.getUnitVecX();
-      const up = this.view.camera.getUnitVecY();
-      left.scale(-dx);
-      up.scale(dy);
+      const left = new Vec3(1,0,0).apply(this.cameraQuat).scale(-dx);
+      const up = new Vec3(0,1,0).apply(this.cameraQuat).scale(dy);
+      this.cameraLoc.add(left);
+      this.cameraLoc.add(up);
       this.target.add(left);
       this.target.add(up);
       this.preMouse.x = e.clientX;

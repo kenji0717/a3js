@@ -877,7 +877,7 @@ export interface Transforer {
    * 角速度を設定する。単位はラジアン/秒。
    * 物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
-   * @aram angvel 角速度
+   * @param angvel 角速度
    */
   setAngvel(angvel: Vec3): void;
 

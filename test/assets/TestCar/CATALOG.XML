@@ -1,0 +1,17 @@
+<a3 xmlns="http://acerola3d.sourceforge.jp/a3/catalog">
+<c><![CDATA[Copyright (c) 2026, Kenji Saito.
+
+この作品は、クリエイティブ・コモンズの表示 2.1 日本ライセンスの下で
+ライセンスされています。この使用許諾条件を見るには、
+http://creativecommons.org/licenses/by/2.1/jp/をチェックするか、
+クリエイティブ･コモンズに郵便にてお問い合わせください。
+住所は：171 Second Street, Suite 300, San Francisco, California 94105, USA です。
+]]></c>
+ <a an="default" bvh="car.bvh">
+  <p name="chassis" wrl="chassis.wrl" />
+  <p name="frontRight" wrl="wheel-front-right.wrl" />
+  <p name="frontLeft" wrl="wheel-front-left.wrl" />
+  <p name="rearRight" wrl="wheel-rear-right.wrl" />
+  <p name="rearLeft" wrl="wheel-rear-left.wrl" />
+ </a>
+</a3>

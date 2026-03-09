@@ -1,0 +1,55 @@
+HIERARCHY
+ROOT root
+{
+  OFFSET 0 0 0
+  CHANNELS 3 Zrotation Xrotation Yrotation
+  JOINT chassis
+  {
+    OFFSET 0.0 -0.5 0.0
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 0 0.5 0
+    }
+  }
+  JOINT frontRight
+  {
+    OFFSET -1.0 -0.8 1.5
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET -0.5 0 0
+    }
+  }
+  JOINT frontLeft
+  {
+    OFFSET 1.0 -0.8 1.5
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 0.5 0 0
+    }
+  }
+  JOINT rearRight
+  {
+    OFFSET -1.0 -0.8 -1.5
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET -0.5 0 0
+    }
+  }
+  JOINT rearLeft
+  {
+    OFFSET 1.0 -0.8 -1.5
+    CHANNELS 3 Zrotation Xrotation Yrotation
+    End Site
+    {
+      OFFSET 0.5 0 0
+    }
+  }
+}
+MOTION
+Frames: 1
+Frame Time: 0.0333
+0 0 0  0 0 0  0 0 0  0 0 0  0 0 0  0 0 0

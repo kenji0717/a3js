@@ -11,7 +11,7 @@ export type { Action, Shape, Motion, Pose, Morph } from './core/ActionObject';
 export { DefaultTransformer, FixedTransformer } from './core/Transformers';
 export { ClipMotion } from './three/ClipMotion';
 export { ControllerBase, OrbitController, FollowAvatarController, AvatarController } from './core/Controller';
-export type { Controller } from './core/Controller';
+export type { Controller, FACOption, ACOption } from './core/Controller';
 export { Test } from './core/Test';
 export type { TestOption } from './core/Test';
 export { Text3D , initFont } from './core/Text3D';

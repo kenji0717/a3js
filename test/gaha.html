@@ -24,50 +24,11 @@
 import * as THREE from 'three';
 import * as a3 from 'a3js';
 
-const stk_kart = {
-  mass: 10.0, // ブレーキの効きが悪いので、こちらで調節することにした
-  chassisWidth: 0.7,
-  chassisHeight: 0.5,
-  chassisLength: 1.5,
-  chassisOffset: {x:  0.0, y: -0.25,  z:  0.0 },
-  wheelFLPosition: {x:  0.30, y: -0.05,  z:  0.40 },
-  wheelFRPosition: {x: -0.30, y: -0.05,  z:  0.40 },
-  wheelRLPosition: {x:  0.35, y: -0.00,   z: -0.35 },
-  wheelRRPosition: {x: -0.35, y: -0.00,   z: -0.35 },
-  wheelFLRadius: 0.1,
-  wheelFRRadius: 0.1,
-  wheelRLRadius: 0.15,
-  wheelRRRadius: 0.15,
-  wheelFLWidth: 0.19,
-  wheelFRWidth: 0.19,
-  wheelRLWidth: 0.24,
-  wheelRRWidth: 0.24,
-  wheelFLSuspensionRestLength: 0.26,
-  wheelFRSuspensionRestLength: 0.26,
-  wheelRLSuspensionRestLength: 0.25,
-  wheelRRSuspensionRestLength: 0.25,
-  wheelFLSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
-  wheelFRSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
-  wheelRLSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
-  wheelRRSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
-  wheelFLSuspensionCompression: 4.0,
-  wheelFRSuspensionCompression: 4.0,
-  wheelRLSuspensionCompression: 4.0,
-  wheelRRSuspensionCompression: 4.0,
-  wheelFLSuspensionRelaxation: 10.0,
-  wheelFRSuspensionRelaxation: 10.0,
-  wheelRLSuspensionRelaxation: 10.0,
-  wheelRRSuspensionRelaxation: 10.0,
-  wheelFLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelFRMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelRLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelRRMaxSuspensionTravel: 0.05 // ほとんど述び縮みしない設定
-};
-
 await a3.initPhysics();
 //const oc = new THREE.OrthographicCamera(-2,2,1,-1,0.1,1000);
 //const gc = new a3.GeneralCamera(oc);
 //const view = new a3.Window(600,300,{camera:gc});
+//const view = new a3.Window(600,300);
 //const view = new a3.GameCanvas();
 const view = new a3.GameCanvas({touchDevice:true});
 view.scene.rapierDebug(true);
@@ -80,8 +41,8 @@ const ground = await new a3.Acerola3D('./assets/A3/supertuxkart/tracks/city/stk_
 ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody:'fixed'});
 view.scene.add(ground);
 
-const obj = await new a3.Acerola3D('./assets/A3/supertuxkart/karts/tux/stk_tux.a3').ready;
-const cc = new a3.CarControl(stk_kart);
+const obj = await new a3.Acerola3D('./assets/TestCar/TestCar.a3').ready;
+const cc = new a3.CarControl();
 obj.setTransformer(cc.trans);
 obj.getAction('default').motion = cc.motion;
 obj.setState('default');
@@ -89,21 +50,21 @@ view.scene.add(obj);
 cc.reset(new a3.Vec3(0,1.5,0));
 
 view.scene.setAvatar(obj);
-//view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:-1}}));
-view.setController(new a3.FollowAvatarController({offset:{x:0,y:1.5,z:-3}}));
+view.setController(new a3.FollowAvatarController({offset:{x:4,y:0,z:0}}));
+//view.setController(new a3.FollowAvatarController({offset:{x:0,y:2,z:-6}}));
 
 while (true) {
   await view.waitForRender();
-  cc.handle(-view.leftJoystick.x*0.1);
-  cc.accelerator(view.leftJoystick.y*10.0);
+  cc.handle(-view.leftJoystick.x*0.3);
+  cc.accelerator(view.leftJoystick.y*30.0);
   if (view.leftButton) {
-    cc.brake(10000.0); // なぜか効きが悪い原因不明
+    cc.brake(1000.0); // なぜか効きが悪い原因不明
     cc.accelerator(0);
   } else {
     cc.brake(0);
   }
   if (view.rightButton)
-    cc.reset(obj.loc);
+    cc.reset(new a3.Vec3(0,0.5,0).add(obj.loc));
 }
 
     </script>
