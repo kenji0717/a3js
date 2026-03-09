@@ -11,7 +11,7 @@
        "imports": {
          "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
          "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
-         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.18.1/+esm",
          "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
          "meshoptimizer": "https://unpkg.com/meshoptimizer@1.0.1/meshopt_decoder.module.js",
          "a3js": "../dist/a3js.es.js"
@@ -19,19 +19,21 @@
      }
     </script>
     <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.29/+esm" -->
+    <!-- "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm", -->
     <script type="module">
 import * as THREE from 'three';
 import * as a3 from 'a3js';
 
 const stk_kart = {
-  mass: 100.0,
+  mass: 10.0, // ブレーキの効きが悪いので、こちらで調節することにした
   chassisWidth: 0.7,
   chassisHeight: 0.5,
   chassisLength: 1.5,
-  wheelFLPosition: {x:  0.30, y: -0.15,  z:  0.40 },
-  wheelFRPosition: {x: -0.30, y: -0.15,  z:  0.40 },
-  wheelRLPosition: {x:  0.35, y: -0.10,   z: -0.35 },
-  wheelRRPosition: {x: -0.35, y: -0.10,   z: -0.35 },
+  chassisOffset: {x:  0.0, y: -0.25,  z:  0.0 },
+  wheelFLPosition: {x:  0.30, y: -0.05,  z:  0.40 },
+  wheelFRPosition: {x: -0.30, y: -0.05,  z:  0.40 },
+  wheelRLPosition: {x:  0.35, y: -0.00,   z: -0.35 },
+  wheelRRPosition: {x: -0.35, y: -0.00,   z: -0.35 },
   wheelFLRadius: 0.1,
   wheelFRRadius: 0.1,
   wheelRLRadius: 0.15,
@@ -40,14 +42,14 @@ const stk_kart = {
   wheelFRWidth: 0.19,
   wheelRLWidth: 0.24,
   wheelRRWidth: 0.24,
-  wheelFLSuspensionRestLength: 0.32,
-  wheelFRSuspensionRestLength: 0.32,
-  wheelRLSuspensionRestLength: 0.3,
-  wheelRRSuspensionRestLength: 0.3,
-  wheelFLSuspensionStiffness: 20.0,
-  wheelFRSuspensionStiffness: 20.0,
-  wheelRLSuspensionStiffness: 25.0,
-  wheelRRSuspensionStiffness: 25.0,
+  wheelFLSuspensionRestLength: 0.26,
+  wheelFRSuspensionRestLength: 0.26,
+  wheelRLSuspensionRestLength: 0.25,
+  wheelRRSuspensionRestLength: 0.25,
+  wheelFLSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
+  wheelFRSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
+  wheelRLSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
+  wheelRRSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
   wheelFLSuspensionCompression: 4.0,
   wheelFRSuspensionCompression: 4.0,
   wheelRLSuspensionCompression: 4.0,
@@ -55,7 +57,11 @@ const stk_kart = {
   wheelFLSuspensionRelaxation: 10.0,
   wheelFRSuspensionRelaxation: 10.0,
   wheelRLSuspensionRelaxation: 10.0,
-  wheelRRSuspensionRelaxation: 10.0
+  wheelRRSuspensionRelaxation: 10.0,
+  wheelFLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+  wheelFRMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+  wheelRLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+  wheelRRMaxSuspensionTravel: 0.05 // ほとんど述び縮みしない設定
 };
 
 await a3.initPhysics();
@@ -80,20 +86,22 @@ obj.setTransformer(cc.trans);
 obj.getAction('default').motion = cc.motion;
 obj.setState('default');
 view.scene.add(obj);
-cc.reset(new a3.Vec3(0,0.5,0));
+cc.reset(new a3.Vec3(0,1.5,0));
 
 view.scene.setAvatar(obj);
-view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:-1}}));
-//view.setController(new a3.FollowAvatarController({offset:{x:0,y:1.5,z:-3}}));
+//view.setController(new a3.FollowAvatarController({offset:{x:2,y:0,z:-1}}));
+view.setController(new a3.FollowAvatarController({offset:{x:0,y:1.5,z:-3}}));
 
 while (true) {
   await view.waitForRender();
   cc.handle(-view.leftJoystick.x*0.1);
-  cc.accelerator(view.leftJoystick.y*100);
-  if (view.leftButton)
-    cc.brake(100000);
-  else
+  cc.accelerator(view.leftJoystick.y*10.0);
+  if (view.leftButton) {
+    cc.brake(10000.0); // なぜか効きが悪い原因不明
+    cc.accelerator(0);
+  } else {
     cc.brake(0);
+  }
   if (view.rightButton)
     cc.reset(obj.loc);
 }

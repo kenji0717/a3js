@@ -277,7 +277,7 @@ export class FollowAvatarController extends ControllerBase {
     const up = this.view.camera.upVector ? this.view.camera.upVector : ObjectA3.defaultUpVector;
     up.normalize();
     const q = getQuatOfLookAt(tmp.v0,this.view.scene.avatar.loc,up);
-    q.mul(new Quat(Math.sin(up.x),Math.sin(up.y),Math.sin(up.z),Math.cos(Math.PI/2)));
+    q.mul(new Quat(up.x,up.y,up.z,0));
     this.view.camera.transformer.setQuat(q);
   }
 
@@ -367,7 +367,7 @@ export class AvatarController extends ControllerBase {
     const up = this.view.camera.upVector ? this.view.camera.upVector : ObjectA3.defaultUpVector;
     up.normalize();
     const q = getQuatOfLookAt(tmp.v0,this.view.scene.avatar.loc,up);
-    q.mul(new Quat(Math.sin(up.x),Math.sin(up.y),Math.sin(up.z),Math.cos(Math.PI/2)));
+    q.mul(new Quat(up.x,up.y,up.z,0));
     this.view.camera.transformer.setQuat(q);
 
     this._avatarNextLoc.set(aTrans.loc);
