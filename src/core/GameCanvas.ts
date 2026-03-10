@@ -46,6 +46,7 @@ export class GameCanvas extends HTMLElement implements View {
     this.shadowRoot!.innerHTML = `
   <style>
     :host {
+      display: block;
       .game-ui {
         position: relative;
       }

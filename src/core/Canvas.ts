@@ -48,24 +48,25 @@ export class Canvas extends HTMLElement implements View {
     this.shadowRoot!.innerHTML = `
   <style>
     :host {
-      width: 100%;
-      height: 100%;
       display: block;
+      position: relative;
+      overflow: hidden;
       padding: 0;
       margin: 0;
-      position: relative;
       background: rgba(0,0,0,0);
-      box-sizing:
-      border-box;
     }
 
-    :host canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
+    canvas, .css2d-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
       margin: 0;
       padding: 0;
     }
+    canvas { z-index: 1; }
+    .css2d-layer { z-index: 2; }
   </style>
   <slot></slog>
 `;
@@ -100,11 +101,12 @@ export class Canvas extends HTMLElement implements View {
     this._canvas = this.renderer.domElement;
     this._canvas.width = 600;
     this._canvas.height = 300;
+    //this.shadowRoot!.appendChild(this._canvas);
     this.appendChild(this._canvas);
     this.css2DRenderer = new CSS2DRenderer();
     this._css2DCanvas = this.css2DRenderer.domElement;
-    this._css2DCanvas.style.position='absolute';
-    this._css2DCanvas.style.top='0px';
+    this._css2DCanvas.classList.add('css2d-layer');
+    //this.shadowRoot!.appendChild(this._css2DCanvas);
     this.appendChild(this._css2DCanvas);
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
 
@@ -127,22 +129,18 @@ export class Canvas extends HTMLElement implements View {
   }
 
   connectedCallback() {
-    this.ro = new ResizeObserver(() => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = Math.floor(this.clientWidth * dpr);
-      const h = Math.floor(this.clientHeight * dpr);
-      if (this._canvas.width !== w
-          || this._canvas.height !== h) {
-        this._canvas.width = w;
-        this._canvas.height = h;
-        if (isPerspectiveCamera(this.camera3js)) {
-          this.camera3js.aspect = w / h;
-          this.camera3js.updateProjectionMatrix();
-        } else if (isOrthographicCamera(this.camera3js)) {
-          this.camera3js.updateProjectionMatrix();
-        }
-        this.renderer.setSize(w, h);
-        this.css2DRenderer.setSize(w, h);
+    this.ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      const w = entry.contentRect.width;
+      const h = entry.contentRect.height;
+      if (w === 0 || h === 0) return;
+      this.renderer.setSize(w, h, false); // falseで内部解像度のみの変更
+      this.css2DRenderer.setSize(w, h);
+      if (isPerspectiveCamera(this.camera3js)) {
+        this.camera3js.aspect = w / h;
+        this.camera3js.updateProjectionMatrix();
+      } else if (isOrthographicCamera(this.camera3js)) {
+        this.camera3js.updateProjectionMatrix();
       }
     });
     this.ro.observe(this);
@@ -246,7 +244,7 @@ export class Canvas extends HTMLElement implements View {
   alert(message: string, func?: ()=>void): Promise<void> {
     return new Promise((resolve) => {
       const div = document.createElement('div');
-      div.style.cssText = 'position: absolute; top: 0px; width: 100%; height: 100%; display: flex; flex-direction: column;';
+      div.style.cssText = 'position: absolute; top: 0px; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 3;';
       const p = document.createElement('p');
       p.style.cssText = 'width: 80%; margin: 0 auto; color: red; text-align: center; border: 3px solid red;';
       p.textContent = message;
@@ -254,12 +252,12 @@ export class Canvas extends HTMLElement implements View {
       const btn = document.createElement('button');
       btn.textContent = 'OK!';
       div.appendChild(btn);
-      this.appendChild(div);
+      this.shadowRoot!.appendChild(div);
       
       btn.addEventListener('click',async ()=>{
         if (func)
           await func();
-        this.removeChild(div);
+        this.shadowRoot!.removeChild(div);
         resolve();
       });
     });

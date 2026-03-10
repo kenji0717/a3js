@@ -2,6 +2,7 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Canvas();
+view.style.cssText = 'width:600px;height:300px;';
 document.body.appendChild(view);
 
 //view.alert("ただメッセージを出すだけのalert()");

@@ -2,6 +2,7 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Canvas();
+view.style.cssText = 'width:600px;height:300px;';
 document.body.appendChild(view);
 const obj1 = new a3.Test();
 view.scene.add(obj1);

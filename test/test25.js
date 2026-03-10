@@ -11,7 +11,10 @@ const div = document.createElement('div');
 katex.render('E=mc^2',div,{throwOnError: false, displayMode: true});
 div.style.color = 'white';
 
-const view = new a3.Window(600,300);
+//const view = new a3.Window(600,300);
+const view = new a3.Canvas();
+view.style.cssText = 'width:600px;height:300px;position:relative;';
+document.body.appendChild(view);
 const html = new a3.HTML(div);
 view.scene.add(html);
 
