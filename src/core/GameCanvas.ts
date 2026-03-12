@@ -47,74 +47,89 @@ export class GameCanvas extends HTMLElement implements View {
   <style>
     :host {
       display: block;
-      .game-ui {
-        position: relative;
+      position: relative;
+      width: 600px;
+      height: 300px;
+
+      canvas-a3 {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
       }
-.joystick {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 2px solid rgba(255,255,255,0.2);
-  backdrop-filter: blur(4px);
-}
-.stick {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.4);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-.joystick.left {
-  bottom: 40px;
-  left: 30px;
-}
-.joystick.right {
-  bottom: 40px;
-  right: 30px;
-}
-.btn {
-  position: absolute;
-  border-radius: 50%;
-  border: none;
-  color: white;
-  font-size: 14px;
-  background: rgba(255,255,255,0.15);
-  border: 2px solid rgba(255,255,255,0.3);
-  backdrop-filter: blur(4px);
-  cursor: pointer;
-}
-.btn.left {
-  width: 90px;
-  height: 90px;
-  bottom: 50px;
-  left: 200px;
-}
-.btn.right {
-  width: 90px;
-  height: 90px;
-  bottom: 50px;
-  right: 200px;
-}
-.btn:active {
-  transform: scale(0.9);
-}
+      .game-ui {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+
+        .joystick {
+          position: absolute;
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.08);
+          border: 2px solid rgba(255,255,255,0.2);
+          backdrop-filter: blur(4px);
+        }
+        .stick {
+          position: absolute;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.4);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .joystick.left {
+          bottom: 40px;
+          left: 30px;
+        }
+        .joystick.right {
+          bottom: 40px;
+          right: 30px;
+        }
+        .btn {
+          position: absolute;
+          border-radius: 50%;
+          border: none;
+          color: white;
+          font-size: 14px;
+          background: rgba(255,255,255,0.15);
+          border: 2px solid rgba(255,255,255,0.3);
+          backdrop-filter: blur(4px);
+          cursor: pointer;
+        }
+        .btn.left {
+          width: 90px;
+          height: 90px;
+          bottom: 50px;
+          left: 200px;
+        }
+        .btn.right {
+          width: 90px;
+          height: 90px;
+          bottom: 50px;
+          right: 200px;
+        }
+        .btn:active {
+          transform: scale(0.9);
+        }
+      }
     }
   </style>
+  <canvas-a3></canvas-a3>
   <div class="game-ui">
-    <slot></slot>
     <div class="joystick left"><div class="stick"></div></div>
     <div class="joystick right"><div class="stick"></div></div>
     <button class="btn left">L</button>
     <button class="btn right">R</button>
   </div>
 `;
-    this.canvas = new Canvas();
-    this.append(this.canvas);
+    //this.canvas = new Canvas();
+    //this.append(this.canvas);
+    this.canvas = this.shadowRoot!.querySelector('canvas-a3')!;
     this.scene = this.canvas.scene;
     this.camera = this.canvas.camera;
     this.controller = this.canvas.controller;
@@ -206,14 +221,8 @@ export class GameCanvas extends HTMLElement implements View {
     rightButton.addEventListener('pointerup',()=>{
       this.rightButton = false;
     });
-    window.addEventListener('keydown',(e)=>{
-      this.keys.add(e.code);
-      this.updateUIFromKeyInfo();
-    });
-    window.addEventListener('keyup',(e)=>{
-      this.keys.delete(e.code);
-      this.updateUIFromKeyInfo();
-    });
+    window.addEventListener('keydown',this.keyDownListener);
+    window.addEventListener('keyup',this.keyUpListener);
     // PCの場合タッチデバイス用UIを非表示
     if (!this.option.touchDevice) {
       this.shadowRoot!.querySelectorAll<HTMLDivElement>('.joystick').forEach((js)=>{
@@ -223,6 +232,15 @@ export class GameCanvas extends HTMLElement implements View {
         js.style.display = 'none';
       });
     }
+  }
+
+  keyDownListener = (e: KeyboardEvent)=>{this.keys.add(e.code);this.updateUIFromKeyInfo();}
+  keyUpListener = (e: KeyboardEvent)=>{this.keys.delete(e.code);this.updateUIFromKeyInfo();}
+
+  connectedCallback() {}
+  disconnectedCallback() {
+    window.removeEventListener('keydown',this.keyDownListener);
+    window.removeEventListener('keyup',this.keyUpListener);
   }
 
   updateUIFromKeyInfo() {

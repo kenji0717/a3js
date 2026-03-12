@@ -50,25 +50,14 @@ export class Canvas extends HTMLElement implements View {
     :host {
       display: block;
       position: relative;
-      overflow: hidden;
-      padding: 0;
-      margin: 0;
-      background: rgba(0,0,0,0);
     }
 
     canvas, .css2d-layer {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100% !important;
-      height: 100% !important;
-      margin: 0;
-      padding: 0;
+      inset: 0;
     }
-    canvas { z-index: 1; }
-    .css2d-layer { z-index: 2; }
   </style>
-  <slot></slog>
+  <slot></slot>
 `;
 
     this.option = {
@@ -89,7 +78,8 @@ export class Canvas extends HTMLElement implements View {
     this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
-    this.timer.connect(document);
+    //this.timer.connect(document); // 複数Canvas生成したらダメなのでコメントアウト
+
     const o = {
       antialias: this.option.antialias,
       alpha: this.option.transparent
@@ -97,24 +87,26 @@ export class Canvas extends HTMLElement implements View {
     this.renderer = new THREE.WebGLRenderer(o);
     regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(600,300);
-    //if ('opaque' in opt) this.renderer.setClearAlpha(0);
-    this._canvas = this.renderer.domElement;
+    this.shadowRoot!.appendChild(this.renderer.domElement);
+    this._canvas = this.shadowRoot!.querySelector('canvas')!;
     this._canvas.width = 600;
     this._canvas.height = 300;
-    //this.shadowRoot!.appendChild(this._canvas);
-    this.appendChild(this._canvas);
+
     this.css2DRenderer = new CSS2DRenderer();
-    this._css2DCanvas = this.css2DRenderer.domElement;
-    this._css2DCanvas.classList.add('css2d-layer');
-    //this.shadowRoot!.appendChild(this._css2DCanvas);
-    this.appendChild(this._css2DCanvas);
+    this.css2DRenderer.domElement.classList.add('css2d-layer');
+    this.shadowRoot!.appendChild(this.css2DRenderer.domElement);
+    this._css2DCanvas = this.shadowRoot!.querySelector('.css2d-layer')!;
+
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
 
     this._css2DCanvas.addEventListener('click',this.myMouseClickedListener);
 
-    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
-    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
-    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
+    // コントローラに対するイベントの登録
+    // 本当は複数a3.Windowを生成したらwindow.addEventListener();はダメかも
+    // しれないけど、今はそのままで。GAHA
+    window.addEventListener('keydown',this.keyDownListener);
+    window.addEventListener('keyup',this.keyUpListener);
+    window.addEventListener('keypress',this.keyPressListener);
     this._css2DCanvas.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
     this._css2DCanvas.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
     this._css2DCanvas.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
@@ -128,14 +120,18 @@ export class Canvas extends HTMLElement implements View {
     this._css2DCanvas.addEventListener('touchcancel',(e)=>{this.controller?.touchCancel(e);});
   }
 
+  keyDownListener = (e: KeyboardEvent)=>{this.controller?.keyDown(e);};
+  keyUpListener = (e: KeyboardEvent)=>{this.controller?.keyUp(e);};
+  keyPressListener = (e: KeyboardEvent)=>{this.controller?.keyPress(e);};
+
   connectedCallback() {
     this.ro = new ResizeObserver((entries) => {
       const entry = entries[0];
       const w = entry.contentRect.width;
       const h = entry.contentRect.height;
       if (w === 0 || h === 0) return;
-      this.renderer.setSize(w, h, false); // falseで内部解像度のみの変更
-      this.css2DRenderer.setSize(w, h);
+      this.renderer.setSize(w, h, true); // trueで内部解像度に加え要素の表示の大きさも変更
+      this.css2DRenderer.setSize(w, h); // こっちは最初からそう？
       if (isPerspectiveCamera(this.camera3js)) {
         this.camera3js.aspect = w / h;
         this.camera3js.updateProjectionMatrix();
@@ -147,6 +143,9 @@ export class Canvas extends HTMLElement implements View {
   }
   disconnectedCallback() {
     this.ro?.disconnect();
+    window.removeEventListener('keydown',this.keyDownListener);
+    window.removeEventListener('keyup',this.keyUpListener);
+    window.removeEventListener('keypress',this.keyPressListener);
   }
 
   replaceScene(newScene: Scene): Scene {
@@ -259,6 +258,31 @@ export class Canvas extends HTMLElement implements View {
           await func();
         this.shadowRoot!.removeChild(div);
         resolve();
+      });
+    });
+  }
+
+  prompt(message: string, func?: ()=>void): Promise<string> {
+    return new Promise((resolve) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position: absolute; top: 0px; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 3;';
+      const p = document.createElement('p');
+      p.style.cssText = 'width: 80%; margin: 0 auto; color: red; text-align: center; border: 3px solid red;';
+      p.textContent = message;
+      div.appendChild(p);
+      const input = document.createElement('input');
+      input.setAttribute('type','text');
+      div.appendChild(input);
+      const btn = document.createElement('button');
+      btn.textContent = 'OK!';
+      div.appendChild(btn);
+      this.shadowRoot!.appendChild(div);
+      
+      btn.addEventListener('click',async ()=>{
+        if (func)
+          await func();
+        this.shadowRoot!.removeChild(div);
+        resolve(input.value);
       });
     });
   }

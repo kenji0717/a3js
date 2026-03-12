@@ -107,7 +107,6 @@ export class Window extends HTMLElement implements View {
     <span class="close">✕</span>
   </div>
   <div class="content">
-    <slot></slot>
   </div>
 `;
     // ########## WebComponent関係のセットアップ終り ##########
@@ -127,27 +126,32 @@ export class Window extends HTMLElement implements View {
     this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
-    this.timer.connect(document);
+    //this.timer.connect(document); // 複数Window生成したらダメなのでコメントアウト
+
     this.renderer = new THREE.WebGLRenderer();
     regenerateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(width, height);
-    this._canvas = this.renderer.domElement;
-    this._canvas.width = width;
-    this._canvas.width = height;
-    this.appendChild(this._canvas);
+    this.renderer.domElement.width = width;
+    this.renderer.domElement.height = height;
+    const content = this.shadowRoot!.querySelector('.content')!;
+    content.appendChild(this.renderer.domElement);
+    this._canvas = this.shadowRoot!.querySelector('canvas')!;
     this.css2DRenderer = new CSS2DRenderer();
     this.css2DRenderer.setSize(width, height);
-    this._css2DCanvas = this.css2DRenderer.domElement;
-    this._css2DCanvas.style.position='absolute';
-    this._css2DCanvas.style.top='28px';
-    this.appendChild(this._css2DCanvas);
+    this.css2DRenderer.domElement.classList.add('css2d-layer');
+    this.css2DRenderer.domElement.style.position='absolute';
+    this.css2DRenderer.domElement.style.top='28px';
+    content.appendChild(this.css2DRenderer.domElement);
+    this._css2DCanvas = this.shadowRoot!.querySelector('.css2d-layer')!;
 
     this._css2DCanvas.addEventListener('click',this.myMouseClickedListener);
 
     // コントローラに対するイベントの登録
-    window.addEventListener('keydown',(e)=>{this.controller?.keyDown(e);});
-    window.addEventListener('keyup',(e)=>{this.controller?.keyUp(e);});
-    window.addEventListener('keypress',(e)=>{this.controller?.keyPress(e);});
+    // 本当は複数a3.Windowを生成したらwindow.addEventListener();はダメかも
+    // しれないけど、今はそのままで。GAHA
+    window.addEventListener('keydown',this.keyDownListener);
+    window.addEventListener('keyup',this.keyUpListener);
+    window.addEventListener('keypress',this.keyPressListener);
     this._css2DCanvas.addEventListener('mousedown',(e)=>{this.controller?.mouseDown(e);});
     this._css2DCanvas.addEventListener('mouseup',(e)=>{this.controller?.mouseUp(e);});
     this._css2DCanvas.addEventListener('mousemove',(e)=>{this.controller?.mouseMove(e);});
@@ -172,6 +176,10 @@ export class Window extends HTMLElement implements View {
     this.animationFrameId = requestAnimationFrame(this.renderingLoop);
   }
   // コンストラクタ終り
+
+  keyDownListener = (e: KeyboardEvent)=>{this.controller?.keyDown(e);}
+  keyUpListener = (e: KeyboardEvent)=>{this.controller?.keyUp(e);}
+  keyPressListener = (e: KeyboardEvent)=>{this.controller?.keyPress(e);}
 
   // ########## まずはWebComponent関係のメソッドを用意する ##########
 
@@ -239,6 +247,9 @@ export class Window extends HTMLElement implements View {
     document.removeEventListener("mousemove", this._onMouseMove);
     document.removeEventListener("mouseup", this._onMouseUp);
     this._resizeObserver?.disconnect();
+    window.addEventListener('keydown',this.keyDownListener);
+    window.addEventListener('keyup',this.keyUpListener);
+    window.addEventListener('keypress',this.keyPressListener);
   }
   // Drag ------------------------------------
   _onDragStart = (e: MouseEvent) => {
@@ -435,13 +446,38 @@ export class Window extends HTMLElement implements View {
       const btn = document.createElement('button');
       btn.textContent = 'OK!';
       div.appendChild(btn);
-      this.appendChild(div);
+      this.shadowRoot!.appendChild(div);
       
       btn.addEventListener('click',async ()=>{
         if (func)
           await func();
-        this.removeChild(div);
+        this.shadowRoot!.removeChild(div);
         resolve();
+      });
+    });
+  }
+
+  prompt(message: string, func?: ()=>void): Promise<string> {
+    return new Promise((resolve) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position: absolute; top: 28px; width: 100%; height: 100%; display: flex; flex-direction: column;';
+      const p = document.createElement('p');
+      p.style.cssText = 'width: 80%; margin: 0 auto; color: red; text-align: center; border: 3px solid red;';
+      p.textContent = message;
+      div.appendChild(p);
+      const input = document.createElement('input');
+      input.setAttribute('type','text');
+      div.appendChild(input);
+      const btn = document.createElement('button');
+      btn.textContent = 'OK!';
+      div.appendChild(btn);
+      this.shadowRoot!.appendChild(div);
+      
+      btn.addEventListener('click',async ()=>{
+        if (func)
+          await func();
+        this.shadowRoot!.removeChild(div);
+        resolve(input.value);
       });
     });
   }
