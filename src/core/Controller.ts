@@ -383,7 +383,7 @@ export class AvatarController extends ControllerBase {
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
     if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,0.01,0)));
     if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-0.01,0)));
-    avatar.setLocationNow(this._avatarNextLoc);
+    avatar.setLocation(this._avatarNextLoc);
     avatar.setQuat(this._avatarNextQuat);
   }
 

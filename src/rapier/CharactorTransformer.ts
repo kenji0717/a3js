@@ -24,8 +24,6 @@ export class CharactorTransformer implements Transforer {
   objectA3?: ObjectA3;
   completeOption: CharactorTransOption;
   controller?: Rapier.KinematicCharacterController;
-  bodyDesc?: Rapier.RigidBodyDesc;
-  body?: Rapier.RigidBody;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
   capsuleCenter: Vec3;
@@ -56,37 +54,31 @@ export class CharactorTransformer implements Transforer {
       box.getCenter(tmpV);
       this.capsuleCenter.set(tmpV);
     }
-    this.bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
     this.colliderDesc = RAPIER.ColliderDesc.capsule(
         this.completeOption.height,
         this.completeOption.radius);
-    this.bodyDesc.setTranslation(
+    this.colliderDesc.setTranslation(
       trans.loc.x,
       trans.loc.y,
       trans.loc.z
     );
     this.trans.set(objectA3);
-    this.bodyDesc.setRotation({
+    this.colliderDesc.setRotation({
       x: trans.quat.x,
       y: trans.quat.y,
       z: trans.quat.z,
       w: trans.quat.w
     });
-
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
     this.controller = world.world.createCharacterController(this.completeOption.offset);
-    if (this.bodyDesc)
-      this.body = world.world.createRigidBody(this.bodyDesc);
     if (this.colliderDesc)
-    this.collider = world.world.createCollider(this.colliderDesc,this.body);
+      this.collider = world.world.createCollider(this.colliderDesc);
     if (this.collider && this.objectA3)
       collisionMap.set(this.collider.handle,this.objectA3);
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.body)
-      world.world.removeRigidBody(this.body);
     if (this.collider) {
       world.world.removeCollider(this.collider,false); // falseでOK
       collisionMap.delete(this.collider.handle);
@@ -102,27 +94,21 @@ export class CharactorTransformer implements Transforer {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
-    if (this.body)
-      this.body.setNextKinematicTranslation(v); // こんなメソッドもあるのね
-    else
-      this.bodyDesc?.setTranslation(v.x,v.y,v.z);
+    if (this.collider)
+      this.collider.setTranslation(v);
     this.trans.loc.set(v);
     this.nextLocation.set(v);
   }
 
   setQuat(q: Quat): void {
     // Capluleだし、制限なしとする
-    if (this.body)
-      this.body.setRotation(q,false); // Kinematicだからfalse
-    else
-      this.bodyDesc?.setRotation(q);
-    this.trans.loc.set(q);
+    if (this.collider)
+      this.collider.setRotation(q);
+    this.trans.quat.set(q);
   }
   setQuatNow(q: Quat): void {
-    if (this.body)
-      this.body.setRotation(q,false); // Kinematicだからfalse
-    else
-      this.bodyDesc?.setRotation(q);
+    if (this.collider)
+      this.collider.setRotation(q);
     this.trans.quat.set(q);
   }
 
@@ -151,21 +137,19 @@ export class CharactorTransformer implements Transforer {
   }
 
   update(_dt: number): void {
-    if (!this.body || !this.controller || !this.collider)
+    if (!this.controller || !this.collider)
       return;
 
-    this.trans.quat.set(this.body.rotation());
+    this.trans.quat.set(this.collider.rotation());
 
-    //this.tmpV1.set(this.trans.loc); // こっちはダメっぽい
-    this.tmpV1.set(this.body.translation());
+    this.tmpV1.set(this.collider.translation());
     this.tmpV2.set(this.nextLocation);
     this.tmpV2.sub(this.tmpV1);
     this.controller.computeColliderMovement(this.collider,this.tmpV2);
     const corrected = this.controller.computedMovement();
 
-    this.tmpV1.add(corrected.x,corrected.y,corrected.z);
-    //this.body.setTranslation(this.tmpV1,true); // どっちが良い？
-    this.body.setNextKinematicTranslation(this.tmpV1); // どっちが良い？
+    this.tmpV1.add(corrected);
+    this.collider.setTranslation(this.tmpV1);
 
     this.tmpV1.sub(this.capsuleCenter);
     this.trans.loc.set(this.tmpV1);
