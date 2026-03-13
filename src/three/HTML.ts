@@ -4,6 +4,9 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 /**
  * HTMLElementを受け取りViewに2D表示する。
+ * 
+ * 現在の所、view.scene.remove(HTMLのインスタンス)
+ * しても上手く消えてくれない。
  */
 export class HTML extends ObjectA3 {
   constructor(element: HTMLElement) {

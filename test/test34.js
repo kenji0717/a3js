@@ -1,4 +1,4 @@
-// CarControlのテスト
+// CarControlのテスト1。stk_tux.a3
 // RapierのDynamicRayCastVehicleController
 // を使っている。
 import * as a3 from 'a3js';
@@ -9,38 +9,26 @@ const stk_kart = {
   chassisHeight: 0.5,
   chassisLength: 1.5,
   chassisOffset: {x:  0.0, y: -0.25,  z:  0.0 },
-  wheelFLPosition: {x:  0.30, y: -0.05,  z:  0.40 },
-  wheelFRPosition: {x: -0.30, y: -0.05,  z:  0.40 },
-  wheelRLPosition: {x:  0.35, y: -0.00,   z: -0.35 },
-  wheelRRPosition: {x: -0.35, y: -0.00,   z: -0.35 },
-  wheelFLRadius: 0.1,
-  wheelFRRadius: 0.1,
-  wheelRLRadius: 0.15,
-  wheelRRRadius: 0.15,
-  wheelFLWidth: 0.19,
-  wheelFRWidth: 0.19,
-  wheelRLWidth: 0.24,
-  wheelRRWidth: 0.24,
-  wheelFLSuspensionRestLength: 0.26,
-  wheelFRSuspensionRestLength: 0.26,
-  wheelRLSuspensionRestLength: 0.25,
-  wheelRRSuspensionRestLength: 0.25,
-  wheelFLSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
-  wheelFRSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
-  wheelRLSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
-  wheelRRSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
-  wheelFLSuspensionCompression: 4.0,
-  wheelFRSuspensionCompression: 4.0,
-  wheelRLSuspensionCompression: 4.0,
-  wheelRRSuspensionCompression: 4.0,
-  wheelFLSuspensionRelaxation: 10.0,
-  wheelFRSuspensionRelaxation: 10.0,
-  wheelRLSuspensionRelaxation: 10.0,
-  wheelRRSuspensionRelaxation: 10.0,
-  wheelFLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelFRMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelRLMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
-  wheelRRMaxSuspensionTravel: 0.05 // ほとんど述び縮みしない設定
+  wheelFrontYPosition: -0.05,
+  wheelFrontZPosition: 0.40,
+  wheelFrontAxleLength: 0.6,
+  wheelRearYPosition: -0.00,
+  wheelRearZPosition: -0.35,
+  wheelRearAxleLength: 0.7,
+  wheelFrontRadius: 0.1,
+  wheelRearRadius: 0.15,
+  wheelFrontWidth: 0.19,
+  wheelRearWidth: 0.24,
+  wheelFrontSuspensionRestLength: 0.26,
+  wheelRearSuspensionRestLength: 0.25,
+  wheelFrontSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
+  wheelRearSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
+  wheelFrontSuspensionCompression: 4.0,
+  wheelRearSuspensionCompression: 4.0,
+  wheelFrontSuspensionRelaxation: 10.0,
+  wheelRearSuspensionRelaxation: 10.0,
+  wheelFrontMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+  wheelRearMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
 };
 
 await a3.initPhysics();

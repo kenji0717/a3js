@@ -1,4 +1,4 @@
-// a3.Canvasのalertのテスト
+// a3.Canvasのpromptのテスト
 import * as a3 from 'a3js';
 
 await a3.initFont('./assets/M-PLUS-1_Bold.json.zip');

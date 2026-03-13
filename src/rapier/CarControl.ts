@@ -10,11 +10,12 @@ import type { Motion, Pose } from '../core/ActionObject';
 /*
  * タイヤの順番なんだけど、混乱しないように書いておくと、
  * FL(0),FR(1),RL(2),RR(3)という順番で統一する。
- * あと、CarMotionは、シャーシとして表示する3Dメッシュが、
- * その原点がシャーシの直方体の底の中心が原点となるように
- * 調整してPose情報を生成する。
  */
 
+/**
+ * CarControlを生成するために使用する全てのパラメータを
+ * 含んだインタフェース。
+ */
 export interface CarControlOption {
   mass: number;
   defaultLocation: {x: number, y: number, z: number };
@@ -24,52 +25,38 @@ export interface CarControlOption {
   chassisLength: number;
   chassisOffset: {x: number, y: number, z: number }; // 表示のずれを補正するやつ
   chassisFriction: number;
-  wheelFLPosition: {x: number, y: number, z: number };
-  wheelFRPosition: {x: number, y: number, z: number };
-  wheelRLPosition: {x: number, y: number, z: number };
-  wheelRRPosition: {x: number, y: number, z: number };
-  wheelFLRadius: number;
-  wheelFRRadius: number;
-  wheelRLRadius: number;
-  wheelRRRadius: number;
-  wheelFLWidth: number;
-  wheelFRWidth: number;
-  wheelRLWidth: number;
-  wheelRRWidth: number;
-  wheelFLSuspensionRestLength: number;
-  wheelFRSuspensionRestLength: number;
-  wheelRLSuspensionRestLength: number;
-  wheelRRSuspensionRestLength: number;
-  wheelFLDirection: {x: number, y: number, z: number };
-  wheelFRDirection: {x: number, y: number, z: number };
-  wheelRLDirection: {x: number, y: number, z: number };
-  wheelRRDirection: {x: number, y: number, z: number };
-  wheelFLAxle: {x: number, y: number, z: number };
-  wheelFRAxle: {x: number, y: number, z: number };
-  wheelRLAxle: {x: number, y: number, z: number };
-  wheelRRAxle: {x: number, y: number, z: number };
-  wheelFLSuspensionStiffness: number;
-  wheelFRSuspensionStiffness: number;
-  wheelRLSuspensionStiffness: number;
-  wheelRRSuspensionStiffness: number;
-  wheelFLSuspensionCompression: number;
-  wheelFRSuspensionCompression: number;
-  wheelRLSuspensionCompression: number;
-  wheelRRSuspensionCompression: number;
-  wheelFLSuspensionRelaxation: number;
-  wheelFRSuspensionRelaxation: number;
-  wheelRLSuspensionRelaxation: number;
-  wheelRRSuspensionRelaxation: number;
-  wheelFLWheelFrictionSlip: number;
-  wheelFRWheelFrictionSlip: number;
-  wheelRLWheelFrictionSlip: number;
-  wheelRRWheelFrictionSlip: number;
-  wheelFLMaxSuspensionTravel: number;
-  wheelFRMaxSuspensionTravel: number;
-  wheelRLMaxSuspensionTravel: number;
-  wheelRRMaxSuspensionTravel: number;
+  wheelFrontYPosition: number;
+  wheelFrontZPosition: number;
+  wheelFrontAxleLength: number;
+  wheelRearYPosition: number;
+  wheelRearZPosition: number;
+  wheelRearAxleLength: number;
+  wheelFrontRadius: number;
+  wheelRearRadius: number;
+  wheelFrontWidth: number;
+  wheelRearWidth: number;
+  wheelFrontSuspensionRestLength: number;
+  wheelRearSuspensionRestLength: number;
+  wheelFrontDirection: {x: number, y: number, z: number };
+  wheelRearDirection: {x: number, y: number, z: number };
+  wheelFrontAxle: {x: number, y: number, z: number };
+  wheelRearAxle: {x: number, y: number, z: number };
+  wheelFrontSuspensionStiffness: number;
+  wheelRearSuspensionStiffness: number;
+  wheelFrontSuspensionCompression: number;
+  wheelRearSuspensionCompression: number;
+  wheelFrontSuspensionRelaxation: number;
+  wheelRearSuspensionRelaxation: number;
+  wheelFrontWheelFrictionSlip: number;
+  wheelRearWheelFrictionSlip: number;
+  wheelFrontMaxSuspensionTravel: number;
+  wheelRearMaxSuspensionTravel: number;
 }
 
+/**
+ * CarControlを生成する時に、パラメータが提供されなかった
+ * 場合に使用されるデフォルトのパラメータ。
+ */
 export const defaultCarControlOption = {
   mass: 10.0, // ブレーキが弱いのでこうするしかない
   defaultLocation: {x: 0.0, y: 1.0, z: 0.0},
@@ -79,52 +66,40 @@ export const defaultCarControlOption = {
   chassisLength: 4.0,
   chassisOffset: {x: 0.0, y: -0.5, z: 0.0 }, // 表示のずれを補正するやつ
   chassisFriction: 0.1, // すぐひっかかるので、つるつるに
-  wheelFLPosition: {x:  1.0, y: 0.0, z:  1.5 },
-  wheelFRPosition: {x: -1.0, y: 0.0, z:  1.5 },
-  wheelRLPosition: {x:  1.0, y: 0.0, z: -1.5 },
-  wheelRRPosition: {x: -1.0, y: 0.0, z: -1.5 },
-  wheelFLRadius: 0.3,
-  wheelFRRadius: 0.3,
-  wheelRLRadius: 0.3,
-  wheelRRRadius: 0.3,
-  wheelFLWidth: 0.4,
-  wheelFRWidth: 0.4,
-  wheelRLWidth: 0.4,
-  wheelRRWidth: 0.4,
-  wheelFLSuspensionRestLength: 0.8,
-  wheelFRSuspensionRestLength: 0.8,
-  wheelRLSuspensionRestLength: 0.8,
-  wheelRRSuspensionRestLength: 0.8,
-  wheelFLDirection: {x: 0.0, y: -1.0, z: 0.0 },
-  wheelFRDirection: {x: 0.0, y: -1.0, z: 0.0 },
-  wheelRLDirection: {x: 0.0, y: -1.0, z: 0.0 },
-  wheelRRDirection: {x: 0.0, y: -1.0, z: 0.0 },
-  wheelFLAxle: {x: -1.0, y: 0.0, z: 0.0 },
-  wheelFRAxle: {x: -1.0, y: 0.0, z: 0.0 },
-  wheelRLAxle: {x: -1.0, y: 0.0, z: 0.0 },
-  wheelRRAxle: {x: -1.0, y: 0.0, z: 0.0 },
-  wheelFLSuspensionStiffness: 24.0,
-  wheelFRSuspensionStiffness: 24.0,
-  wheelRLSuspensionStiffness: 24.0,
-  wheelRRSuspensionStiffness: 24.0,
-  wheelFLSuspensionCompression: 4.0,
-  wheelFRSuspensionCompression: 4.0,
-  wheelRLSuspensionCompression: 4.0,
-  wheelRRSuspensionCompression: 4.0,
-  wheelFLSuspensionRelaxation: 3.0,
-  wheelFRSuspensionRelaxation: 3.0,
-  wheelRLSuspensionRelaxation: 3.0,
-  wheelRRSuspensionRelaxation: 3.0,
-  wheelFLWheelFrictionSlip: 100.0,
-  wheelFRWheelFrictionSlip: 100.0,
-  wheelRLWheelFrictionSlip: 100.0,
-  wheelRRWheelFrictionSlip: 100.0,
-  wheelFLMaxSuspensionTravel: 0.25,
-  wheelFRMaxSuspensionTravel: 0.25,
-  wheelRLMaxSuspensionTravel: 0.25,
-  wheelRRMaxSuspensionTravel: 0.25
+  wheelFrontYPosition: 0.0,
+  wheelFrontZPosition: 1.5,
+  wheelFrontAxleLength: 2.0,
+  wheelRearYPosition: 0.0,
+  wheelRearZPosition: -1.5,
+  wheelRearAxleLength: 2.0,
+  wheelFrontRadius: 0.3,
+  wheelRearRadius: 0.3,
+  wheelFrontWidth: 0.4,
+  wheelRearWidth: 0.4,
+  wheelFrontSuspensionRestLength: 0.8,
+  wheelRearSuspensionRestLength: 0.8,
+  wheelFrontDirection: {x: 0.0, y: -1.0, z: 0.0 },
+  wheelRearDirection: {x: 0.0, y: -1.0, z: 0.0 },
+  wheelFrontAxle: {x: -1.0, y: 0.0, z: 0.0 },
+  wheelRearAxle: {x: -1.0, y: 0.0, z: 0.0 },
+  wheelFrontSuspensionStiffness: 24.0,
+  wheelRearSuspensionStiffness: 24.0,
+  wheelFrontSuspensionCompression: 4.0,
+  wheelRearSuspensionCompression: 4.0,
+  wheelFrontSuspensionRelaxation: 3.0,
+  wheelRearSuspensionRelaxation: 3.0,
+  wheelFrontWheelFrictionSlip: 100.0,
+  wheelRearWheelFrictionSlip: 100.0,
+  wheelFrontMaxSuspensionTravel: 0.25,
+  wheelRearMaxSuspensionTravel: 0.25,
 };
 
+/**
+ * 4輪車で左右対象であることを前提にした、車の動きの
+ * 物理計算をしてくれるオブジェクト。このオブジェクトの
+ * 中に trans: CarTransformerと motion: CarMotionが入って
+ * おり、それぞれをActionObjectに設定して使う。
+ */
 export class CarControl {
   opt: CarControlOption;
   trans: CarTransformer;
@@ -229,57 +204,70 @@ export class CarTransformer implements Transforer {
 
     if (this.controller) {
       // 左の前輪
+      const p = {x:0,y:0,z:0};
+      p.x = -this.cc.opt.wheelFrontAxleLength/2.0;
+      p.y = this.cc.opt.wheelFrontYPosition;
+      p.z = this.cc.opt.wheelFrontZPosition;
       this.controller.addWheel(
-        this.cc.opt.wheelFLPosition,
-        this.cc.opt.wheelFLDirection,
-        this.cc.opt.wheelFLAxle,
-        this.cc.opt.wheelFLSuspensionRestLength,
-        this.cc.opt.wheelFLRadius
+        p,
+        this.cc.opt.wheelFrontDirection,
+        this.cc.opt.wheelFrontAxle,
+        this.cc.opt.wheelFrontSuspensionRestLength,
+        this.cc.opt.wheelFrontRadius
       );
-      this.controller.setWheelSuspensionStiffness(0,this.cc.opt.wheelFLSuspensionStiffness);
-      this.controller.setWheelSuspensionCompression(0,this.cc.opt.wheelFLSuspensionCompression);
-      this.controller.setWheelSuspensionRelaxation(0,this.cc.opt.wheelFLSuspensionRelaxation);
-      this.controller.setWheelFrictionSlip(0,this.cc.opt.wheelFLWheelFrictionSlip);
-      this.controller.setWheelMaxSuspensionTravel(0,this.cc.opt.wheelFLMaxSuspensionTravel);
+      this.controller.setWheelSuspensionStiffness(0,this.cc.opt.wheelFrontSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(0,this.cc.opt.wheelFrontSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(0,this.cc.opt.wheelFrontSuspensionRelaxation);
+      this.controller.setWheelFrictionSlip(0,this.cc.opt.wheelFrontWheelFrictionSlip);
+      this.controller.setWheelMaxSuspensionTravel(0,this.cc.opt.wheelFrontMaxSuspensionTravel);
       // 右の前輪
+      p.x = this.cc.opt.wheelFrontAxleLength/2.0;
+      p.y = this.cc.opt.wheelFrontYPosition;
+      p.z = this.cc.opt.wheelFrontZPosition;
       this.controller.addWheel(
-        this.cc.opt.wheelFRPosition,
-        this.cc.opt.wheelFRDirection,
-        this.cc.opt.wheelFRAxle,
-        this.cc.opt.wheelFRSuspensionRestLength,
-        this.cc.opt.wheelFRRadius
+        p,
+        this.cc.opt.wheelFrontDirection,
+        this.cc.opt.wheelFrontAxle,
+        this.cc.opt.wheelFrontSuspensionRestLength,
+        this.cc.opt.wheelFrontRadius
       );
-      this.controller.setWheelSuspensionStiffness(1,this.cc.opt.wheelFRSuspensionStiffness);
-      this.controller.setWheelSuspensionCompression(1,this.cc.opt.wheelFRSuspensionCompression);
-      this.controller.setWheelSuspensionRelaxation(1,this.cc.opt.wheelFRSuspensionRelaxation);
-      this.controller.setWheelFrictionSlip(1,this.cc.opt.wheelFRWheelFrictionSlip);
-      this.controller.setWheelMaxSuspensionTravel(1,this.cc.opt.wheelFRMaxSuspensionTravel);
+      this.controller.setWheelSuspensionStiffness(1,this.cc.opt.wheelFrontSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(1,this.cc.opt.wheelFrontSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(1,this.cc.opt.wheelFrontSuspensionRelaxation);
+      this.controller.setWheelFrictionSlip(1,this.cc.opt.wheelFrontWheelFrictionSlip);
+      this.controller.setWheelMaxSuspensionTravel(1,this.cc.opt.wheelFrontMaxSuspensionTravel);
       // 左の後輪
+      p.x = -this.cc.opt.wheelRearAxleLength/2.0;
+      p.y = this.cc.opt.wheelRearYPosition;
+      p.z = this.cc.opt.wheelRearZPosition;
       this.controller.addWheel(
-        this.cc.opt.wheelRLPosition,
-        this.cc.opt.wheelRLDirection,
-        this.cc.opt.wheelRLAxle,
-        this.cc.opt.wheelRLSuspensionRestLength,
-        this.cc.opt.wheelRLRadius
+        p,
+        this.cc.opt.wheelRearDirection,
+        this.cc.opt.wheelRearAxle,
+        this.cc.opt.wheelRearSuspensionRestLength,
+        this.cc.opt.wheelRearRadius
       );
-      this.controller.setWheelSuspensionStiffness(2,this.cc.opt.wheelRLSuspensionStiffness);
-      this.controller.setWheelSuspensionCompression(2,this.cc.opt.wheelRLSuspensionCompression);
-      this.controller.setWheelSuspensionRelaxation(2,this.cc.opt.wheelRLSuspensionRelaxation);
-      this.controller.setWheelFrictionSlip(2,this.cc.opt.wheelRLWheelFrictionSlip);
-      this.controller.setWheelMaxSuspensionTravel(2,this.cc.opt.wheelRLMaxSuspensionTravel);
+      this.controller.setWheelSuspensionStiffness(2,this.cc.opt.wheelRearSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(2,this.cc.opt.wheelRearSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(2,this.cc.opt.wheelRearSuspensionRelaxation);
+      this.controller.setWheelFrictionSlip(2,this.cc.opt.wheelRearWheelFrictionSlip);
+      this.controller.setWheelMaxSuspensionTravel(2,this.cc.opt.wheelRearMaxSuspensionTravel);
       // 右の後輪
+      p.x = this.cc.opt.wheelRearAxleLength/2.0;
+      p.y = this.cc.opt.wheelRearYPosition;
+      p.z = this.cc.opt.wheelRearZPosition;
       this.controller.addWheel(
-        this.cc.opt.wheelRRPosition,
-        this.cc.opt.wheelRRDirection,
-        this.cc.opt.wheelRRAxle,
-        this.cc.opt.wheelRRSuspensionRestLength,
-        this.cc.opt.wheelRRRadius
+        p,
+        this.cc.opt.wheelRearDirection,
+        this.cc.opt.wheelRearAxle,
+        this.cc.opt.wheelRearSuspensionRestLength,
+        this.cc.opt.wheelRearRadius
       );
-      this.controller.setWheelSuspensionStiffness(3,this.cc.opt.wheelRRSuspensionStiffness);
-      this.controller.setWheelSuspensionCompression(3,this.cc.opt.wheelRRSuspensionCompression);
-      this.controller.setWheelSuspensionRelaxation(3,this.cc.opt.wheelRRSuspensionRelaxation);
-      this.controller.setWheelFrictionSlip(3,this.cc.opt.wheelRRWheelFrictionSlip);
-      this.controller.setWheelMaxSuspensionTravel(3,this.cc.opt.wheelRRMaxSuspensionTravel);
+      this.controller.setWheelSuspensionStiffness(3,this.cc.opt.wheelRearSuspensionStiffness);
+      this.controller.setWheelSuspensionCompression(3,this.cc.opt.wheelRearSuspensionCompression);
+      this.controller.setWheelSuspensionRelaxation(3,this.cc.opt.wheelRearSuspensionRelaxation);
+      this.controller.setWheelFrictionSlip(3,this.cc.opt.wheelRearWheelFrictionSlip);
+      this.controller.setWheelMaxSuspensionTravel(3,this.cc.opt.wheelRearMaxSuspensionTravel);
     }
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
@@ -364,8 +352,12 @@ export class CarMotion implements Motion {
     const flLoc = new Vec3();
     const flQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelFLAxle);
-      const connection = new Vec3(this.cm.opt.wheelFLPosition);
+
+      const wheelAxleCs = new Vec3(this.cm.opt.wheelFrontAxle);
+      const connection = new Vec3(
+        -this.cm.opt.wheelFrontAxleLength/2.0,
+        this.cm.opt.wheelFrontYPosition,
+        this.cm.opt.wheelFrontZPosition);
       const suspension = this.cm.trans.controller.wheelSuspensionLength(0) || 0;
       const steering = this.cm.trans.controller.wheelSteering(0) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(0) || 0;
@@ -382,8 +374,11 @@ export class CarMotion implements Motion {
     const frLoc = new Vec3();
     const frQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelFRAxle);
-      const connection = new Vec3(this.cm.opt.wheelFRPosition);
+      const wheelAxleCs = new Vec3(this.cm.opt.wheelFrontAxle);
+      const connection = new Vec3(
+        this.cm.opt.wheelFrontAxleLength/2.0,
+        this.cm.opt.wheelFrontYPosition,
+        this.cm.opt.wheelFrontZPosition);
       const suspension = this.cm.trans.controller.wheelSuspensionLength(1) || 0;
       const steering = this.cm.trans.controller.wheelSteering(1) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(1) || 0;
@@ -400,8 +395,11 @@ export class CarMotion implements Motion {
     const rlLoc = new Vec3();
     const rlQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelRLAxle);
-      const connection = new Vec3(this.cm.opt.wheelRLPosition);
+      const wheelAxleCs = new Vec3(this.cm.opt.wheelRearAxle);
+      const connection = new Vec3(
+        -this.cm.opt.wheelRearAxleLength/2.0,
+        this.cm.opt.wheelRearYPosition,
+        this.cm.opt.wheelRearZPosition);
       const suspension = this.cm.trans.controller.wheelSuspensionLength(2) || 0;
       const steering = this.cm.trans.controller.wheelSteering(2) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(2) || 0;
@@ -418,8 +416,11 @@ export class CarMotion implements Motion {
     const rrLoc = new Vec3();
     const rrQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelRRAxle);
-      const connection = new Vec3(this.cm.opt.wheelRRPosition);
+      const wheelAxleCs = new Vec3(this.cm.opt.wheelRearAxle);
+      const connection = new Vec3(
+        this.cm.opt.wheelRearAxleLength/2.0,
+        this.cm.opt.wheelRearYPosition,
+        this.cm.opt.wheelRearZPosition);
       const suspension = this.cm.trans.controller.wheelSuspensionLength(3) || 0;
       const steering = this.cm.trans.controller.wheelSteering(3) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(3) || 0;

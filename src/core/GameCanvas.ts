@@ -291,6 +291,14 @@ export class GameCanvas extends HTMLElement implements View {
   waitForRender(): Promise<number> {
     return this.canvas.waitForRender();
   }
+
+  alert(msg: string): Promise<void> {
+    return this.canvas.alert(msg);
+  }
+
+  prompt(msg: string): Promise<string> {
+    return this.canvas.prompt(msg);
+  }
 }
 
 customElements.define("game-canvas-a3", GameCanvas);

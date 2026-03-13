@@ -1,3 +1,6 @@
+// a3.CarControlのテスト2。TestCar.a3
+// というかa3.defaultCarControlOptionのテスト。
+
 import * as a3 from 'a3js';
 
 await a3.initPhysics();
