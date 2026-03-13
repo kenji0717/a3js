@@ -237,11 +237,11 @@ console.log(`GAHA: touchStart()`,event);
 }
 
 
-export interface FACOption {
+export interface FACOptions {
   offset: {x:number, y:number, z:number}
 }
 
-export const defaultFACOption: FACOption = {
+export const defaultFACOptions: FACOptions = {
   offset: {x:0, y:5, z:-10}
 };
 
@@ -250,16 +250,16 @@ export const defaultFACOption: FACOption = {
   * カメラをコントロールするコントローラ。
   */
 export class FollowAvatarController extends ControllerBase {
-  option: FACOption;
+  options: FACOptions;
   private _offset: Vec3;
 
-  constructor(option: Partial<FACOption>) {
+  constructor(options: Partial<FACOptions>) {
     super();
-    this.option = {
-      ...defaultFACOption,
-      ...option
+    this.options = {
+      ...defaultFACOptions,
+      ...options
     };
-    const o = this.option.offset;
+    const o = this.options.offset;
     this._offset = new Vec3(o.x, o.y, o.z);
   }
 
@@ -286,11 +286,11 @@ export class FollowAvatarController extends ControllerBase {
 }
 
 
-export interface ACOption {
+export interface ACOptions {
   offset: {x:number, y:number, z:number}
 }
 
-export const defaultACOption: ACOption = {
+export const defaultACOptions: ACOptions = {
   offset: {x:0, y:5, z:-10}
 };
 
@@ -300,7 +300,7 @@ export const defaultACOption: ACOption = {
   * コントローラ。
   */
 export class AvatarController extends ControllerBase {
-  option: ACOption;
+  options: ACOptions;
   private _keyW: boolean;
   private _keyA: boolean;
   private _keyS: boolean;
@@ -313,16 +313,16 @@ export class AvatarController extends ControllerBase {
   private _avatarNextQuat: Quat;
   private _velY: number;
 
-  constructor(option: Partial<ACOption>) {
+  constructor(options: Partial<ACOptions>) {
     super();
-    this.option = {
-      ...defaultACOption,
-      ...option
+    this.options = {
+      ...defaultACOptions,
+      ...options
     };
     this._keyW = this._keyA = this._keyS = this._keyD = false;
     this._keyLeft = this._keyRight = false;
     this._keySpace = false;
-    const o = this.option.offset;
+    const o = this.options.offset;
     this._offset = new Vec3(o.x,o.y,o.z);
     this._avatarNextLoc = new Vec3();
     this._avatarNextQuat = new Quat();

@@ -4,8 +4,8 @@ import type { Scene } from './Scene'; // ここをtypeにしないと循環参�
 import { DefaultTransformer, InterpolationTransformer,
          BillboardTransformer, InterpolationBillboardTransformer,
        } from './Transformers';
-import { defaultPhysicsMotionOption } from './Physics';
-import type { PhysicsMotionOption, PhysicsWorld } from './Physics';
+import { defaultPhysicsMotionOptions } from './Physics';
+import type { PhysicsMotionOptions, PhysicsWorld } from './Physics';
 import { RapierTransformer } from '../rapier/RapierPhysics';
 import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
@@ -115,29 +115,29 @@ export class ObjectA3 {
     return this.transformer;
   }
 
-  setTransformMode(mode: TransformMode,option?: any) {
+  setTransformMode(mode: TransformMode,options?: any) {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
     else if (mode === "Interpolation")
       this.setTransformer(new InterpolationTransformer());
     else if (mode === "Billboard")
-      this.setTransformer(new BillboardTransformer(option));
+      this.setTransformer(new BillboardTransformer(options));
     else if (mode === "InterpolationBillboard")
-      this.setTransformer(new InterpolationBillboardTransformer(option));
+      this.setTransformer(new InterpolationBillboardTransformer(options));
     else if (mode === "SimplePhysics") {
       const opt = {
-        ...defaultPhysicsMotionOption,
-        ...option
+        ...defaultPhysicsMotionOptions,
+        ...options
       };
       this.setTransformer(new RapierTransformer(opt));
     }
   }
 
   // setTransformModeでも同じことできるけど。。。
-  initSimplePhysics(option: PhysicsMotionOption) {
+  initSimplePhysics(options: PhysicsMotionOptions) {
     const opt = {
-      ...defaultPhysicsMotionOption,
-      ...option
+      ...defaultPhysicsMotionOptions,
+      ...options
     };
     this.setTransformer(new RapierTransformer(opt));
   }

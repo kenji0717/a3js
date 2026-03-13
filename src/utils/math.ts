@@ -99,11 +99,11 @@ export function mimeTypeFromPath(path: string): string {
 }
 
 // ChatGPTに教えてもらったマージできる設定の型とマージ関数。
-// 抜けのない完璧な設定の型(例えばXOption)を定義した後、
-// 完璧なデフォルトの設定を用意(例えばdefaultXOption)。
-// ユーザにはその型のDeepPartial<XOption>を要求することで
+// 抜けのない完璧な設定の型(例えばXOptions)を定義した後、
+// 完璧なデフォルトの設定を用意(例えばdefaultXOptions)。
+// ユーザにはその型のDeepPartial<XOptions>を要求することで
 // 全ての設定を指定しなくて良くなって、
-// deepMarge<XOption>(defaultXOption,userOption);で完璧な
+// deepMarge<XOptions>(defaultXOptions,userOptions);で完璧な
 // 設定が用意できるという仕組み。
 
 export type DeepPartial<T> = {

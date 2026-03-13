@@ -16,7 +16,7 @@ import type { Motion, Pose } from '../core/ActionObject';
  * CarControlを生成するために使用する全てのパラメータを
  * 含んだインタフェース。
  */
-export interface CarControlOption {
+export interface CarControlOptions {
   mass: number;
   defaultLocation: {x: number, y: number, z: number };
   defaultQuat: {x: number, y: number, z: number, w: number };
@@ -57,7 +57,7 @@ export interface CarControlOption {
  * CarControlを生成する時に、パラメータが提供されなかった
  * 場合に使用されるデフォルトのパラメータ。
  */
-export const defaultCarControlOption = {
+export const defaultCarControlOptions = {
   mass: 10.0, // ブレーキが弱いのでこうするしかない
   defaultLocation: {x: 0.0, y: 1.0, z: 0.0},
   defaultQuat: {x: 0.0, y: 0.0, z: 0.0, w: 1.0},
@@ -101,14 +101,14 @@ export const defaultCarControlOption = {
  * おり、それぞれをActionObjectに設定して使う。
  */
 export class CarControl {
-  opt: CarControlOption;
+  opt: CarControlOptions;
   trans: CarTransformer;
   motion: CarMotion;
 
-  constructor(option: Partial<CarControlOption>) {
+  constructor(options: Partial<CarControlOptions>) {
     this.opt = {
-      ...defaultCarControlOption,
-      ...option
+      ...defaultCarControlOptions,
+      ...options
     };
     this.trans = new CarTransformer(this);
     this.motion = new CarMotion(this);

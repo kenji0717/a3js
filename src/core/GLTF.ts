@@ -31,23 +31,23 @@ function hasMorphTargets(
   );
 }
 
-export interface GLTFOption {
+export interface GLTFOptions {
   renderer?: THREE.WebGLRenderer /*| THREE.WebGPURenderer*/,
   draco: string,
   ktx2: string,
   meshopt: boolean
 }
 
-export const defaultGLTFOption = {
+export const defaultGLTFOptions = {
   draco: 'https://unpkg.com/three@0.182/examples/jsm/libs/draco/',
   ktx2: 'https://unpkg.com/three@0.182.0/examples/jsm/libs/basis/',
   meshopt: true
 };
 
-export function regenerateGLTFLoader(option: Partial<GLTFOption>={}) {
+export function regenerateGLTFLoader(options: Partial<GLTFOptions>={}) {
   const opt = {
-    ...defaultGLTFOption,
-    ...option
+    ...defaultGLTFOptions,
+    ...options
   };
   let newGltfLoader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();

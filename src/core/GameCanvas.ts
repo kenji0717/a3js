@@ -5,17 +5,17 @@ import type { Controller } from './Controller';
 import type { Vec3 } from './LinearMath';
 import type { Scene } from './Scene';
 
-export interface GameCanvasOption {
+export interface GameCanvasOptions {
   touchDevice: boolean;
 }
 
-export const defaultGameCanvasOption: GameCanvasOption = {
+export const defaultGameCanvasOptions: GameCanvasOptions = {
   // スマホかPCかの判定をタッチデバイスの数で判定
   touchDevice: (navigator.maxTouchPoints > 0)
 };
 
 export class GameCanvas extends HTMLElement implements View {
-  option: GameCanvasOption;
+  options: GameCanvasOptions;
   canvas: Canvas;
   scene: Scene;
   camera: Camera;
@@ -36,11 +36,11 @@ export class GameCanvas extends HTMLElement implements View {
   // 以下キーの情報
   keys: Set<string>;
 
-  constructor(option: Partial<GameCanvasOption> = {}) {
+  constructor(options: Partial<GameCanvasOptions> = {}) {
     super();
-    this.option = {
-      ...defaultGameCanvasOption,
-      ...option
+    this.options = {
+      ...defaultGameCanvasOptions,
+      ...options
     };
     this.attachShadow({mode:"open"});
     this.shadowRoot!.innerHTML = `
@@ -224,7 +224,7 @@ export class GameCanvas extends HTMLElement implements View {
     window.addEventListener('keydown',this.keyDownListener);
     window.addEventListener('keyup',this.keyUpListener);
     // PCの場合タッチデバイス用UIを非表示
-    if (!this.option.touchDevice) {
+    if (!this.options.touchDevice) {
       this.shadowRoot!.querySelectorAll<HTMLDivElement>('.joystick').forEach((js)=>{
         js.style.display = 'none';
       });

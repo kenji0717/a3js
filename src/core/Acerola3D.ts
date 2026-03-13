@@ -10,7 +10,7 @@ import { ClipMotion } from '../three/ClipMotion.js';
 import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
 import { Sound } from '../three/Sound';
-import type { SoundOptionInput } from '../three/Sound';
+import type { SoundOptionsInput } from '../three/Sound';
 import { readBlobFromUnzippedA3 } from '../utils/math';
 //import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
@@ -128,7 +128,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           if (file) {
             const blob = readBlobFromUnzippedA3(unzippedA3,file);
             const url = URL.createObjectURL(blob);
-            const opt: SoundOptionInput = {
+            const opt: SoundOptionsInput = {
               type: ssType,
               //autoplay: false,
               loop: loop==='true',

@@ -45,7 +45,7 @@ const defaultSoundOptions: SoundOptions = {
   },
 };
 
-export type SoundOptionInput = DeepPartial<SoundOptions>;
+export type SoundOptionsInput = DeepPartial<SoundOptions>;
 
 /**
  * サウンドの初期化を行います。必ずユーザジェスチャを起点とする
@@ -66,11 +66,11 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   static audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
 
   readonly ready: Promise<Sound>;
-  private option: SoundOptions;
+  private options: SoundOptions;
   private sound?: THREE.PositionalAudio | THREE.Audio<GainNode | PannerNode>;
-  constructor(soundFile: string, options: SoundOptionInput = {}) {
+  constructor(soundFile: string, options: SoundOptionsInput = {}) {
     super();
-    this.option = deepMerge(defaultSoundOptions, options);
+    this.options = deepMerge(defaultSoundOptions, options);
     this.ready = this.asyncInit(soundFile);
   }
 
@@ -79,24 +79,24 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   }
 
   async asyncInit(soundFile: string): Promise<Sound> {
-    if (this.option.type === "positional") {
+    if (this.options.type === "positional") {
       const sound = new THREE.PositionalAudio(Sound.listener);
-      sound.setRefDistance(this.option.positional.refDistance);
-      sound.setMaxDistance(this.option.positional.maxDistance);
-      sound.setRolloffFactor(this.option.positional.rolloffFactor);
-      const d = this.option.positional.directional;
+      sound.setRefDistance(this.options.positional.refDistance);
+      sound.setMaxDistance(this.options.positional.maxDistance);
+      sound.setRolloffFactor(this.options.positional.rolloffFactor);
+      const d = this.options.positional.directional;
       sound.setDirectionalCone(
         d.coneInnerAngle,
         d.coneOuterAngle,
         d.coneOuterGain
       );
-      sound.setVolume(this.option.volume);
-      sound.setLoop(this.option.loop);
+      sound.setVolume(this.options.volume);
+      sound.setLoop(this.options.loop);
       this.sound = sound;
     } else {
       const sound = new THREE.Audio(Sound.listener);
-      sound.setVolume(this.option.volume);
-      sound.setLoop(this.option.loop);
+      sound.setVolume(this.options.volume);
+      sound.setLoop(this.options.loop);
       this.sound = sound;
     }
     this.object.add(this.sound);

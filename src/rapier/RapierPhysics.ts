@@ -6,9 +6,9 @@ import * as TG from '../utils/TypeGuard';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transforer } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
-import { defaultPhysicsMotionOption } from '../core/Physics';
-import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOption,
-              PhysicsMotionOption, Collision } from '../core/Physics';
+import { defaultPhysicsMotionOptions } from '../core/Physics';
+import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOptions,
+              PhysicsMotionOptions, Collision } from '../core/Physics';
 import type { Motion } from '../core/ActionObject';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -43,20 +43,20 @@ export class RapierPhysicsEngine implements PhysicsEngine {
   /**
     * RapierWorldを作って返す。
     */
-  createWorld(option: RapierPhysicsWorldOption): PhysicsWorld {
+  createWorld(options: RapierPhysicsWorldOptions): PhysicsWorld {
     let timestep = 1/60;
-    if (this.isRapierWorldOption(option))
-      timestep = option.timestep;
-    const world = new RAPIER.World(option.gravity);
+    if (this.isRapierWorldOptions(options))
+      timestep = options.timestep;
+    const world = new RAPIER.World(options.gravity);
     return new RapierPhysicsWorld(world,timestep);
   }
 
-  private isRapierWorldOption(option: PhysicsWorldOption): option is RapierPhysicsWorldOption {
-    return ( /* "enableCCD" in option && */ "timestep" in option );
+  private isRapierWorldOptions(options: PhysicsWorldOptions): options is RapierPhysicsWorldOptions {
+    return ( /* "enableCCD" in options && */ "timestep" in options );
   }
 }
 
-export interface RapierPhysicsWorldOption extends PhysicsWorldOption {
+export interface RapierPhysicsWorldOptions extends PhysicsWorldOptions {
   //enableCCD: boolean;
   timestep: number;
 }
@@ -114,13 +114,13 @@ export class RapierTransformer implements Transforer {
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[];
   colliders: Rapier.Collider[];
-  completeOption: PhysicsMotionOption;
+  completeOptions: PhysicsMotionOptions;
 
   // 最低限の初期化。
-  constructor(option: Partial<PhysicsMotionOption> = {}) {
-    this.completeOption = {
-      ...defaultPhysicsMotionOption,
-      ...option
+  constructor(options: Partial<PhysicsMotionOptions> = {}) {
+    this.completeOptions = {
+      ...defaultPhysicsMotionOptions,
+      ...options
     };
     this.trans = new Transform();
     this.colliderDescs = [];
@@ -129,7 +129,7 @@ export class RapierTransformer implements Transforer {
 
   private makeBodyDesc(): Rapier.RigidBodyDesc {
     let bodyDesc: Rapier.RigidBodyDesc;
-    switch(this.completeOption.rigidBody) {
+    switch(this.completeOptions.rigidBody) {
       case "dynamic":
         bodyDesc = RAPIER.RigidBodyDesc.dynamic();
         break;
@@ -158,7 +158,7 @@ export class RapierTransformer implements Transforer {
 
   private configColliderDescs() {
     if (!this.objectA3) return; // あっちゃいけない
-    const opt = this.completeOption;
+    const opt = this.completeOptions;
     const volumes: number[] = [];
     this.objectA3.object.traverse((obj)=>{
       if (TG.isMesh(obj)) {

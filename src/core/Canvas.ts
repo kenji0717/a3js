@@ -11,13 +11,13 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
 import { regenerateGLTFLoader } from './GLTF';
 
-export interface CanvasOption {
+export interface CanvasOptions {
   camera: GeneralCamera | undefined;
   antialias: boolean;
   transparent: boolean;
 }
 
-export const defaultCanvasOption: CanvasOption = {
+export const defaultCanvasOptions: CanvasOptions = {
   camera: undefined,
   antialias: false,
   transparent: false
@@ -27,7 +27,7 @@ export const defaultCanvasOption: CanvasOption = {
  * HTMLのエレメント(a3-canvas)として使えるView。
  */
 export class Canvas extends HTMLElement implements View {
-  option: CanvasOption;
+  options: CanvasOptions;
   private ro?: ResizeObserver;
   base: ViewBase;
   renderer;
@@ -40,7 +40,7 @@ export class Canvas extends HTMLElement implements View {
   private _canvas: HTMLCanvasElement;
   private _css2DCanvas: HTMLElement;
   
-  constructor(option?: Partial<CanvasOption>) {
+  constructor(options?: Partial<CanvasOptions>) {
     super();
 
     // ########## WebComponent関係のセットアップ ##########
@@ -60,13 +60,13 @@ export class Canvas extends HTMLElement implements View {
   <slot></slot>
 `;
 
-    this.option = {
-      ...defaultCanvasOption,
-      ...option
+    this.options = {
+      ...defaultCanvasOptions,
+      ...options
     };
-    if (this.option.camera) {
-      this.camera3js = this.option.camera.camera;
-      this.camera = this.option.camera;
+    if (this.options.camera) {
+      this.camera3js = this.options.camera.camera;
+      this.camera = this.options.camera;
     } else {
       const camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
       camera3js.aspect = 300 / 150;
@@ -81,8 +81,8 @@ export class Canvas extends HTMLElement implements View {
     //this.timer.connect(document); // 複数Canvas生成したらダメなのでコメントアウト
 
     const o = {
-      antialias: this.option.antialias,
-      alpha: this.option.transparent
+      antialias: this.options.antialias,
+      alpha: this.options.transparent
     };
     this.renderer = new THREE.WebGLRenderer(o);
     regenerateGLTFLoader({renderer: this.renderer});

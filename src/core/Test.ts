@@ -18,22 +18,22 @@ const labelCSS = `
   pointer-events: none; /* マウスイベントを透過させて背後の操作を邪魔しない */
 `;
 
-export interface TestOption {
+export interface TestOptions {
   testMode: boolean;
 }
 
-export const defaultTestOption: TestOption = {
+export const defaultTestOptions: TestOptions = {
   testMode: true,
 }
 
 export class Test extends ObjectA3 {
-  constructor(opt: DeepPartial<TestOption> = {}) {
-    super(opt);
-    const option = {
-      ...defaultTestOption,
-      ...opt
+  constructor(options: DeepPartial<TestOptions> = {}) {
+    super(options);
+    const opt = {
+      ...defaultTestOptions,
+      ...options
     };
-    this.setTransformer(new TestMotion(option));
+    this.setTransformer(new TestMotion(opt));
   }
 
   initObject() {
@@ -49,8 +49,8 @@ export class Test extends ObjectA3 {
     return mesh;
   }
 
-  initTransformer(option: DeepPartial<TestOption>): Transforer {
-    const opt = deepMerge<TestOption>(defaultTestOption,option);
+  initTransformer(option: DeepPartial<TestOptions>): Transforer {
+    const opt = deepMerge<TestOptions>(defaultTestOptions,option);
     return new TestMotion(opt);
   }
 }
@@ -59,9 +59,9 @@ class TestMotion extends DefaultTransformer {
   testMode: boolean = true;
   rot: Vec3 = new Vec3();
 
-  constructor(opt: TestOption) {
+  constructor(options: TestOptions) {
     super();
-    this.testMode = opt.testMode;
+    this.testMode = options.testMode;
   }
 
   update(dt: number) {

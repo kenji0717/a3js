@@ -11,13 +11,13 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
 import { regenerateGLTFLoader } from './GLTF';
 
-export interface WindowOption {
+export interface WindowOptions {
   width: number;
   height: number;
   camera: GeneralCamera | undefined;
 }
 
-export const defaultWindowOption: WindowOption = {
+export const defaultWindowOptions: WindowOptions = {
   width: 600,
   height: 300,
   camera: undefined
@@ -45,7 +45,7 @@ export class Window extends HTMLElement implements View {
   private _closeBtn: HTMLElement | null = null;
   // ########## WebComponent関係のセットアップ終り ##########
 
-  option: WindowOption;
+  options: WindowOptions;
   base: ViewBase;
   renderer;
   css2DRenderer: CSS2DRenderer;
@@ -55,11 +55,11 @@ export class Window extends HTMLElement implements View {
   camera3js: THREE.Camera;
   timer: THREE.Timer;
 
-  constructor(width=600, height=300, option: Partial<WindowOption> = {}) {
+  constructor(width=600, height=300, options: Partial<WindowOptions> = {}) {
     super();
-    this.option = {
-      ...defaultWindowOption,
-      ...option,
+    this.options = {
+      ...defaultWindowOptions,
+      ...options,
       ...{width,height}
     };
     // ########## WebComponent関係のセットアップ ##########
@@ -112,9 +112,9 @@ export class Window extends HTMLElement implements View {
     // ########## WebComponent関係のセットアップ終り ##########
 
     // ここからようやく3D関係
-    if (this.option.camera) {
-      this.camera3js = this.option.camera.camera;
-      this.camera = this.option.camera;
+    if (this.options.camera) {
+      this.camera3js = this.options.camera.camera;
+      this.camera = this.options.camera;
     } else {
       const camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
       camera3js.aspect = width / height;

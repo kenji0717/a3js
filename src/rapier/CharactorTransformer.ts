@@ -5,14 +5,14 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transforer } from '../core/ObjectA3';
 
-export interface CharactorTransOption {
+export interface CharactorTransOptions {
   offset: number,
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharactorTransOption = {
+export const defaultCharactorTransOptions = {
   offset: 0.01,
   auto: true,
   height: 1.5,
@@ -22,7 +22,7 @@ export const defaultCharactorTransOption = {
 export class CharactorTransformer implements Transforer {
   trans: Transform;
   objectA3?: ObjectA3;
-  completeOption: CharactorTransOption;
+  completeOptions: CharactorTransOptions;
   controller?: Rapier.KinematicCharacterController;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
@@ -31,10 +31,10 @@ export class CharactorTransformer implements Transforer {
   tmpV1: Vec3;
   tmpV2: Vec3;
 
-  constructor(option: Partial<CharactorTransOption> = {}) {
-    this.completeOption = {
-      ...defaultCharactorTransOption,
-      ...option
+  constructor(options: Partial<CharactorTransOptions> = {}) {
+    this.completeOptions = {
+      ...defaultCharactorTransOptions,
+      ...options
     };
     this.trans = new Transform();
     this.capsuleCenter = new Vec3();
@@ -45,18 +45,18 @@ export class CharactorTransformer implements Transforer {
 
   init(trans: Transform, objectA3: ObjectA3) {
     this.trans.set(trans);
-    if (this.completeOption.auto) {
+    if (this.completeOptions.auto) {
       const box = new THREE.Box3().setFromObject(objectA3.object);
       const tmpV = new THREE.Vector3();
       box.getSize(tmpV);
-      this.completeOption.radius = Math.max(tmpV.x, tmpV.z) / 2;
-      this.completeOption.height = tmpV.y - this.completeOption.radius * 2;
+      this.completeOptions.radius = Math.max(tmpV.x, tmpV.z) / 2;
+      this.completeOptions.height = tmpV.y - this.completeOptions.radius * 2;
       box.getCenter(tmpV);
       this.capsuleCenter.set(tmpV);
     }
     this.colliderDesc = RAPIER.ColliderDesc.capsule(
-        this.completeOption.height,
-        this.completeOption.radius);
+        this.completeOptions.height,
+        this.completeOptions.radius);
     this.colliderDesc.setTranslation(
       trans.loc.x,
       trans.loc.y,
@@ -72,7 +72,7 @@ export class CharactorTransformer implements Transforer {
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
-    this.controller = world.world.createCharacterController(this.completeOption.offset);
+    this.controller = world.world.createCharacterController(this.completeOptions.offset);
     if (this.colliderDesc)
       this.collider = world.world.createCollider(this.colliderDesc);
     if (this.collider && this.objectA3)

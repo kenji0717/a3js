@@ -29,14 +29,14 @@ export interface PhysicsEngine {
   /**
     * 物理演算用のWorldを生成して返す。
     */
-  createWorld(option: PhysicsWorldOption): PhysicsWorld;
+  createWorld(options: PhysicsWorldOptions): PhysicsWorld;
 }
 
 /**
  * PhysicsWorldを生成する時に必要となる情報をまとめたもの。
  * 物理エンジンの実装ごとに拡張可能。
  */
-export interface PhysicsWorldOption {
+export interface PhysicsWorldOptions {
   gravity: { x: number; y: number; z: number };
 }
 
@@ -59,7 +59,7 @@ export type MeshColliderKind = "tri_mesh" | "convex_hull";
  * PhysicsMotionを生成する時に必要な情報をまとめたもの。
  * 現在はRapierの実装に合わせた物になってしまっている。
  */
-export interface PhysicsMotionOption {
+export interface PhysicsMotionOptions {
   rigidBody: RigidBodyType;
   collider: ColliderKind;
   meshCollider: MeshColliderKind;
@@ -72,9 +72,9 @@ export interface PhysicsMotionOption {
 }
 
 /**
- * デフォルト値となるPhysicsMotionOption
+ * デフォルト値となるPhysicsMotionOptions
  */
-export const defaultPhysicsMotionOption: PhysicsMotionOption = {
+export const defaultPhysicsMotionOptions: PhysicsMotionOptions = {
   rigidBody: "dynamic",
   collider: "solid",
   meshCollider: "convex_hull",
