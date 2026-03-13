@@ -66,11 +66,11 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   static audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
 
   readonly ready: Promise<Sound>;
-  private config: SoundOptions;
+  private option: SoundOptions;
   private sound?: THREE.PositionalAudio | THREE.Audio<GainNode | PannerNode>;
   constructor(soundFile: string, options: SoundOptionInput = {}) {
     super();
-    this.config = deepMerge(defaultSoundOptions, options);
+    this.option = deepMerge(defaultSoundOptions, options);
     this.ready = this.asyncInit(soundFile);
   }
 
@@ -79,24 +79,24 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   }
 
   async asyncInit(soundFile: string): Promise<Sound> {
-    if (this.config.type === "positional") {
+    if (this.option.type === "positional") {
       const sound = new THREE.PositionalAudio(Sound.listener);
-      sound.setRefDistance(this.config.positional.refDistance);
-      sound.setMaxDistance(this.config.positional.maxDistance);
-      sound.setRolloffFactor(this.config.positional.rolloffFactor);
-      const d = this.config.positional.directional;
+      sound.setRefDistance(this.option.positional.refDistance);
+      sound.setMaxDistance(this.option.positional.maxDistance);
+      sound.setRolloffFactor(this.option.positional.rolloffFactor);
+      const d = this.option.positional.directional;
       sound.setDirectionalCone(
         d.coneInnerAngle,
         d.coneOuterAngle,
         d.coneOuterGain
       );
-      sound.setVolume(this.config.volume);
-      sound.setLoop(this.config.loop);
+      sound.setVolume(this.option.volume);
+      sound.setLoop(this.option.loop);
       this.sound = sound;
     } else {
       const sound = new THREE.Audio(Sound.listener);
-      sound.setVolume(this.config.volume);
-      sound.setLoop(this.config.loop);
+      sound.setVolume(this.option.volume);
+      sound.setLoop(this.option.loop);
       this.sound = sound;
     }
     this.object.add(this.sound);

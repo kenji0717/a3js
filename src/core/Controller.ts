@@ -253,11 +253,11 @@ export class FollowAvatarController extends ControllerBase {
   option: FACOption;
   private _offset: Vec3;
 
-  constructor(config: Partial<FACOption>) {
+  constructor(option: Partial<FACOption>) {
     super();
     this.option = {
       ...defaultFACOption,
-      ...config
+      ...option
     };
     const o = this.option.offset;
     this._offset = new Vec3(o.x, o.y, o.z);
@@ -313,11 +313,11 @@ export class AvatarController extends ControllerBase {
   private _avatarNextQuat: Quat;
   private _velY: number;
 
-  constructor(config: Partial<ACOption>) {
+  constructor(option: Partial<ACOption>) {
     super();
     this.option = {
       ...defaultACOption,
-      ...config
+      ...option
     };
     this._keyW = this._keyA = this._keyS = this._keyD = false;
     this._keyLeft = this._keyRight = false;
