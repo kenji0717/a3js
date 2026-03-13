@@ -292,12 +292,12 @@ export class GameCanvas extends HTMLElement implements View {
     return this.canvas.waitForRender();
   }
 
-  alert(msg: string): Promise<void> {
-    return this.canvas.alert(msg);
+  alert(msg: string, func?: ()=>void): Promise<void> {
+    return this.canvas.alert(msg,func);
   }
 
-  prompt(msg: string): Promise<string> {
-    return this.canvas.prompt(msg);
+  prompt(msg: string, func?: ()=>void): Promise<string> {
+    return this.canvas.prompt(msg,func);
   }
 }
 
