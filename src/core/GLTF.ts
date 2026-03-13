@@ -112,7 +112,9 @@ export class GLTF extends ActionObject<GLTF> {
         actions[anim.name] = {
           name: anim.name,
           shape,
-          motion: new ClipMotion(anim)
+          motion: new ClipMotion(anim),
+          sound: undefined,
+          soundContinue: true
         };
       });
       if (firstActionName) {
@@ -122,7 +124,9 @@ export class GLTF extends ActionObject<GLTF> {
         actions['dummy'] = {
           name: 'dummy',
           shape,
-          motion: new DummyMotion()
+          motion: new DummyMotion(),
+          sound: undefined,
+          soundContinue: true
         };
         this.syncInit(firstActionName,actions,morphs);
       }
@@ -136,7 +140,9 @@ export class GLTF extends ActionObject<GLTF> {
       actions['dummy'] = {
         name: 'dummy',
         shape: {root: mesh},
-        motion: new DummyMotion()
+        motion: new DummyMotion(),
+        sound: undefined,
+        soundContinue: true
       };
       this.syncInit(firstActionName,actions);
       

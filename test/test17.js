@@ -4,8 +4,9 @@ import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
 await view.alert("ボタンを押すとスタートします",a3.initSound);
+a3.Sound.listener.setMasterVolume(0.5); // 全体のボリューム設定
 
-const obj = new a3.Test();
+const obj = new a3.Test(); // 場所認識のためだけのobj
 view.scene.add(obj);
 
 const opt = { loop: true, volume: 0.3 };
@@ -16,7 +17,6 @@ sound.play();
 
 let t=0;
 while (true) {
-  await view.waitForRender();
+  t += await view.waitForRender();
   obj.setLocation(0,0,-t);
-  t+=0.05;
 }

@@ -13,7 +13,10 @@ let vrmlLoader: VRMLLoader2;
 export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: string): Promise<THREE.Object3D> {
   if (!vrmlLoader)
     vrmlLoader = new VRMLLoader2();
-  // URLModifierでVRML内のテクスチャ参照をBlob URLに置換
+  // URLModifierでVRML内のテクスチャ参照をBlob URLに置換する
+  // 処理が必要なのだが、これをするとVRMLLoaderだけでなく、
+  // AudioLoaderとかThree.js全体に影響するっぽいので処理が終わ
+  // ったらすぐにダミーのURLModifierを設定すること。
   vrmlLoader.manager.setURLModifier((url) => {
     if (url.startsWith('./'))
       url = url.substring(2);
@@ -21,6 +24,8 @@ export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: str
   });
 
   const mesh = await vrmlLoader.loadAsync(vrmlFile);
+
+  vrmlLoader.manager.setURLModifier((url)=>{return url;})
   return mesh;
 }
 

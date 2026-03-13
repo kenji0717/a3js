@@ -4,8 +4,9 @@ import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
 await view.alert("ボタンを押すとスタートします",a3.initSound);
+a3.Sound.listener.setMasterVolume(0.5); // 全体のボリューム設定
 
-const obj = new a3.Box("green");
+const obj = new a3.Box("green"); // 方向認識のためだけのobj
 view.scene.add(obj);
 
 const directional = { coneInnerAngle:30, coneOuterAngle: 90, coneOuterGain: 0.1 };
@@ -17,8 +18,7 @@ sound.play();
 
 let t=0;
 while (true) {
-  await view.waitForRender();
-  obj.setRotation(0,t,0);
-  t+=0.5;
+  t += await view.waitForRender();
+  obj.setRotation(0,50*t,0);
 }
 

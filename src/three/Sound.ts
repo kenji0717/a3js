@@ -110,6 +110,11 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
   }
 
   play() {
+    this.sound?.stop();
     this.sound?.play();
+  }
+
+  stop() {
+    this.sound?.stop();
   }
 }

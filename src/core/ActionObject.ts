@@ -3,11 +3,14 @@ import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
+import { Sound } from '../three/Sound';
 
 export interface Action {
   name: string; // 本当はこのnameを取り除きたい。GAHA
   shape: Shape;
   motion: Motion;
+  sound?: Sound;
+  soundContinue: boolean;
 }
 
 export interface Shape {
@@ -118,11 +121,22 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   setState(name: string) {
     const a = this.actions[name];
     if (a) {
-      if (this.currentAction)
+      if (this.currentAction) {
+        if (this.currentAction.sound) {
+          if (!this.currentAction.soundContinue)
+            this.currentAction.sound.stop();
+        }
         this.object.remove(this.currentAction.shape.root);
+      }
       this.object.add(a.shape.root);
       a.motion.playCount = 0;
       a.motion.time = 0;
+      if (a.sound) {
+        a.sound.play();
+        a.motion.setFinishListener(()=>{
+          a.sound?.play();
+        });
+      }
       this.currentAction = a;
       this.stateAction = a;
     }
@@ -131,11 +145,22 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   setEmote(name: string) {
     const a = this.actions[name];
     if (a) {
-      if (this.currentAction)
+      if (this.currentAction) {
+        if (this.currentAction.sound) {
+          if (!this.currentAction.soundContinue)
+            this.currentAction.sound.stop();
+        }
         this.object.remove(this.currentAction.shape.root);
+      }
       this.object.add(a.shape.root);
       a.motion.playCount = 0;
       a.motion.time = 0;
+      if (a.sound) {
+        a.sound.play();
+        a.motion.setFinishListener(()=>{
+          a.sound?.play();
+        });
+      }
       this.currentAction = a;
       this.emoteAction = a;
     }
@@ -165,12 +190,28 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     if (this.emoteAction && this.emoteAction.motion.playCount<=0) {
       pose = this.emoteAction.motion.update(dt);
       if (this.emoteAction.motion.playCount>0) {
-        if (this.currentAction?.shape.root)
-          this.object.remove(this.currentAction?.shape.root);
+        // emoteAction再生終了で切り替え
+        // まずはcurrentActionの停止
+        if (this.currentAction?.shape.root) {
+          this.object.remove(this.currentAction.shape.root);
+        }
+        if (this.currentAction?.sound) {
+          if (!this.currentAction.soundContinue)
+            this.currentAction.sound.stop();
+        }
+        // emoteActionはundefinedに
         this.emoteAction = undefined;
+        // stateActionがあれば開始
         if (this.stateAction) {
           this.object.add(this.stateAction.shape.root);
           this.currentAction = this.stateAction;
+          if (this.stateAction.sound) {
+            const sound = this.stateAction.sound;
+            sound.play();
+            this.stateAction.motion.setFinishListener(()=>{
+              sound.play();
+            });
+          }
         }
       }
     } else if (this.stateAction) {
@@ -272,6 +313,11 @@ export interface Motion {
   time: number;
 
   /**
+   * モーションの再生が最後まで来た時に呼び出されるイベントリスナー。
+   */
+  finishListener?: ()=>void;
+
+  /**
    * 物理演算が必要な場合にRigidBodyやColliderを
    * PhysicsWorldに登録する必要があるので、このメソッドで
    * 対応する。
@@ -310,6 +356,12 @@ export interface Motion {
   setTime(time: number): void;
 
   /**
+   * このモーションの再生が一巡して最後まで来た時に呼び出される
+   * イベントリスナーを登録する。
+   */
+  setFinishListener(listener: ()=>void | undefined): void;
+
+  /**
    * 経過時間に応じて対象のObjectA3の内部の動きをおこす。
    * 毎フレーム呼び出されることで、アニメーションを作り出す。
    * @param dt 経過時間(秒)
@@ -321,6 +373,7 @@ export class DummyMotion implements Motion {
   name: string;
   playCount: number;
   time: number;
+  finishListener?: ()=>void;
   constructor() {
     this.name = 'dummy';
     this.playCount = 0;
@@ -330,6 +383,7 @@ export class DummyMotion implements Motion {
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
   setPause(_p: boolean): void {}
   setTime(_time: number): void {}
+  setFinishListener(listener: ()=>void | undefined) { this.finishListener=listener}
   update(_dt: number): Pose { return {};}
 }
 

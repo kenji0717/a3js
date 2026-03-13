@@ -321,6 +321,7 @@ export class CarMotion implements Motion {
   name: string;
   playCount: number;
   time: number;
+  finishListener?: ()=>void;
 
   constructor(cm: CarControl) {
     this.cm = cm;
@@ -333,6 +334,9 @@ export class CarMotion implements Motion {
   removeOneselfFromPhysics(_world: PhysicsWorld) {}
   setPause(_p: boolean) {}
   setTime(_time: number) {}
+  setFinishListener(listener: ()=>void | undefined) {
+    this.finishListener = listener;
+  }
   update(_dt: number): Pose {
     if (!this.cm.trans.chassisBody) return {};
     if (!this.cm.trans.controller) return {};

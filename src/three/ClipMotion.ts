@@ -12,6 +12,7 @@ import type { PhysicsWorld } from '../core/Physics';
 export class ClipMotion implements Motion {
   name: string;
   time: number;
+  finishListener?: ()=>void;
   duration: number;
   isPaused: boolean;
   playCount: number;
@@ -59,11 +60,17 @@ export class ClipMotion implements Motion {
     this.time = time;
   }
 
+  setFinishListener(listener: ()=>void|undefined) {
+    this.finishListener=listener
+  }
+
   update(dt: number): Pose {
     this.time += dt;
     if (this.time > this.duration) {
       this.time -= this.duration;
       this.playCount++;
+      if (this.finishListener)
+        this.finishListener();
     }
     const pose: Pose = {};
     for (const [name,interpolant] of Object.entries(this.interpolants)) {

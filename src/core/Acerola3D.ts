@@ -9,6 +9,9 @@ import { loadVrmlInUnzippedA3,
 import { ClipMotion } from '../three/ClipMotion.js';
 import type { BVH } from '../three/BVHLoader2.js';
 import * as TG from '../utils/TypeGuard';
+import { Sound } from '../three/Sound';
+import type { SoundOptionInput } from '../three/Sound';
+import { readBlobFromUnzippedA3 } from '../utils/math';
 //import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 class DummyBVH implements BVH {
@@ -16,20 +19,6 @@ class DummyBVH implements BVH {
   skeleton = new THREE.Skeleton([new THREE.Bone()]);
   clip = new THREE.AnimationClip('dummy');
 };
-
-/*
-interface Action {
-  name: string;
-  root: THREE.Object3D;
-  bones: Record<string,THREE.Object3D>;
-  skeleton: THREE.Skeleton;
-
-  bvh: BVH;
-  scale: number;
-  offset: Vec3;
-  parts: Record<string,THREE.Object3D>;
-}
-*/
 
 const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
 const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
@@ -116,10 +105,56 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           o.userData['a3js']={objectA3:this};
         });
 //root.add(new THREE.SkeletonHelper(bvh.skeleton.bones[0])); // GAHA!
+        let sound: Sound | undefined;
+        let soundContinue: boolean = true;
+        const ss = a.getElementsByTagNameNS(ns,'s');
+        if (ss[0]) {
+          const file = ss[0].getAttribute('file');
+          const sType = ss[0].getAttribute('type') || 'PointSound';
+          const loop = ss[0].getAttribute('loop') || 'false';
+          const gain = ss[0].getAttribute('gain') || '1.0';
+          const offset = ss[0].getAttribute('offset') || '0.0 0.0 0.0';
+          const direction = ss[0].getAttribute('direction') || '0.0 0.0 1.0';
+          const sContinue = ss[0].getAttribute('continue') || 'true';
+          soundContinue = sContinue==='true';
+          const os = offset.split(' ').map((s)=>Number(s));
+          const offsetVec3 = new Vec3(os[0],os[1],os[2]);
+          const ds = direction.split(' ').map((s)=>Number(s));
+          const directionVec3 = new Vec3(ds[0],ds[1],ds[2]);
+          const ssType = sType==='PointSound'?'positional':(sType==='ConeSound'?'positional':'audio');
+          const pDir = {coneInnerAngle:360,coneOuterAngle:360,coneOuterGain:0};
+          const cDir = {coneInnerAngle:30,coneOuterAngle:90,coneOuterGain:0.1};
+          const directional = sType==='PointSound'?pDir:cDir;
+          if (file) {
+            const blob = readBlobFromUnzippedA3(unzippedA3,file);
+            const url = URL.createObjectURL(blob);
+            const opt: SoundOptionInput = {
+              type: ssType,
+              //autoplay: false,
+              loop: loop==='true',
+              volume: Number(gain),
+              positional: {
+                //refDistance: 1,
+                //maxDistance: 1000,
+                //rolloffFactor: 1,
+                directional
+              }
+            };
+            sound = await new Sound(url,opt).ready;
+            sound.setLocation(offsetVec3);
+            sound.lookAt(directionVec3);
+            URL.revokeObjectURL(url);
+            root.add(sound.object); // この処理が強引 GAHA
+            //this.add(sound); // この処理が強引 GAHA
+          }
+        }
+
         actions[actionName] = {
           name: actionName,
           shape: { root, bones, skeleton: bvh.skeleton },
-          motion: new ClipMotion(bvh.clip,actionName)
+          motion: new ClipMotion(bvh.clip,actionName),
+          sound,
+          soundContinue
         };
       }
     }
