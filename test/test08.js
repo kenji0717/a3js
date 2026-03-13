@@ -9,11 +9,11 @@ let i=0;
 while (true) {
   if (i%2 === 0) {
     obj.setLocation(1,0,0);
-    obj.setQuat(0,0.707,0,0.707);
+    obj.setRotation(0,90,0);
     obj.setScale(2,2,2);
   } else {
     obj.setLocation(-1,0,0);
-    obj.setQuat(0,0.707,0,-0.707);
+    obj.setRotation(0,-90,0);
     obj.setScale(0.5,0.5,0.5);
   }
   i++;

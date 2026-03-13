@@ -2,6 +2,7 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
+await view.alert('音がなります。',a3.initSound);
 const obj0 = await new a3.Acerola3D('./assets/vesma13.a3').ready;
 obj0.setLocation(1,0,0);
 obj0.setState("IamSorry");
