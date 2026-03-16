@@ -1,4 +1,29 @@
 
+TransformerをTransforerとスペルミスしてた。今MS Codeが
+使えなくてリファクタリングできないのでメモだけしておく。GAHA
+あ、CharacterをCharactorとスペルミスしてるところ多数！GAHA
+
+-----
+
+### CharactorTransformer2の手抜き箇所
+
+CharactorTransformer2.tsのisGroundedの処理において、
+Rayを下に飛して地面の判定をしているのだけど、
+castRayの6番目の引数は除外対象で自分自身のColliderを設定。
+これ重要！第3引数のtrueは中空でないと仮定するもの。
+だから最初から建物やドームの中にいる時にはバグるかも。
+ChatGPTには、今のRayの前後左右にcapsuleRadius*0.6ぐらい
+ずらした4箇所からも下にRayを飛して、さらに全てのRayについて
+hitの中に入っているnormalを調べて、地面が急角度だったら
+接地してないことにするという追加の処理を入れるように言われた
+けど、面倒だからやってない。あと、たぶん真横から見ると浮いて
+見えるかもしれない。微調整も必要だと思う。
+
+それと、CharacterTransformer2、AvatarController2という
+ネーミングをなんとかした方が良い。
+
+-----
+
 DynamicRayCastVehicleControllerのブレーキの実装が、
 車体重量1kgから10kgぐらいでないと上手く動作しない
 んじゃないかという疑惑。とりあえず、ここについては

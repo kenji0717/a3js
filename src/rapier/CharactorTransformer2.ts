@@ -5,35 +5,35 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transforer } from '../core/ObjectA3';
 
-export interface CharactorTransOptions {
-  offset: number,
+export interface CharactorTrans2Options {
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharactorTransOptions = {
-  offset: 0.01,
+export const defaultCharactorTrans2Options = {
   auto: true,
   height: 1.5,
   radius: 0.3
 };
 
-export class CharactorTransformer implements Transforer {
+export class CharactorTransformer2 implements Transforer {
   trans: Transform;
   objectA3?: ObjectA3;
-  completeOptions: CharactorTransOptions;
-  controller?: Rapier.KinematicCharacterController;
+  completeOptions: CharactorTrans2Options;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
+  bodyDesc?: Rapier.RigidBodyDesc;
+  body?: Rapier.RigidBody;
   capsuleCenter: Vec3;
   nextLocation: Vec3;
   tmpV1: Vec3;
   tmpV2: Vec3;
+  physicsWorld?: RapierPhysicsWorld;
 
-  constructor(options: Partial<CharactorTransOptions> = {}) {
+  constructor(options: Partial<CharactorTrans2Options> = {}) {
     this.completeOptions = {
-      ...defaultCharactorTransOptions,
+      ...defaultCharactorTrans2Options,
       ...options
     };
     this.trans = new Transform();
@@ -59,41 +59,48 @@ export class CharactorTransformer implements Transforer {
         o.scale.set(tmpV.x,tmpV.y,tmpV.z);
       }
       const box = new THREE.Box3().setFromObject(o);
-      o.remove(objectA3.object);
       box.getSize(tmpV);
       this.completeOptions.radius = Math.max(tmpV.x, tmpV.z) / 2;
       this.completeOptions.height = tmpV.y - this.completeOptions.radius * 2;
       box.getCenter(tmpV);
       this.capsuleCenter.set(tmpV);
     }
-    this.colliderDesc = RAPIER.ColliderDesc.capsule(
-        this.completeOptions.height,
-        this.completeOptions.radius);
-    this.colliderDesc.setTranslation(
+    this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
+    this.bodyDesc.setTranslation(
       trans.loc.x,
       trans.loc.y,
       trans.loc.z
     );
-    this.colliderDesc.setRotation({
+    this.bodyDesc.setRotation({
       x: trans.quat.x,
       y: trans.quat.y,
       z: trans.quat.z,
       w: trans.quat.w
     });
+    this.colliderDesc = RAPIER.ColliderDesc.capsule(
+        this.completeOptions.height,
+        this.completeOptions.radius);
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
-    this.controller = world.world.createCharacterController(this.completeOptions.offset);
+    this.physicsWorld = world;
+    if (this.bodyDesc) {
+      this.body = world.world.createRigidBody(this.bodyDesc);
+      this.body.setEnabledRotations(false,false,false,true); // これで回転しない
+    }
     if (this.colliderDesc)
-      this.collider = world.world.createCollider(this.colliderDesc);
+      this.collider = world.world.createCollider(this.colliderDesc,this.body);
     if (this.collider && this.objectA3)
       collisionMap.set(this.collider.handle,this.objectA3);
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
+    if (this.body)
+      world.world.removeRigidBody(this.body); // falseでOK
     if (this.collider) {
       world.world.removeCollider(this.collider,false); // falseでOK
       collisionMap.delete(this.collider.handle);
     }
+    this.physicsWorld = undefined;
   }
 
   setLocation(v: Vec3): void {
@@ -130,40 +137,74 @@ export class CharactorTransformer implements Transforer {
     // 簡単ではないのでとりあえず保留
   }
 
-  setLinvel(_vel: Vec3): void {}
-  setAngvel(_angvel: Vec3): void {}
-  resetForce(): void {}
-  addForce(_f: Vec3): void {}
-  addForceAtPoint(_v: Vec3, _p: Vec3): void {}
-  resetTorque(): void {}
-  addTorque(_t: Vec3): void {}
-  applyImpulse(_i: Vec3): void {}
-  applyImpulseAtPoint(_i: Vec3, _p: Vec3): void {}
-  applyTorqueImpulse(_ti: Vec3): void {}
+  setLinvel(vel: Vec3): void {
+    if (this.body)
+      this.body.setLinvel({x:vel.x, y:vel.y, z:vel.z},true);
+    else
+      this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
+  }
+
+  setAngvel(av: Vec3): void {
+    if (this.body)
+      this.body.setAngvel({x:av.x, y:av.y, z:av.z},true);
+    else
+      this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
+  }
+
+  resetForce(): void {
+    this.body?.resetForces(true);
+  }
+
+  addForce(f: Vec3): void {
+    this.body?.addForce({x:f.x, y:f.y, z:f.z},true);
+  }
+
+  addForceAtPoint(f: Vec3, p: Vec3) {
+    this.body?.addForceAtPoint({x:f.x, y:f.y, z:f.z},{x:p.x, y:p.y, z:p.z},true);
+  }
+
+  resetTorque(): void {
+    this.body?.resetTorques(true);
+  }
+
+  addTorque(t: Vec3): void {
+    this.body?.addTorque({x:t.x, y:t.y, z:t.z},true);
+  }
+
+  applyImpulse(i: Vec3): void {
+    this.body?.applyImpulse({x:i.x, y:i.y, z:i.z},true);
+  }
+
+  applyImpulseAtPoint(i: Vec3, p: Vec3): void {
+    this.body?.applyImpulseAtPoint({x:i.x, y:i.y, z:i.z},{x:p.x, y:p.y, z:p.z},true);
+  }
+
+  applyTorqueImpulse(ti: Vec3): void {
+    this.body?.applyTorqueImpulse({x:ti.x, y:ti.y, z:ti.z},true);
+  }
 
   isGrounded(): boolean {
-    if (this.controller)
-      return this.controller.computedGrounded();
-    return false; // こういうことで
+    if (this.body && this.physicsWorld) {
+      const pos = this.body.translation();
+      const ray = new RAPIER.Ray(pos,{x:0,y:-1,z:0});
+      // GAHA 手抜きな所がある。手抜き箇所はmemo.mdの
+      // ### CharactorTransformer2の手抜き箇所 にメモ。
+      const maxToi = 1.1*(this.completeOptions.height+this.completeOptions.radius);
+      const hit = this.physicsWorld.world.castRay(ray,maxToi,true,
+        undefined, undefined,this.collider);
+      return hit !== null;
+    } else {
+      return this.trans.loc.y <= 0;
+    }
   }
 
   update(_dt: number): void {
-    if (!this.controller || !this.collider)
+    if (!this.body)
       return;
 
-    this.trans.quat.set(this.collider.rotation());
-
-    this.tmpV1.set(this.collider.translation());
-    this.tmpV2.set(this.nextLocation);
-    this.tmpV2.sub(this.tmpV1);
-    this.controller.computeColliderMovement(this.collider,this.tmpV2);
-    const corrected = this.controller.computedMovement();
-
-    this.tmpV1.add(corrected);
-    this.collider.setTranslation(this.tmpV1);
-
-    this.tmpV1.sub(this.capsuleCenter);
-    this.trans.loc.set(this.tmpV1);
-    this.nextLocation.set(this.tmpV1);
+    const tmpV1 = new Vec3(this.body.translation());
+    tmpV1.sub(this.capsuleCenter);
+    this.trans.loc.set(tmpV1);
+    this.trans.quat.set(this.body.rotation());
   }
 }

@@ -11,7 +11,7 @@ export type { Action, Shape, Motion, Pose, Morph } from './core/ActionObject';
 export { DefaultTransformer, FixedTransformer, FollowTransformer, defaultFollowTransformerOptions } from './core/Transformers';
 export type { FollowTransformerOptions } from './core/Transformers';
 export { ClipMotion } from './three/ClipMotion';
-export { ControllerBase, OrbitController, AvatarController } from './core/Controller';
+export { ControllerBase, OrbitController, AvatarController, AvatarController2 } from './core/Controller';
 export type { Controller, ACOptions } from './core/Controller';
 export { Test } from './core/Test';
 export type { TestOptions } from './core/Test';
@@ -41,6 +41,8 @@ export { initPhysics, RapierPhysicsEngine, collisionMap, RapierPhysicsWorld } fr
 export type { RapierPhysicsWorldOptions } from './rapier/RapierPhysics';
 export { CharactorTransformer, defaultCharactorTransOptions } from './rapier/CharactorTransformer';
 export type { CharactorTransOptions } from './rapier/CharactorTransformer';
+export { CharactorTransformer2, defaultCharactorTrans2Options } from './rapier/CharactorTransformer2';
+export type { CharactorTrans2Options } from './rapier/CharactorTransformer2';
 export { CarControl, CarTransformer, CarMotion, defaultCarControlOptions } from './rapier/CarControl';
 export type { CarControlOptions } from './rapier/CarControl';
 export { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './core/LinearMath';

@@ -247,8 +247,14 @@ export const defaultACOptions: ACOptions = {
 };
 
 /**
-  * view.sceneに設定されているアバターをキーボードで
-  * コントロールするコントローラ。
+  * コンストラクタで指定されているアバターをキーボードで
+  * コントロールするコントローラ。こちらはRAPIERのCharactor
+  * controllerとavatar.transformer.Location()でコントロールする方。
+  * 地面判定が性格で安定性が高いけれど、まわりのRigidBodyから
+  * 押されたり押したりできない。
+  *
+  * RigidBodyとavatar.transformer.setLinvel()でコントロールする方は
+  * AvatarController2。
   */
 export class AvatarController extends ControllerBase {
   options: ACOptions;
@@ -300,7 +306,6 @@ export class AvatarController extends ControllerBase {
   }
 
   update(dt: number): void {
-    if (!this.view) return;
     const avatar = this._avatar;
     const aTrans = new Transform();
     aTrans.set(avatar);
@@ -326,6 +331,113 @@ export class AvatarController extends ControllerBase {
     //avatar.setQuat(this._avatarNextQuat);
     avatar.transformer.setLocation(this._avatarNextLoc);
     avatar.transformer.setQuat(this._avatarNextQuat);
+  }
+
+  //setCameraLocation(loc: Vec3): void {}
+  //setCameraLocationNow(loc: Vec3): void {}
+  //setCameraQuat(quat: Quat): void {}
+  //setCameraQuatNow(quat: Quat): void {}
+}
+
+export interface AC2Options {
+  speed: number;
+  angSpeed: number;
+  jumpSpeed: number;
+}
+
+export const defaultAC2Options: AC2Options = {
+  speed: 5.0,
+  angSpeed: 0.3,
+  jumpSpeed: 15.0
+};
+
+/**
+  * コンストラクタで指定されているアバターをキーボードで
+  * コントロールするコントローラ。こちらはRigidBodyと
+  * avatar.transformer.setLinvel()でコントロールする方。
+  * 地面判定が不正確だけど、まわりのRigidBodyから押されたり、
+  * 押したりできる。
+  * 
+  * RAPIERのCharactor controllerとavatar.transformer.Location()で
+  * コントロールする方はAvatarController。
+  */
+export class AvatarController2 extends ControllerBase {
+  options: AC2Options;
+  private _avatar: ObjectA3;
+  private _keyW: boolean;
+  private _keyA: boolean;
+  private _keyS: boolean;
+  private _keyD: boolean;
+  private _keyLeft: boolean;
+  private _keyRight: boolean;
+  private _keySpace: boolean;
+  private _avatarNextVel: Vec3;
+  private _avatarNextAngVel: Vec3;
+  private _velY: number;
+
+  constructor(avatar: ObjectA3, options: Partial<AC2Options>) {
+    super();
+    this.options = {
+      ...defaultAC2Options,
+      ...options
+    };
+    this._avatar = avatar;
+    this._keyW = this._keyA = this._keyS = this._keyD = false;
+    this._keyLeft = this._keyRight = false;
+    this._keySpace = false;
+    this._avatarNextVel = new Vec3();
+    this._avatarNextAngVel = new Vec3();
+    this._velY = 0.0;
+  }
+
+  keyDown(event: KeyboardEvent): void {
+    if (event.code === 'KeyW') this._keyW = true;
+    else if (event.code === 'KeyA') this._keyA = true;
+    else if (event.code === 'KeyS') this._keyS = true;
+    else if (event.code === 'KeyD') this._keyD = true;
+    else if (event.code === 'ArrowLeft') this._keyLeft = true;
+    else if (event.code === 'ArrowRight') this._keyRight = true;
+    else if (event.code === 'Space') this._keySpace = true;
+  }
+
+  keyUp(event: KeyboardEvent): void {
+    if (event.code === 'KeyW') this._keyW = false;
+    else if (event.code === 'KeyA') this._keyA = false;
+    else if (event.code === 'KeyS') this._keyS = false;
+    else if (event.code === 'KeyD') this._keyD = false;
+    else if (event.code === 'ArrowLeft') this._keyLeft = false;
+    else if (event.code === 'ArrowRight') this._keyRight = false;
+    else if (event.code === 'Space') this._keySpace = false;
+  }
+
+  update(dt: number): void {
+    const avatar = this._avatar;
+    const aTrans = new Transform();
+    aTrans.set(avatar);
+    const forward = avatar.getUnitVecZ().scale(this.options.speed);
+    const left = avatar.getUnitVecX().scale(this.options.speed);
+
+    this._avatarNextVel.set(0,0,0);
+    this._avatarNextAngVel.set(0,0,0);
+    if (this._keyW) this._avatarNextVel.add(forward);
+    if (this._keyA) this._avatarNextVel.add(left);
+    if (this._keyS) this._avatarNextVel.sub(forward);
+    if (this._keyD) this._avatarNextVel.sub(left);
+
+    this._velY += (-9.8*dt);
+console.log(`GAHA: `,avatar.isGrounded());
+    if (avatar.isGrounded()) {
+      this._velY = 0.0;
+      if (this._keySpace) this._velY = this.options.jumpSpeed;
+    }
+    this._avatarNextVel.add(0,this._velY,0);
+
+    if (this._keyLeft) this._avatarNextAngVel.add(new Vec3(0,this.options.angSpeed,0));
+    if (this._keyRight) this._avatarNextAngVel.add(new Vec3(0,-this.options.angSpeed,0));
+    //avatar.setLinvel(this._avatarNextVel);
+    //avatar.setAngvel(this._avatarNextAngVel);
+    avatar.transformer.setLinvel(this._avatarNextVel);
+    avatar.transformer.setAngvel(this._avatarNextAngVel);
   }
 
   //setCameraLocation(loc: Vec3): void {}
