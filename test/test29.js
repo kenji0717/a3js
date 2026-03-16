@@ -1,4 +1,4 @@
-// a3.FolloAvatarControllerと移動系のテスト
+// a3.FollowTransformerと移動系のテスト
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
@@ -7,11 +7,9 @@ view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
 obj.setState('Idle');
 view.scene.add(obj);
-view.scene.setAvatar(obj);
-view.setController(new a3.FollowAvatarController());
+view.camera.setTransformer(new a3.FollowTransformer(obj));
 
 document.addEventListener('keydown',(e)=>{
-//console.log(`GAHA: `,e.code);
   if (e.code === 'KeyW') obj.moveForward(0.3);
   else if (e.code === 'KeyA') obj.moveLeft(0.3);
   else if (e.code === 'KeyS') obj.moveBackward(0.3);

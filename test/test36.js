@@ -26,9 +26,7 @@ obj.setState('default');
 view.scene.add(obj);
 cc.reset(new a3.Vec3(100,1.5,100));
 
-view.scene.setAvatar(obj);
-//view.setController(new a3.FollowAvatarController({offset:{x:0,y:2,z:-6}}));
-view.setController(new a3.FollowAvatarController({offset:{x:2,y:2,z:-5}}));
+view.camera.setTransformer(new a3.FollowTransformer(obj));
 
 let keyW = false, keyA = false, keyS = false, keyD = false;
 let keySpace, keyEnter; keySpace=keyEnter=false;

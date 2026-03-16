@@ -236,71 +236,23 @@ console.log(`GAHA: touchStart()`,event);
   }
 }
 
-
-export interface FACOptions {
-  offset: {x:number, y:number, z:number}
-}
-
-export const defaultFACOptions: FACOptions = {
-  offset: {x:0, y:5, z:-10}
-};
-
-/**
-  * view.sceneに設定されているアバターを追従するように
-  * カメラをコントロールするコントローラ。
-  */
-export class FollowAvatarController extends ControllerBase {
-  options: FACOptions;
-  private _offset: Vec3;
-
-  constructor(options: Partial<FACOptions>) {
-    super();
-    this.options = {
-      ...defaultFACOptions,
-      ...options
-    };
-    const o = this.options.offset;
-    this._offset = new Vec3(o.x, o.y, o.z);
-  }
-
-  update(_dt: number): void {
-    if (!this.view) return;
-    if (!this.view.scene.avatar) return;
-    const aTrans = new Transform();
-    aTrans.set(this.view.scene.avatar);
-    tmp.v0.set(this._offset);
-    tmp.v0.apply(aTrans.quat);
-    tmp.v0.add(aTrans.loc);
-    this.view.camera.transformer.setLocationNow(tmp.v0);
-    const up = this.view.camera.upVector ? this.view.camera.upVector : ObjectA3.defaultUpVector;
-    up.normalize();
-    const q = getQuatOfLookAt(tmp.v0,this.view.scene.avatar.loc,up);
-    q.mul(new Quat(up.x,up.y,up.z,0));
-    this.view.camera.transformer.setQuat(q);
-  }
-
-  //setCameraLocation(loc: Vec3): void {}
-  //setCameraLocationNow(loc: Vec3): void {}
-  //setCameraQuat(quat: Quat): void {}
-  //setCameraQuatNow(quat: Quat): void {}
-}
-
-
 export interface ACOptions {
-  offset: {x:number, y:number, z:number}
+  speed: number;
+  angSpeed: number;
 }
 
 export const defaultACOptions: ACOptions = {
-  offset: {x:0, y:5, z:-10}
+  speed: 0.1,
+  angSpeed: 0.01
 };
 
 /**
   * view.sceneに設定されているアバターをキーボードで
-  * コントロールして、さらにカメラもコントロールする
-  * コントローラ。
+  * コントロールするコントローラ。
   */
 export class AvatarController extends ControllerBase {
   options: ACOptions;
+  private _avatar: ObjectA3;
   private _keyW: boolean;
   private _keyA: boolean;
   private _keyS: boolean;
@@ -308,22 +260,20 @@ export class AvatarController extends ControllerBase {
   private _keyLeft: boolean;
   private _keyRight: boolean;
   private _keySpace: boolean;
-  private _offset: Vec3;
   private _avatarNextLoc: Vec3;
   private _avatarNextQuat: Quat;
   private _velY: number;
 
-  constructor(options: Partial<ACOptions>) {
+  constructor(avatar: ObjectA3, options: Partial<ACOptions>) {
     super();
     this.options = {
       ...defaultACOptions,
       ...options
     };
+    this._avatar = avatar;
     this._keyW = this._keyA = this._keyS = this._keyD = false;
     this._keyLeft = this._keyRight = false;
     this._keySpace = false;
-    const o = this.options.offset;
-    this._offset = new Vec3(o.x,o.y,o.z);
     this._avatarNextLoc = new Vec3();
     this._avatarNextQuat = new Quat();
     this._velY = 0.0;
@@ -351,22 +301,11 @@ export class AvatarController extends ControllerBase {
 
   update(dt: number): void {
     if (!this.view) return;
-    if (!this.view.scene.avatar) return;
-    const avatar = this.view.scene.avatar;
+    const avatar = this._avatar;
     const aTrans = new Transform();
     aTrans.set(avatar);
-    const forward = avatar.getUnitVecZ().scale(0.1);
-    const left = avatar.getUnitVecX().scale(0.1);
-
-    tmp.v0.set(this._offset);
-    tmp.v0.apply(aTrans.quat);
-    tmp.v0.add(aTrans.loc);
-    this.view.camera.transformer.setLocation(tmp.v0);
-    const up = this.view.camera.upVector ? this.view.camera.upVector : ObjectA3.defaultUpVector;
-    up.normalize();
-    const q = getQuatOfLookAt(tmp.v0,this.view.scene.avatar.loc,up);
-    q.mul(new Quat(up.x,up.y,up.z,0));
-    this.view.camera.transformer.setQuat(q);
+    const forward = avatar.getUnitVecZ().scale(this.options.speed);
+    const left = avatar.getUnitVecX().scale(this.options.speed);
 
     this._avatarNextLoc.set(aTrans.loc);
     this._avatarNextQuat.set(aTrans.quat);
@@ -381,10 +320,12 @@ export class AvatarController extends ControllerBase {
       if (this._keySpace) this._velY = 0.5;
     }
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
-    if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,0.01,0)));
-    if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-0.01,0)));
-    avatar.setLocation(this._avatarNextLoc);
-    avatar.setQuat(this._avatarNextQuat);
+    if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,this.options.angSpeed,0)));
+    if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-this.options.angSpeed,0)));
+    //avatar.setLocation(this._avatarNextLoc);
+    //avatar.setQuat(this._avatarNextQuat);
+    avatar.transformer.setLocation(this._avatarNextLoc);
+    avatar.transformer.setQuat(this._avatarNextQuat);
   }
 
   //setCameraLocation(loc: Vec3): void {}

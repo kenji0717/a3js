@@ -52,6 +52,12 @@ export class Vec3 {
     return new Vec3(this);
   }
 
+  write(q: MutableVec3) {
+    q.x = this._x;
+    q.y = this._y;
+    q.z = this._z;
+  }
+
   normalize() {
     const l0 = this._x*this._x + this._y*this._y + this._z*this._z;
     const l1 = Math.sqrt(l0);
@@ -215,6 +221,13 @@ export class Quat {
 
   clone() {
     return new Quat(this);
+  }
+
+  write(q: MutableQuat) {
+    q.x = this._x;
+    q.y = this._y;
+    q.z = this._z;
+    q.w = this._w;
   }
 
   normalize() {

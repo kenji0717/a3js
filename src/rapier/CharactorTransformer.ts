@@ -46,8 +46,19 @@ export class CharactorTransformer implements Transforer {
   init(trans: Transform, objectA3: ObjectA3) {
     this.trans.set(trans);
     if (this.completeOptions.auto) {
-      const box = new THREE.Box3().setFromObject(objectA3.object);
       const tmpV = new THREE.Vector3();
+      const tmpQ = new THREE.Quaternion();
+      const o = new THREE.Object3D();
+      o.add(objectA3.object);
+      { // transformerから持ってこないと
+        objectA3.transformer.trans.loc.write(tmpV);
+        o.position.set(tmpV.x,tmpV.y,tmpV.z);
+        objectA3.transformer.trans.quat.write(tmpQ);
+        o.quaternion.set(tmpQ.x,tmpQ.y,tmpQ.z,tmpQ.w);
+        objectA3.transformer.trans.scale.write(tmpV);
+        o.scale.set(tmpV.x,tmpV.y,tmpV.z);
+      }
+      const box = new THREE.Box3().setFromObject(o);
       box.getSize(tmpV);
       this.completeOptions.radius = Math.max(tmpV.x, tmpV.z) / 2;
       this.completeOptions.height = tmpV.y - this.completeOptions.radius * 2;

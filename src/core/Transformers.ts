@@ -271,3 +271,58 @@ export class InterpolationBillboardTransformer extends InterpolationTransformer 
   }
 }
 
+export interface FollowTransformerOptions {
+  lookFrom: {x:number, y:number, z:number};
+}
+
+export const defaultFollowTransformerOptions: FollowTransformerOptions = {
+  lookFrom: {x:0, y:5, z:-10}
+};
+
+/**
+ * targetで指定したObjectA3を追従するTransformer。
+ * targetの動きに常に追従するオブジェクトを作りたい時に
+ * 使用するのはもちろん、view.cameraにセットすれば、
+ * 特定のキャラクタを追尾するカメラにすることができる。
+ * そのかわりsetLocation()などでは動かせなくなる。
+ */
+export class FollowTransformer extends FixedTransformer {
+  options: FollowTransformerOptions;
+  target: ObjectA3;
+  lookFrom: Vec3;
+  up: Vec3;
+
+  constructor(target: ObjectA3, options: Partial<FollowTransformerOptions>={}) {
+    super();
+    this.options = {
+      ...defaultFollowTransformerOptions,
+      ...options
+    };
+    this.target = target;
+    this.lookFrom = new Vec3(this.options.lookFrom);
+    if (target.upVector) {
+      this.up = target.upVector;
+    } else {
+      this.up = ObjectA3.defaultUpVector;
+    }
+  }
+
+  init(trans: Transform, objectA3: ObjectA3) {
+    super.init(trans, objectA3);
+  }
+
+  update(dt: number) {
+    super.update(dt);
+    tmpObjLoc.set(this.trans.loc);
+    tmpTargetLoc.set(this.target.trans.loc);
+    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
+    quat.mul(new Quat(0,1,0,0));
+    this.trans.quat.set(quat);
+
+    tmpObjLoc.set(this.lookFrom);
+    tmpObjLoc.apply(this.target.quat);
+    tmpObjLoc.add(this.target.loc);
+    this.trans.loc.set(tmpObjLoc);
+  }
+}
+
