@@ -61,7 +61,7 @@ export class ObjectA3 {
   object: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
-  transformer: Transforer;
+  transformer: Transformer;
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
@@ -93,7 +93,7 @@ export class ObjectA3 {
    * @param _data コンストラクタから渡された情報
    * @returns このObjectA3で使用されるTransformerの配列
    */
-  initTransformer(_data?: any): Transforer {
+  initTransformer(_data?: any): Transformer {
     return new DefaultTransformer();
   }
 
@@ -101,7 +101,7 @@ export class ObjectA3 {
    * ObjectA3生成後に使用されるTransformerを変更する。
    * @param transformer 新しいTransformer
    */
-  setTransformer(transformer: Transforer): void {
+  setTransformer(transformer: Transformer): void {
     tmp.t0.set(this.transformer.trans);
     transformer.init(tmp.t0, this);
     this.transformer = transformer;
@@ -111,7 +111,7 @@ export class ObjectA3 {
    * ObjectA3に現在設定されているTransformerを返す。
    * @return 現在のTransformer
    */
-  getTransformer(): Transforer {
+  getTransformer(): Transformer {
     return this.transformer;
   }
 
@@ -710,7 +710,7 @@ export class ObjectA3 {
   }
 
   /**
-   * TransformerがCharactorTransformerなどの場合だけ
+   * TransformerがCharacterTransformerなどの場合だけ
    * 他のオブジェクトを考慮して現在接地していうかどうかを
    * 判定してくれる。それ以外の時は、Y座標が0以下の時接地している
    * と判定するのが普通。
@@ -768,9 +768,9 @@ class BalloonInfo {
  * 可能なかぎり要求に即座に答えなければならない。
  * 
  * このTransformerを実装することでInterpolateTransformer、
- * BillboardTransformer、CharactorTransformerなどが作られる。
+ * BillboardTransformer、CharacterTransformerなどが作られる。
  */
-export interface Transforer {
+export interface Transformer {
   /**
    * このTransformerが管理している位置、回転、拡大・縮小率。
    * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
@@ -812,7 +812,7 @@ export interface Transforer {
   /**
    * このTransformerがコントロールする3Dオブジェクトが
    * 地面に接地しているかどうかを返す。実際には
-   * CharactorTransformerのようなTransfomerだけが意味の
+   * CharacterTransformerのようなTransfomerだけが意味の
    * ある応答が可能だが、それ以外の場合は
    * 「return this.trans.loc.y <= 0;」で良し。
    */

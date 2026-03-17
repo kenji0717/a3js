@@ -248,7 +248,7 @@ export const defaultACOptions: ACOptions = {
 
 /**
   * コンストラクタで指定されているアバターをキーボードで
-  * コントロールするコントローラ。こちらはRAPIERのCharactor
+  * コントロールするコントローラ。こちらはRAPIERのCharacter
   * controllerとavatar.transformer.Location()でコントロールする方。
   * 地面判定が性格で安定性が高いけれど、まわりのRigidBodyから
   * 押されたり押したりできない。
@@ -358,7 +358,7 @@ export const defaultAC2Options: AC2Options = {
   * 地面判定が不正確だけど、まわりのRigidBodyから押されたり、
   * 押したりできる。
   * 
-  * RAPIERのCharactor controllerとavatar.transformer.Location()で
+  * RAPIERのCharacter controllerとavatar.transformer.Location()で
   * コントロールする方はAvatarController。
   */
 export class AvatarController2 extends ControllerBase {

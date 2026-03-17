@@ -1,6 +1,6 @@
 
 import type { ObjectA3 } from './ObjectA3';
-import type { Transforer } from './ObjectA3';
+import type { Transformer } from './ObjectA3';
 import type { Motion } from './ActionObject';
 
 /*
@@ -46,8 +46,8 @@ export interface PhysicsWorldOptions {
  * メソッドを持つ。
  */
 export interface PhysicsWorld {
-  add(motion: Transforer | Motion): void;
-  remove(motion: Transforer | Motion): void;
+  add(motion: Transformer | Motion): void;
+  remove(motion: Transformer | Motion): void;
   update(dt: number): void;
   getCollisions(): Collision[];
 }

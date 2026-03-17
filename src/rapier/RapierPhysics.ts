@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import * as TG from '../utils/TypeGuard';
 
 import { ObjectA3 } from '../core/ObjectA3';
-import type { Transforer } from '../core/ObjectA3';
+import type { Transformer } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { defaultPhysicsMotionOptions } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOptions,
@@ -73,11 +73,11 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.world.integrationParameters.dt = this.timestep;
   }
 
-  add(motion: Transforer | Motion) {
+  add(motion: Transformer | Motion) {
     motion.addOneselfToPhysics(this);
   }
 
-  remove(motion: Transforer | Motion) {
+  remove(motion: Transformer | Motion) {
     motion.removeOneselfFromPhysics(this);
   }
 
@@ -107,7 +107,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 }
 
-export class RapierTransformer implements Transforer {
+export class RapierTransformer implements Transformer {
   trans: Transform;
   objectA3?: ObjectA3;
   bodyDesc?: Rapier.RigidBodyDesc;

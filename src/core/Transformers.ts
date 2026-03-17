@@ -1,7 +1,7 @@
 import { Vec3, Quat, getQuatOfLookAt, Transform } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
-import type { Transforer } from "./ObjectA3";
+import type { Transformer } from "./ObjectA3";
 
 
 
@@ -13,7 +13,7 @@ import type { Transforer } from "./ObjectA3";
  * 時は、このクラスを拡張して必要なところだけオーバーライド
  * するのがお勧め。
  */
-export class DefaultTransformer implements Transforer {
+export class DefaultTransformer implements Transformer {
   trans: Transform;
 
   /**
@@ -70,7 +70,7 @@ export class DefaultTransformer implements Transforer {
  * よりも、こちらの方をベースにした方がやりやすい場合があると
  * 思う。
  */
-export class FixedTransformer implements Transforer {
+export class FixedTransformer implements Transformer {
   trans: Transform;
 
   /**
@@ -109,7 +109,7 @@ export class FixedTransformer implements Transforer {
   update(_dt: number) {}
 }
 
-export class InterpolationTransformer implements Transforer {
+export class InterpolationTransformer implements Transformer {
   firstTrans: Transform;
   trans: Transform; // 現在のTransform
   lastTrans: Transform;

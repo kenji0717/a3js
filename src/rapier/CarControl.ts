@@ -4,7 +4,7 @@ import type { PhysicsWorld } from "../core/Physics";
 import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { Transforer } from '../core/ObjectA3';
+import type { Transformer } from '../core/ObjectA3';
 import type { Motion, Pose } from '../core/ActionObject';
 
 /*
@@ -161,7 +161,7 @@ export class CarControl {
   }
 }
 
-export class CarTransformer implements Transforer {
+export class CarTransformer implements Transformer {
   cc: CarControl;
   trans: Transform;
   objectA3?: ObjectA3;

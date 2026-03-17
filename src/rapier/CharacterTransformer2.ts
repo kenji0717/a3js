@@ -3,24 +3,24 @@ import { RAPIER, RapierPhysicsWorld, collisionMap } from './RapierPhysics';
 import * as THREE from 'three';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
-import type { Transforer } from '../core/ObjectA3';
+import type { Transformer } from '../core/ObjectA3';
 
-export interface CharactorTrans2Options {
+export interface CharacterTrans2Options {
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharactorTrans2Options = {
+export const defaultCharacterTrans2Options = {
   auto: true,
   height: 1.5,
   radius: 0.3
 };
 
-export class CharactorTransformer2 implements Transforer {
+export class CharacterTransformer2 implements Transformer {
   trans: Transform;
   objectA3?: ObjectA3;
-  completeOptions: CharactorTrans2Options;
+  completeOptions: CharacterTrans2Options;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
   bodyDesc?: Rapier.RigidBodyDesc;
@@ -31,9 +31,9 @@ export class CharactorTransformer2 implements Transforer {
   tmpV2: Vec3;
   physicsWorld?: RapierPhysicsWorld;
 
-  constructor(options: Partial<CharactorTrans2Options> = {}) {
+  constructor(options: Partial<CharacterTrans2Options> = {}) {
     this.completeOptions = {
-      ...defaultCharactorTrans2Options,
+      ...defaultCharacterTrans2Options,
       ...options
     };
     this.trans = new Transform();
@@ -188,7 +188,7 @@ export class CharactorTransformer2 implements Transforer {
       const pos = this.body.translation();
       const ray = new RAPIER.Ray(pos,{x:0,y:-1,z:0});
       // GAHA 手抜きな所がある。手抜き箇所はmemo.mdの
-      // ### CharactorTransformer2の手抜き箇所 にメモ。
+      // ### CharacterTransformer2の手抜き箇所 にメモ。
       const maxToi = 1.1*(this.completeOptions.height+this.completeOptions.radius);
       const hit = this.physicsWorld.world.castRay(ray,maxToi,true,
         undefined, undefined,this.collider);
