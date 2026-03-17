@@ -305,25 +305,21 @@ export class Quat {
       console.warn('Quat.slerp(): t must be in [0,1]');
       return;
     }
-    const cosR =
+    let cosR =
       q1.x * q2.x
       + q1.y * q2.y
       + q1.z * q2.z
       + q1.w * q2.w;
-    if (cosR < 0.9995) {
-      const tt = Math.acos(cosR);
-      const w1 = Math.sin((1-t)*tt) / Math.sin(tt);
-      const w2 = Math.sin(t*tt) / Math.sin(tt);
-      this._x = w1*q1.x + w2*q2.x;
-      this._y = w1*q1.y + w2*q2.y;
-      this._z = w1*q1.z + w2*q2.z;
-      this._w = w1*q1.w + w2*q2.w;
-    } else {
-      
-      this._x = (1-t)*q1.x + t*q2.x;
-      this._y = (1-t)*q1.y + t*q2.y;
-      this._z = (1-t)*q1.z + t*q2.z;
-      this._w = (1-t)*q1.w + t*q2.w;
+    q3.set(q2); // <- q3はQuatクラスの下で定義してる
+    if (cosR < 0) {
+      cosR *= -1;
+      q3.set(-q3.x,-q3.y,-q3.z,-q3.w);
+    }
+    if (cosR > 0.9995) {
+      this._x = (1-t)*q1.x + t*q3.x;
+      this._y = (1-t)*q1.y + t*q3.y;
+      this._z = (1-t)*q1.z + t*q3.z;
+      this._w = (1-t)*q1.w + t*q3.w;
       const s = Math.sqrt(
         this._x * this._x
         + this._y * this._y
@@ -342,9 +338,19 @@ export class Quat {
         this._z *= 1/s;
         this._w *= 1/s;
       }
+    } else {
+      const tt = Math.acos(cosR);
+      const w1 = Math.sin((1-t)*tt) / Math.sin(tt);
+      const w2 = Math.sin(t*tt) / Math.sin(tt);
+      this._x = w1*q1.x + w2*q3.x;
+      this._y = w1*q1.y + w2*q3.y;
+      this._z = w1*q1.z + w2*q3.z;
+      this._w = w1*q1.w + w2*q3.w;
     }
   }
 }
+
+const q3 = new Quat(); // 計算のテンポラリで使う
 
 /**
  * 自分(me)が対象(target)の方を向くための四元数を計算で出します。

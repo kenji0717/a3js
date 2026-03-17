@@ -5,18 +5,11 @@ import * as a3 from 'a3js';
 
 await a3.initPhysics();
 const view = new a3.Window(600,300);
-for (let x=0;x<=200;x+=10) {
-  for (let z=0;z<=200;z+=10) {
-    let ground;
-    if (x/10%2===0&&z/10%2===0 || x/10%2===1&&z/10%2===1)
-      ground = new a3.Box(10,1,10,'white');
-    else
-      ground = new a3.Box(10,1,10,'black');
-    ground.setLocation(x,-0.5,z);
-    ground.initSimplePhysics({rigidBody:'fixed'});
-    view.scene.add(ground);
-  }
-}
+const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
+//ground.setScale(10,10,10);
+ground.setLocation(0,-10,0);
+ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
+view.scene.add(ground);
 
 const obj = await new a3.Acerola3D('./assets/TestCar/TestCar.a3').ready;
 const cc = new a3.CarControl();

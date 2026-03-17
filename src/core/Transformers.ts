@@ -273,10 +273,13 @@ export class InterpolationBillboardTransformer extends InterpolationTransformer 
 
 export interface FollowTransformerOptions {
   lookFrom: {x:number, y:number, z:number};
+  /** smoothness in [0,1) */
+  smoothness: number;
 }
 
 export const defaultFollowTransformerOptions: FollowTransformerOptions = {
-  lookFrom: {x:0, y:5, z:-10}
+  lookFrom: {x:0, y:5, z:-10},
+  smoothness: 0.9
 };
 
 /**
@@ -313,16 +316,20 @@ export class FollowTransformer extends FixedTransformer {
 
   update(dt: number) {
     super.update(dt);
+    const goalTrans = new Transform();
     tmpObjLoc.set(this.trans.loc);
     tmpTargetLoc.set(this.target.trans.loc);
     const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
     quat.mul(new Quat(0,1,0,0));
-    this.trans.quat.set(quat);
+    goalTrans.quat.set(quat);
 
     tmpObjLoc.set(this.lookFrom);
     tmpObjLoc.apply(this.target.quat);
     tmpObjLoc.add(this.target.loc);
-    this.trans.loc.set(tmpObjLoc);
+    goalTrans.loc.set(tmpObjLoc);
+
+    this.trans.loc.lerp(this.trans.loc,goalTrans.loc,(1-this.options.smoothness));
+    this.trans.quat.slerp(this.trans.quat,goalTrans.quat,(1-this.options.smoothness));
   }
 }
 

@@ -425,7 +425,6 @@ export class AvatarController2 extends ControllerBase {
     if (this._keyD) this._avatarNextVel.sub(left);
 
     this._velY += (-9.8*dt);
-console.log(`GAHA: `,avatar.isGrounded());
     if (avatar.isGrounded()) {
       this._velY = 0.0;
       if (this._keySpace) this._velY = this.options.jumpSpeed;
