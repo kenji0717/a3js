@@ -35,6 +35,7 @@ export class GameCanvas extends HTMLElement implements View {
   rightButton: boolean;
   // 以下キーの情報
   keys: Set<string>;
+  private _ro?: ResizeObserver;
 
   constructor(options: Partial<GameCanvasOptions> = {}) {
     super();
@@ -237,8 +238,28 @@ export class GameCanvas extends HTMLElement implements View {
   keyDownListener = (e: KeyboardEvent)=>{this.keys.add(e.code);this.updateUIFromKeyInfo();}
   keyUpListener = (e: KeyboardEvent)=>{this.keys.delete(e.code);this.updateUIFromKeyInfo();}
 
-  connectedCallback() {}
+  connectedCallback() {
+    this._ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      const w = entry.contentRect.width;
+      const h = entry.contentRect.height;
+      if (w === 0 || h === 0) return;
+      if (w > h) {
+        const btnL = this.shadowRoot!.querySelector<HTMLButtonElement>('.btn.left')!;
+        btnL.style.bottom = '50px';btnL.style.left = '200px';
+        const btnR = this.shadowRoot!.querySelector<HTMLButtonElement>('.btn.right')!;
+        btnR.style.bottom = '50px';btnR.style.right = '200px';
+      } else {
+        const btnL = this.shadowRoot!.querySelector<HTMLButtonElement>('.btn.left')!;
+        btnL.style.bottom = '200px';btnL.style.left = '50px';
+        const btnR = this.shadowRoot!.querySelector<HTMLButtonElement>('.btn.right')!;
+        btnR.style.bottom = '200px';btnR.style.right = '50px';
+      }
+    });
+    this._ro.observe(this);
+  }
   disconnectedCallback() {
+    this._ro?.disconnect();
     window.removeEventListener('keydown',this.keyDownListener);
     window.removeEventListener('keyup',this.keyUpListener);
   }
