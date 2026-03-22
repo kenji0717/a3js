@@ -287,7 +287,23 @@ export class CarTransformer implements Transformer {
   setScaleNow(_s: Vec3): void {}
 
   setLinvel(_vel: Vec3): void {}
+  getLinvel(v: Vec3 | undefined) {
+    if (!v) v = new Vec3();
+    if (this.chassisBody)
+      v.set(this.chassisBody.linvel());
+    else if (this.chassisBodyDesc)
+      v.set(this.chassisBodyDesc.linvel)
+    return v;
+  }
   setAngvel(_angvel: Vec3): void {}
+  getAngvel(v: Vec3 | undefined) {
+    if (!v) v = new Vec3();
+    if (this.chassisBody)
+      v.set(this.chassisBody.angvel());
+    else if (this.chassisBodyDesc)
+      v.set(this.chassisBodyDesc.angvel)
+    return v;
+  }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}

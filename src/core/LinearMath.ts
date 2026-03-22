@@ -422,17 +422,128 @@ export function vec3EulerToQuat(rot: Vec3, order: RotationOrder = "XYZ" ): Quat 
     const c = order.charAt(i);
     switch(c) {
       case 'X':
-        quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
+        quat.mul(Math.sin(rot.x),0,0,Math.cos(rot.x));
         break;
       case 'Y':
-        quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
+        quat.mul(0,Math.sin(rot.y),0,Math.cos(rot.y));
         break;
       case 'Z':
-        quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
+        quat.mul(0,0,Math.sin(rot.z),Math.cos(rot.z));
         break;
     }
   }
   return quat;
+}
+
+/**
+ * 与えられた四元数に対応する3x3の行列を返します。
+ * @param q 四元数
+ * @returns 行列(二次元配列)
+ */
+export function quatToMatrix(q: Quat): number[][] {
+  const m: number[][] = [[],[],[]];
+  const x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
+  const xx = q.x * x2, xy = q.x * y2, xz = q.x * z2;
+  const yy = q.y * y2, yz = q.y * z2, zz = q.z * z2;
+  const wx = q.w * x2, wy = q.w * y2, wz = q.w * z2;
+
+  m[0][0] = 1 - (yy + zz);
+  m[0][1] = xy - wz;
+  m[0][2] = xz + wy;
+
+  m[1][0] = xy + wz;
+  m[1][1] = 1 - (xx + zz);
+  m[1][2] = yz - wx;
+
+  m[2][0] = xz - wy;
+  m[2][1] = yz + wx;
+  m[2][2] = 1 - (xx + yy);
+  return m;
+}
+
+/*
+ * 下のquatToVec3Eulerで使うclamp関数。
+ */
+const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+
+/**
+ * 四元数をオイラー角(ラジアン)に変換する関数、2番目の引数は
+ * 軸の回転順番を指定するRotationOrder。
+ */
+export function quatToVec3Euler(q: Quat, order: RotationOrder = "XYZ" ): Vec3 {
+  const m = quatToMatrix(q);
+  const v = new Vec3();
+  let x=0,y=0,z=0;
+  // --- orderごとの分岐 ---
+  switch (order) {
+    case "XYZ":
+      y = Math.asin(clamp(m[0][2]));
+      if (Math.abs(m[0][2]) < 0.9999999) {
+        x = Math.atan2(-m[1][2], m[2][2]);
+        z = Math.atan2(-m[0][1], m[0][0]);
+      } else {
+        x = Math.atan2(m[2][1], m[1][1]);
+        z = 0;
+      }
+      break;
+
+    case "YXZ":
+      x = Math.asin(-clamp(m[1][2]));
+      if (Math.abs(m[1][2]) < 0.9999999) {
+        y = Math.atan2(m[0][2], m[2][2]);
+        z = Math.atan2(m[1][0], m[1][1]);
+      } else {
+        y = Math.atan2(-m[2][0], m[0][0]);
+        z = 0;
+      }
+      break;
+
+    case "ZXY":
+      x = Math.asin(clamp(m[2][1]));
+      if (Math.abs(m[2][1]) < 0.9999999) {
+        y = Math.atan2(-m[2][0], m[2][2]);
+        z = Math.atan2(-m[0][1], m[1][1]);
+      } else {
+        y = 0;
+        z = Math.atan2(m[1][0], m[0][0]);
+      }
+      break;
+
+    case "ZYX":
+      y = Math.asin(-clamp(m[2][0]));
+      if (Math.abs(m[2][0]) < 0.9999999) {
+        x = Math.atan2(m[2][1], m[2][2]);
+        z = Math.atan2(m[1][0], m[0][0]);
+      } else {
+        x = 0;
+        z = Math.atan2(-m[0][1], m[1][1]);
+      }
+      break;
+
+    case "YZX":
+      z = Math.asin(clamp(m[1][0]));
+      if (Math.abs(m[1][0]) < 0.9999999) {
+        x = Math.atan2(-m[1][2], m[1][1]);
+        y = Math.atan2(-m[2][0], m[0][0]);
+      } else {
+        x = 0;
+        y = Math.atan2(m[0][2], m[2][2]);
+      }
+      break;
+
+    case "XZY":
+      z = Math.asin(-clamp(m[0][1]));
+      if (Math.abs(m[0][1]) < 0.9999999) {
+        x = Math.atan2(m[2][1], m[1][1]);
+        y = Math.atan2(m[0][2], m[0][0]);
+      } else {
+        x = Math.atan2(-m[1][2], m[2][2]);
+        y = 0;
+      }
+      break;
+  }
+  v.set(x,y,z);
+  return v;
 }
 
 // ###################################################################

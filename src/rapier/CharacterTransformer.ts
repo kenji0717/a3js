@@ -131,7 +131,17 @@ export class CharacterTransformer implements Transformer {
   }
 
   setLinvel(_vel: Vec3): void {}
+  getLinvel(v: Vec3 | undefined) { // 適当
+    if (!v) v = new Vec3();
+    v.set(0,0,0);
+    return v;
+  }
   setAngvel(_angvel: Vec3): void {}
+  getAngvel(v: Vec3 | undefined) { // 適当
+    if (!v) v = new Vec3();
+    v.set(0,0,0);
+    return v;
+  }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}

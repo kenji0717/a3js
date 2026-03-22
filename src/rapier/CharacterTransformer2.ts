@@ -144,11 +144,29 @@ export class CharacterTransformer2 implements Transformer {
       this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
   }
 
+  getLinvel(v: Vec3 | undefined) {
+    if (!v) v = new Vec3();
+    if (this.body)
+      v.set(this.body.linvel());
+    else if (this.bodyDesc)
+      v.set(this.bodyDesc.linvel)
+    return v;
+  }
+
   setAngvel(av: Vec3): void {
     if (this.body)
       this.body.setAngvel({x:av.x, y:av.y, z:av.z},true);
     else
       this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
+  }
+
+  getAngvel(v: Vec3 | undefined) {
+    if (!v) v = new Vec3();
+    if (this.body)
+      v.set(this.body.angvel());
+    else if (this.bodyDesc)
+      v.set(this.bodyDesc.angvel)
+    return v;
   }
 
   resetForce(): void {

@@ -1,4 +1,4 @@
-import { Vec3, Quat, getQuatOfLookAt, Transform } from './LinearMath';
+import { Vec3, Quat, getQuatOfLookAt, quatToVec3Euler, Transform } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 import type { Transformer } from "./ObjectA3";
@@ -52,7 +52,9 @@ export class DefaultTransformer implements Transformer {
     this.trans.scale.set(scale);
   }
   setLinvel(_vel: Vec3): void {}
+  getLinvel(v: Vec3) { return v?v:new Vec3(); }
   setAngvel(_angvel: Vec3): void {}
+  getAngvel(v: Vec3) { return v?v:new Vec3(); }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}
@@ -97,7 +99,9 @@ export class FixedTransformer implements Transformer {
   setScale(_scale: Vec3) {}
   setScaleNow(_scale: Vec3) {}
   setLinvel(_vel: Vec3): void {}
+  getLinvel(v: Vec3) { return v?v:new Vec3(); }
   setAngvel(_angvel: Vec3): void {}
+  getAngvel(v: Vec3) { return v?v:new Vec3(); }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}
@@ -168,7 +172,28 @@ export class InterpolationTransformer implements Transformer {
   }
 
   setLinvel(_vel: Vec3): void {}
+  getLinvel(v: Vec3 | undefined) {
+    if (!v)
+      v = new Vec3();
+    const x = this.lastTrans.loc.x-this.firstTrans.loc.x;
+    const y = this.lastTrans.loc.y-this.firstTrans.loc.y;
+    const z = this.lastTrans.loc.z-this.firstTrans.loc.z;
+    v.set(x,y,z);
+    const t = this.nowTime<this.duration?this.nowTime:this.duration;
+    v.scale((-6*t*t+6*t)/this.duration)
+    return v;
+  }
   setAngvel(_angvel: Vec3): void {}
+  getAngvel(v: Vec3 | undefined) {
+    if (!v)
+      v = new Vec3();
+    const first = quatToVec3Euler(this.firstTrans.quat,'XYZ');
+    const last = quatToVec3Euler(this.lastTrans.quat,'XYZ');
+    v.set(last.x-first.x, last.y-first.y, last.z-first.z);
+    const t = this.nowTime<this.duration?this.nowTime:this.duration;
+    v.scale((-6*t*t+6*t)/this.duration)
+    return v;
+  }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}
