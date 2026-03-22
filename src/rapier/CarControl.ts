@@ -51,6 +51,7 @@ export interface CarControlOptions {
   wheelRearWheelFrictionSlip: number;
   wheelFrontMaxSuspensionTravel: number;
   wheelRearMaxSuspensionTravel: number;
+  aerodynamicDrag: number; // 空気抵抗
 }
 
 /**
@@ -92,6 +93,7 @@ export const defaultCarControlOptions = {
   wheelRearWheelFrictionSlip: 100.0,
   wheelFrontMaxSuspensionTravel: 0.25,
   wheelRearMaxSuspensionTravel: 0.25,
+  aerodynamicDrag: 0
 };
 
 /**
@@ -323,7 +325,34 @@ export class CarTransformer implements Transformer {
     return g;
   }
 
+  // Rapierが返すシャーシーのRigidBodyの速度が変な
+  // 時があるので、その速度の平均を保存しておくための
+  // 変数として以下のvvを使う。
+  vv = new Vec3();
+
   update(dt: number): void {
+    // 空気抵抗を加える、などの調整をする。
+    // this.chassisBody.linvel()で得られる速度が時々変なことに
+    // なるっぽいので、色々工夫する必要があった。突然Y方向に
+    // とんでもない速度が出るので、そんな時にクリップするのと、
+    // 少し平均をとるような処理を入れることにした。
+    if (this.cc.opt.aerodynamicDrag > 0.0 && this.chassisBody) {
+      const v = new Vec3(this.chassisBody.linvel());
+      if (Math.abs(v.y) > 3.0) {
+console.log(`GAHA: CarControl.update(). v=`,v);
+        v.set(v.x,3*v.y/Math.abs(v.y),v.z);
+      }
+      this.vv.lerp(this.vv,v,0.9); // 0.9でいいのか？
+      const s = this.vv.length();
+      if (s !== 0) {
+        v.set(this.vv);
+        v.normalize();
+        v.scale(-s*s*this.cc.opt.aerodynamicDrag);
+        this.chassisBody.resetForces(true);
+        this.chassisBody.addForce({x:v.x,y:v.y,z:v.z},true);
+      }
+    }
+
     this.controller?.updateVehicle(dt);
     if (this.chassisBody)
       this.trans.loc.set(this.chassisBody.translation());

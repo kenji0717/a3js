@@ -1,6 +1,8 @@
 // CarControlのテスト1。stk_tux.a3
 // RapierのDynamicRayCastVehicleController
-// を使っている。
+// を使っている。RapierのDynamicRayCastVehicleControllerは
+// 未完成なところがあるんだと思う。なので少し工夫しないと
+// ならない。詳しくは[memo.md](../memo.md)参照。
 import * as a3 from 'a3js';
 
 const stk_kart = {
@@ -29,6 +31,7 @@ const stk_kart = {
   wheelRearSuspensionRelaxation: 10.0,
   wheelFrontMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
   wheelRearMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+  aerodynamicDrag: 0.5, // 空気抵抗
 };
 
 await a3.initPhysics();
