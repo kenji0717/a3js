@@ -59,7 +59,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           if (!bvhs[bvhKey])
             bvhs[bvhKey] = await loadBvhInUnzippedA3(unzippedA3, actionBVH);
           bvh = cloneBVH(bvhs[bvhKey]);
-          //以下の行はBVHの動きの補間をOFFにする。Acerola3DのBVHの使い方では必要だけど・・・
+          //以下の行はBVHの動きの補間をOFFにする。Acerola3DのBVHでは必須。
           if (bvh)
             bvh.clip.tracks.forEach(track=>{track.setInterpolation(THREE.InterpolateDiscrete);});
         } else {
@@ -76,6 +76,12 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         if (actionOffset) {
           const as = actionOffset.split(" ");
           offset.set(Number(as[0]),Number(as[1]),Number(as[2]));
+        }
+        const actionRot = a.getAttribute('rot');
+        const rot = new Vec3();
+        if (actionRot) {
+          const ar = actionRot.split(" ");
+          rot.set(Number(ar[0]),Number(ar[1]),Number(ar[2]));
         }
         const parts: Record<string,THREE.Object3D> = {};
         const ps = a.getElementsByTagNameNS(ns,'p');
@@ -98,8 +104,10 @@ export class Acerola3D extends ActionObject<Acerola3D> {
             root.add(p);
           });
         }
-        root.position.add(offset);
         root.scale.set(scale,scale,scale);
+        rot.scale(Math.PI/180);
+        root.setRotationFromEuler(new THREE.Euler(rot.x,rot.y,rot.z,'YXZ')); // 'YXZ'は仕様で決まってる
+        root.position.add(offset);
         // クリックなどへの対応
         root.traverse((o)=>{
           o.userData['a3js']={objectA3:this};

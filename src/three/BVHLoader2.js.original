@@ -11,7 +11,6 @@ import {
 } from 'three';
 
 /**
- * 
  * A loader for the BVH format.
  *
  * Imports BVH files and outputs a single {@link Skeleton} and {@link AnimationClip}.
@@ -60,14 +59,6 @@ class BVHLoader2 extends Loader {
 		 * @default true
 		 */
 		this.animateBoneRotations = true;
-
-		/**
-		 * Whether to animate bone scales or not.
-		 *
-		 * @type {boolean}
-		 * @default true
-		 */
-		this.animateBoneScales = true;
 
 	}
 
@@ -204,8 +195,7 @@ class BVHLoader2 extends Loader {
 			const keyframe = {
 				time: frameTime,
 				position: new Vector3(),
-				rotation: new Quaternion(),
-				scale: new Vector3(1,1,1)
+				rotation: new Quaternion()
 			};
 
 			bone.frames.push( keyframe );
@@ -242,15 +232,6 @@ class BVHLoader2 extends Loader {
 					case 'Zrotation':
 						quat.setFromAxisAngle( vz, parseFloat( data.shift().trim() ) * Math.PI / 180 );
 						keyframe.rotation.multiply( quat );
-						break;
-					case 'Xscale':
-						keyframe.scale.x = parseFloat( data.shift().trim() );
-						break;
-					case 'Yscale':
-						keyframe.scale.y = parseFloat( data.shift().trim() );
-						break;
-					case 'Zscale':
-						keyframe.scale.z = parseFloat( data.shift().trim() );
 						break;
 					default:
 						console.warn( 'THREE.BVHLoader2: Invalid channel type.' );
@@ -428,7 +409,6 @@ class BVHLoader2 extends Loader {
 				const times = [];
 				const positions = [];
 				const rotations = [];
-				const scales = [];
 
 				for ( let j = 0; j < bone.frames.length; j ++ ) {
 
@@ -448,10 +428,6 @@ class BVHLoader2 extends Loader {
 					rotations.push( frame.rotation.z );
 					rotations.push( frame.rotation.w );
 
-					scales.push( frame.scale.x );
-					scales.push( frame.scale.y );
-					scales.push( frame.scale.z );
-
 				}
 
 				if ( scope.animateBonePositions ) {
@@ -463,12 +439,6 @@ class BVHLoader2 extends Loader {
 				if ( scope.animateBoneRotations ) {
 
 					tracks.push( new QuaternionKeyframeTrack( bone.name + '.quaternion', times, rotations ) );
-
-				}
-
-				if ( scope.animateBoneScales ) {
-
-					tracks.push( new VectorKeyframeTrack( bone.name + '.scale', times, scales ) );
 
 				}
 

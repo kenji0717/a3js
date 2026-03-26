@@ -2,8 +2,8 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit-cover"/>
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="mobile-web-app-capable" content="yes">
     <title>gaha</title>
     <script type="importmap">
      {
@@ -68,7 +68,7 @@ const view = new a3.GameCanvas({touchDevice:true});
 document.querySelector('#game').appendChild(view);
 await view.alert('START',async ()=>{
   await a3.initSound();
-  //view.requestFullscreen();
+  view.requestFullscreen();
 });
 
 view.camera.setHeadLightEnable(false);
@@ -80,18 +80,12 @@ ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody:'fixed'});
 view.scene.add(ground);
 
 const obj = await new a3.Acerola3D('./assets/A3/supertuxkart/karts/tux/stk_tux.a3').ready;
-console.log(`GAHA1: `,obj.quat);
 const cc = new a3.CarControl(stk_kart);
 obj.setTransformer(cc.trans);
 obj.getAction('default').motion = cc.motion;
 obj.setState('default');
 view.scene.add(obj);
-obj.setRotationNow(0,90,0);
-console.log(`GAHA2: `,obj.quat);
-await view.waitForRender();
-console.log(`GAHA3: `,obj.quat);
-obj.setRotationNow(0,90,0);
-console.log(`GAHA4: `,obj.quat);
+cc.reset(new a3.Vec3(0,1.0,0),new a3.Quat(0,1,0,0));
 
 view.camera.setTransformer(new a3.FollowTransformer(obj,{lookFrom:{x:0,y:1,z:-3}}));
 

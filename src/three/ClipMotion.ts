@@ -28,18 +28,29 @@ export class ClipMotion implements Motion {
     for (const track of clip.tracks) {
       const valueSize = track.getValueSize();
       let interpolant;
-      if (track.ValueTypeName === 'quaternion') {
-        interpolant = new THREE.QuaternionLinearInterpolant(
+      if (track.getInterpolation()===THREE.InterpolateDiscrete) {
+        interpolant = new THREE.DiscreteInterpolant(
           track.times,
           track.values,
           valueSize
         );
-      } else {
-        interpolant = new THREE.LinearInterpolant(
-          track.times,
-          track.values,
-          valueSize
-        )
+      // } else if (track.getInterpolation()===THREE.InterpolateSmooth) { // 意味不明
+      // } else if (track.getInterpolation()===THREE.InterpolateBezier) { // たぶんありえない
+      // } else if (track.getInterpolation()===THREE.InterpolateLinear) { // デフォルト扱いにする
+      } else { // デフォルトはTHREE.InterpolateLinearということで
+        if (track.ValueTypeName === 'quaternion') {
+          interpolant = new THREE.QuaternionLinearInterpolant(
+            track.times,
+            track.values,
+            valueSize
+          );
+        } else {
+          interpolant = new THREE.LinearInterpolant(
+            track.times,
+            track.values,
+            valueSize
+          );
+        }
       }
       this.interpolants[track.name] = interpolant;
     }
@@ -74,7 +85,8 @@ export class ClipMotion implements Motion {
     }
     const pose: Pose = {};
     for (const [name,interpolant] of Object.entries(this.interpolants)) {
-      const [nodeName,property] = name.split('.');
+      const nodeName = name.substring(0,name.lastIndexOf('.'));
+      const property = name.substring(name.lastIndexOf('.')+1,name.length);
       let data = pose[nodeName];
       if (!data) {
         data = {};

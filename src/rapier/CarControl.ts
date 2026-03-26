@@ -339,7 +339,7 @@ export class CarTransformer implements Transformer {
     if (this.cc.opt.aerodynamicDrag > 0.0 && this.chassisBody) {
       const v = new Vec3(this.chassisBody.linvel());
       if (Math.abs(v.y) > 3.0) {
-console.log(`GAHA: CarControl.update(). v=`,v);
+//console.log(`GAHA: CarControl.update(). 跳ねすぎ？ v=`,v);
         v.set(v.x,3*v.y/Math.abs(v.y),v.z);
       }
       this.vv.lerp(this.vv,v,0.9); // 0.9でいいのか？
