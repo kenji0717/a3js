@@ -39,6 +39,13 @@ export class Scene {
         }
       }
     }
+    // backgroundTextureがあれば適用
+    if (object instanceof ActionObject) {
+      if (object.currentAction && object.currentAction.backgroundTexture) {
+        this.scene.background = object.currentAction.backgroundTexture;
+        this.scene.environment = object.currentAction.backgroundTexture;
+      }
+    }
   }
 
   remove(object: ObjectA3) {

@@ -485,16 +485,16 @@ const obj0 = new a3.Box(10,10,1,"white");
 obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
-const obj = await new a3.Acerola3D('./assets/A3/'+list[404]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[314]).ready;
 console.log(obj.getActionNames());
-obj.setState('design');
+//obj.setState('default');
 view.scene.add(obj);
 
-//let t = 0;
-//while (true) {
-//  t += await view.waitForRender();
-//  obj.setRotation(t*100,0,0);
-//}
+let t = 0;
+while (true) {
+  t += await view.waitForRender();
+  obj.setRotation(t*100,0,0);
+}
 
     </script>
   </body>

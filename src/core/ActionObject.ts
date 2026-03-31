@@ -11,6 +11,7 @@ export interface Action {
   motion: Motion;
   sound?: Sound;
   soundContinue: boolean;
+  backgroundTexture?: THREE.Texture; // 入ってたらscene.backgroundなどに使われる
 }
 
 export interface Shape {
@@ -126,6 +127,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
           if (!this.currentAction.soundContinue)
             this.currentAction.sound.stop();
         }
+        if (this.scene) {
+          this.scene.scene.background = null;
+          this.scene.scene.environment = null;
+        }
         this.object.remove(this.currentAction.shape.root);
       }
       this.object.add(a.shape.root);
@@ -136,6 +141,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
         a.motion.setFinishListener(()=>{
           a.sound?.play();
         });
+      }
+      if (this.scene && a.backgroundTexture) {
+        this.scene.scene.background = a.backgroundTexture;
+        this.scene.scene.environment = a.backgroundTexture;
       }
       this.currentAction = a;
       this.stateAction = a;
@@ -150,6 +159,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
           if (!this.currentAction.soundContinue)
             this.currentAction.sound.stop();
         }
+        if (this.scene) {
+          this.scene.scene.background = null;
+          this.scene.scene.environment = null;
+        }
         this.object.remove(this.currentAction.shape.root);
       }
       this.object.add(a.shape.root);
@@ -160,6 +173,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
         a.motion.setFinishListener(()=>{
           a.sound?.play();
         });
+      }
+      if (this.scene && a.backgroundTexture) {
+        this.scene.scene.background = a.backgroundTexture;
+        this.scene.scene.environment = a.backgroundTexture;
       }
       this.currentAction = a;
       this.emoteAction = a;

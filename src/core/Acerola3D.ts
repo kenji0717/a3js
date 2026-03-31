@@ -3,7 +3,7 @@ import { ActionObject } from './ActionObject';
 import type { Action } from './ActionObject';
 import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
-import { loadVrmlInUnzippedA3,
+import { loadVrmlInUnzippedA3, vrmlBackgroundTexture,
          loadBvhInUnzippedA3,
          cloneBVH } from '../three/threeUtils';
 import { ClipMotion } from '../three/ClipMotion.js';
@@ -83,6 +83,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           const ar = actionRot.split(" ");
           rot.set(Number(ar[0]),Number(ar[1]),Number(ar[2]));
         }
+        let backgroundTexture: THREE.Texture | undefined;
         const parts: Record<string,THREE.Object3D> = {};
         const ps = a.getElementsByTagNameNS(ns,'p');
         for (const p of Array.from(ps)) {
@@ -90,8 +91,12 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           const wrl = p.getAttribute('wrl');
           if (partName && wrl) {
             const vrmlKey = unzippedA3.zipUrl + '!' + wrl;
-            if (!vrmls[vrmlKey])
+            if (!vrmls[vrmlKey]) {
               vrmls[vrmlKey] = await loadVrmlInUnzippedA3(unzippedA3,wrl);
+              if (vrmlBackgroundTexture) {
+                backgroundTexture = vrmlBackgroundTexture;
+              }
+            }
             parts[partName] = vrmls[vrmlKey].clone(true);
           }
         }
@@ -162,7 +167,8 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           shape: { root, bones, skeleton: bvh.skeleton },
           motion: new ClipMotion(bvh.clip,actionName),
           sound,
-          soundContinue
+          soundContinue,
+          backgroundTexture
         };
       }
     }

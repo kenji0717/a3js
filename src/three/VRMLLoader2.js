@@ -36,9 +36,19 @@ import {
 	DirectionalLight,
 	PointLight,
 	SpotLight,
-	AmbientLight
+	AmbientLight,
+	CubeTextureLoader
 } from 'three';
 import chevrotain from './libs/chevrotain.module.min.js';
+
+/**
+ * VRMLのBackgroundノードでSkyboxが使われた時に、scene.backgroundと
+ * scene.environmentに設定できるCubeTextureを受け渡すために使用される。
+ * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
+ * 処理中にBackgrounノードでSkyboxが使われた時に、ここに入れられる。
+ * もし
+ */
+export let vrmlLoaderBackgroundTexture;
 
 /**
  * A loader for the VRML format.
@@ -75,6 +85,7 @@ class VRMLLoader2 extends Loader {
 	 * @param {onErrorCallback} onError - Executed when errors occur.
 	 */
 	load( url, onLoad, onProgress, onError ) {
+		vrmlLoaderBackgroundTexture = undefined;
 
 		const scope = this;
 
@@ -883,12 +894,18 @@ class VRMLLoader2 extends Loader {
 
 		}
 
+		// GAHA
+		// backUrl, bottomUrl, frontUrl, leftUrl, rightUrl, topUrlを実装するが、
+		// 結果は vrmlLoaderBackgroundTexture 変数に保存される。またbackUrlなどは
+		// 複数の画像を設定できるが、一番最初の画像だけを処理し、二番目以降の
+		// 画像は無視される。
 		function buildBackgroundNode( node ) {
 
 			const group = new Group();
 
 			let groundAngle, groundColor;
 			let skyAngle, skyColor;
+			let backUrl, bottomUrl, frontUrl, leftUrl, rightUrl, topUrl;
 
 			const fields = node.fields;
 
@@ -909,27 +926,27 @@ class VRMLLoader2 extends Loader {
 						break;
 
 					case 'backUrl':
-						// field not supported
+						backUrl = fieldValues;
 						break;
 
 					case 'bottomUrl':
-						// field not supported
+						bottomUrl = fieldValues;
 						break;
 
 					case 'frontUrl':
-						// field not supported
+						frontUrl = fieldValues;
 						break;
 
 					case 'leftUrl':
-						// field not supported
+						leftUrl = fieldValues;
 						break;
 
 					case 'rightUrl':
-						// field not supported
+						rightUrl = fieldValues;
 						break;
 
 					case 'topUrl':
-						// field not supported
+						topUrl = fieldValues;
 						break;
 
 					case 'skyAngle':
@@ -946,6 +963,20 @@ class VRMLLoader2 extends Loader {
 
 				}
 
+			}
+
+			// skybox
+
+			if ( backUrl && bottomUrl && frontUrl && leftUrl && rightUrl && topUrl ) {
+				const loader = new CubeTextureLoader();
+				vrmlLoaderBackgroundTexture = loader.load([
+					rightUrl[0],
+					leftUrl[0],
+					topUrl[0],
+					bottomUrl[0],
+					frontUrl[0],
+					backUrl[0]
+				]);
 			}
 
 			const radius = 10000;
