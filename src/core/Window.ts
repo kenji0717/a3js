@@ -198,9 +198,9 @@ export class Window extends HTMLElement implements View {
     //cssHeight -= parseFloat(style.paddingTop);
     //cssHeight -= parseFloat(style.paddingBottom);
 
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(cssWidth * dpr);
-    const h = Math.floor(cssHeight * dpr);
+    //const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(cssWidth); // * dpr);
+    const h = Math.floor(cssHeight); // * dpr);
 
     if (this._canvas.width !== w || this._canvas.height !== h) {
       this._canvas.width  = w;
