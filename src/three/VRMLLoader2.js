@@ -32,7 +32,11 @@ import {
 	SRGBColorSpace,
 	TextureLoader,
 	Vector2,
-	Vector3
+	Vector3,
+	DirectionalLight,
+	PointLight,
+	SpotLight,
+	AmbientLight
 } from 'three';
 import chevrotain from './libs/chevrotain.module.min.js';
 
@@ -733,6 +737,18 @@ class VRMLLoader2 extends Loader {
 					build = buildWorldInfoNode( node );
 					break;
 
+				case 'DirectionalLight':
+					build = buildDirectionalLightNode( node );
+					break;
+
+				case 'PointLight':
+					build = buildPointLightNode( node );
+					break;
+
+				case 'SpotLight':
+					build = buildSpotLightNode( node );
+					break;
+
 				case 'Billboard':
 
 				case 'Inline':
@@ -740,11 +756,8 @@ class VRMLLoader2 extends Loader {
 				case 'Switch':
 
 				case 'AudioClip':
-				case 'DirectionalLight':
-				case 'PointLight':
 				case 'Script':
 				case 'Sound':
-				case 'SpotLight':
 
 				case 'CylinderSensor':
 				case 'PlaneSensor':
@@ -1590,6 +1603,227 @@ class VRMLLoader2 extends Loader {
 
 			return worldInfo;
 
+		}
+
+		// GAHA
+		// ambientIntensityの実装はVRMLの規定通りではない。
+		// 光線の方向(direction)は本当はlight.target.positionで
+		// 調整するのだが、なぜか上手くいかないので、light.position
+		// の方でなんとかした。
+		function buildDirectionalLightNode( node ) {
+			let ambientIntensity = 0;
+			const color = new Color( 1, 1, 1 );
+			const direction = new Vector3( 0, 0, -1 );
+			let intensity = 1;
+			let on = true;
+
+			const fields = node.fields;
+
+			for ( let i = 0, l = fields.length; i < l; i ++ ) {
+
+				const field = fields[ i ];
+				const fieldName = field.name;
+				const fieldValues = field.values;
+
+				switch ( fieldName ) {
+
+					case 'ambientIntensity':
+						ambientIntensity = fieldValues[ 0 ];
+						break;
+
+					case 'color':
+						color.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'direction':
+						direction.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'intensity':
+						intensity = fieldValues[ 0 ];
+						break;
+
+					case 'on':
+						on = fieldValues[ 0 ];
+						break;
+
+					default:
+						console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown field:', fieldName );
+						break;
+				}
+			}
+
+			intensity = on ? intensity : 0 ;
+			const lightGroup = new Object3D();
+			const dl = new DirectionalLight(color,intensity);
+			direction.normalize();
+			direction.multiplyScalar(-10);
+			dl.position.copy(direction);
+			lightGroup.add(dl);
+			const al = new AmbientLight(color,intensity*ambientIntensity);
+			lightGroup.add(al);
+			return lightGroup;
+		}
+
+		// GAHA
+		// ambientIntensityの実装はVRMLの規定通りではない。
+		// attenuationの実装は(1 0 0)のデフォルト値固定。
+		// PointLightが拡大縮小されたら色々調整が必要なはずだけど、
+		// それについては何もしていない。
+		function buildPointLightNode( node ) {
+			let ambientIntensity = 0;
+			const attenuation = new Vector3( 1, 0, 0 );
+			const color = new Color( 1, 1, 1 );
+			let intensity = 1;
+			const location = new Vector3( 0, 0, 0 );
+			let on = true;
+			let radius = 100;
+
+			const fields = node.fields;
+
+			for ( let i = 0, l = fields.length; i < l; i ++ ) {
+
+				const field = fields[ i ];
+				const fieldName = field.name;
+				const fieldValues = field.values;
+
+				switch ( fieldName ) {
+
+					case 'ambientIntensity':
+						ambientIntensity = fieldValues[ 0 ];
+						break;
+
+					case 'attenuation':
+						attenuation.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'color':
+						color.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'intensity':
+						intensity = fieldValues[ 0 ];
+						break;
+
+					case 'location':
+						location.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'on':
+						on = fieldValues[ 0 ];
+						break;
+
+					case 'radius':
+						radius = fieldValues[ 0 ];
+						break;
+
+					default:
+						console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown field:', fieldName );
+						break;
+				}
+			}
+
+			intensity = on ? intensity : 0 ;
+			const lightGroup = new Object3D();
+			const pl = new PointLight(color,intensity,radius);
+			pl.position.copy(location);
+			pl.decay = 2; // attenuation=(1,0,0)固定
+			lightGroup.add(pl);
+			const al = new AmbientLight(color,intensity*ambientIntensity);
+			lightGroup.add(al);
+			return lightGroup;
+		}
+
+		// GAHA
+		// ambientIntensityの実装はVRMLの規定通りではない。
+		// attenuationの実装は(1 0 0)のデフォルト値固定。
+		// beamWidthの実装はVRMLの規定通りではない。
+		// 光線の方向(direction)は本当はlight.target.positionで
+		// 調整するのだが、なぜか上手くいかないので、light.position
+		// の方でごまかしている。locationはlightGroupの方で設定
+		// したけどdirectionの方のごまかしのせいで0.1ずれる。
+		function buildSpotLightNode( node ) {
+			let ambientIntensity = 0;
+			const attenuation = new Vector3( 1, 0, 0 );
+			let beamWidth = 1.570796;
+			const color = new Color( 1, 1, 1 );
+			let cutOffAngle = 0.785398;
+			const direction = new Vector3( 0, 0, -1 );
+			let intensity = 1;
+			const location = new Vector3( 0, 0, -1 );
+			let on = true;
+			let radius = 100;
+
+			const fields = node.fields;
+
+			for ( let i = 0, l = fields.length; i < l; i ++ ) {
+
+				const field = fields[ i ];
+				const fieldName = field.name;
+				const fieldValues = field.values;
+
+				switch ( fieldName ) {
+
+					case 'ambientIntensity':
+						ambientIntensity = fieldValues[ 0 ];
+						break;
+
+					case 'attenuation':
+						attenuation.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'beamWidth':
+						beamWidth = fieldValues[ 0 ];
+						break;
+
+					case 'color':
+						color.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'cutOffAngle':
+						cutOffAngle = fieldValues[ 0 ];
+						break;
+
+					case 'direction':
+						direction.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'intensity':
+						intensity = fieldValues[ 0 ];
+						break;
+
+					case 'location':
+						location.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'on':
+						on = fieldValues[ 0 ];
+						break;
+
+					case 'radius':
+						radius = fieldValues[ 0 ];
+						break;
+
+					default:
+						console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown field:', fieldName );
+						break;
+				}
+			}
+
+			intensity = on ? intensity : 0 ;
+			const lightGroup = new Object3D();
+			beamWidth = beamWidth > cutOffAngle ? cutOffAngle : beamWidth;
+			const penumbra = 1-beamWidth/cutOffAngle;
+			const sl = new SpotLight(color,intensity,radius,cutOffAngle,penumbra);
+			direction.normalize();
+			direction.multiplyScalar(-0.1);
+			sl.position.copy(direction);
+			sl.decay = 2; // attenuation=(1,0,0)固定
+			lightGroup.add(sl);
+			const al = new AmbientLight(color,intensity*ambientIntensity);
+			lightGroup.add(al);
+			lightGroup.position.copy(location);
+			return lightGroup;
 		}
 
 		function buildIndexedFaceSetNode( node ) {

@@ -116,7 +116,7 @@ export class Window extends HTMLElement implements View {
       this.camera3js = this.options.camera.camera;
       this.camera = this.options.camera;
     } else {
-      const camera3js = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
+      const camera3js = new THREE.PerspectiveCamera(75, width/height, 0.01, 1000);
       camera3js.aspect = width / height;
       this.camera3js = camera3js;
       this.camera = new GeneralCamera(this.camera3js);

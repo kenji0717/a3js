@@ -88,7 +88,10 @@
        for (const file of list) {
          const li = document.createElement('li');
          li.textContent = file;
-         li.addEventListener('click',()=>init(file));
+         li.addEventListener('click',()=>{
+           localStorage.setItem('a3js_test_item',file);
+           location.reload();
+         });
          if (program_file_name === file)
            li.style.color = 'red';
          const description = (await (await fetch(file)).text()).split('\n')[0];

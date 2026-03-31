@@ -1,22 +1,35 @@
 
+DirectionalLight、PointLight、SpotLightを実装したけど、
+VRMLとThree.jsでピッタリ整合性があるわけではないので、
+色々ごまかした感じだけど、それなりに見れる感じには
+なったと思う。どのへんごまかしたかはVRMLLoader2.jsの
+コメントに残しておいた。
 
-ChatGPTによればVRMLで透過PNGをテクスチャに使う場合には
+-----
+
+仕様上VRMLで透過PNGをテクスチャに使う場合には
 Materialを追加して`transparency 0`の設定をするべきという
 ことだけど、`transparency 0`は不透明ということで、Three.jsの
 VRMLLoaderは`transparency > 0`の時だけmaterial.transparent=trueの
-設定をする。これがどこに影響するかわからないけど
-`transparency >= 0`とするべきなのかもしれない。ただし、これだと
-不透明な物にもmaterial.transparent=trueの設定をすることになる
-かもしれない。でも実験した限りではtransparencyを設定しなければ
-material.transparent=falseのままみたいだし、ChatGPTを信じるなら
-`transparency >= 0`方が良い気もするけど、とりあえずは
-VRMLの記述の方で`transparency 0.001`と書いておくことで
-対処することにする。後でちゃんとVRMLの仕様を調べた方が良いと
-思うけど、昔自分がBlenderからexportしたVRMLは無駄に`transparency 0`を
-付けてるところが多いから`transparency >= 0`にすると処理が
-無駄に重くなったりするかもしれない。でももし気がかわって
-変えるならばVRMLLoader2.js.originalの方で言えば
-`buildAppearanceNode( node )`関数内の1158行のところ。
+設定をし、`transparency 0`の時は何もしなくてfalseになる。
+この影響でVRMLの仕様通りに書くと透過PNGをテクスチャに使っても
+透明にならない。だからと言ってVRMLLoaderの判定を
+`transparency >= 0`とするとテクスチャを使わない透明でない
+物も透明扱いになる可能性がある。特に、昔自分がBlenderから
+exportしたVRMLは無駄に`transparency 0`を付けてるところが多い
+から透明でないのに透明扱いになる所が多数出てくる。
+その結果、透明扱いになると描画順序などに影響して変なことに
+なるはず。
+
+理想を言うとテクスチャにアルファチャンネルがあることを確認
+するなどのプログラムを入れて対処するのが良いが、難しそう。
+
+とりあえずはVRMLの記述の方で`transparency 0.001`と書いておくことで
+対処することにする。
+
+でももし、後でやる気が出た時にはbuildAppearanceNode()関数の最後
+あたり(VRMLLoader2.js.originalで言うと10251行)にプログラムを追加
+するのが良さそう。
 
 それと、ChatGPTによればgeometryの設定で`solid FALSE`の設定を
 して両面が描画されるようにし方が良いということだが、ちょっと
