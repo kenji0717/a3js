@@ -3,13 +3,14 @@ import { readBlobFromUnzippedA3,
          readStringFromUnzippedA3 } from '../utils/math';
 import type { UnzippedA3 } from '../utils/math';
 //import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
-import { VRMLLoader2, vrmlLoaderBackgroundTexture } from './VRMLLoader2.js';
+import { VRMLLoader2, vrmlLoaderBackgroundTexture, vrmlLoaderFog } from './VRMLLoader2.js';
 //import { BVHLoader } from 'three/addons/loaders/BVHLoader.js';
 import { BVHLoader2 } from '../three/BVHLoader2.js';
 //import type { BVH } from 'three/addons/loaders/BVHLoader.js';
 import type { BVH } from '../three/BVHLoader2.js';
 
 export let vrmlBackgroundTexture: THREE.Texture | undefined;
+export let vrmlFog: THREE.Fog | THREE.FogExp2 | undefined;
 
 let vrmlLoader: VRMLLoader2;
 export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: string): Promise<THREE.Object3D> {
@@ -26,8 +27,10 @@ export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: str
   });
 
   vrmlBackgroundTexture = undefined;
+  vrmlFog = undefined;
   const mesh = await vrmlLoader.loadAsync(vrmlFile);
   vrmlBackgroundTexture = vrmlLoaderBackgroundTexture;
+  vrmlFog = vrmlLoaderFog;
 
   vrmlLoader.manager.setURLModifier((url)=>{return url;})
   return mesh;

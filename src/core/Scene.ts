@@ -39,11 +39,16 @@ export class Scene {
         }
       }
     }
-    // backgroundTextureがあれば適用
+    // backgroundTextureやfogがあれば適用
+    // GAHA この方法が適切？
     if (object instanceof ActionObject) {
-      if (object.currentAction && object.currentAction.backgroundTexture) {
-        this.scene.background = object.currentAction.backgroundTexture;
-        this.scene.environment = object.currentAction.backgroundTexture;
+      if (object.currentAction) {
+        if (object.currentAction.backgroundTexture) {
+          this.scene.background = object.currentAction.backgroundTexture;
+          this.scene.environment = object.currentAction.backgroundTexture;
+        }
+        if (object.currentAction.fog)
+          this.scene.fog = object.currentAction.fog;
       }
     }
   }
@@ -65,6 +70,18 @@ export class Scene {
         for (const a of Object.values(object.actions)) {
           a.motion.removeOneselfFromPhysics(this.physicsWorld);
         }
+      }
+    }
+    // backgroundTextureやfogがあれば削除
+    // GAHA この方法が適切？
+    if (object instanceof ActionObject) {
+      if (object.currentAction) {
+        if (object.currentAction.backgroundTexture) {
+          this.scene.background = null;
+          this.scene.environment = null;
+        }
+        if (object.currentAction.fog)
+          this.scene.fog = null;
       }
     }
   }

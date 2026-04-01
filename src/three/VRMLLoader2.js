@@ -37,7 +37,9 @@ import {
 	PointLight,
 	SpotLight,
 	AmbientLight,
-	CubeTextureLoader
+	CubeTextureLoader,
+	Fog,
+	FogExp2
 } from 'three';
 import chevrotain from './libs/chevrotain.module.min.js';
 
@@ -46,9 +48,16 @@ import chevrotain from './libs/chevrotain.module.min.js';
  * scene.environmentに設定できるCubeTextureを受け渡すために使用される。
  * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
  * 処理中にBackgrounノードでSkyboxが使われた時に、ここに入れられる。
- * もし
  */
 export let vrmlLoaderBackgroundTexture;
+
+/**
+ * VRMLの中でFogノードが使われた時に、scene.fogに設定できる
+ * THREE.Fog、もしくはTHREE.FogExp2を受け渡すために使用される。
+ * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
+ * 処理中にFogノードが使われた時に、ここに入れられる。
+ */
+export let vrmlLoaderFog;
 
 /**
  * A loader for the VRML format.
@@ -86,6 +95,7 @@ class VRMLLoader2 extends Loader {
 	 */
 	load( url, onLoad, onProgress, onError ) {
 		vrmlLoaderBackgroundTexture = undefined;
+		vrmlLoaderFog = undefined;
 
 		const scope = this;
 
@@ -760,6 +770,10 @@ class VRMLLoader2 extends Loader {
 					build = buildSpotLightNode( node );
 					break;
 
+				case 'Fog':
+					build = buildFogNode( node );
+					break;
+
 				case 'Billboard':
 
 				case 'Inline':
@@ -790,7 +804,6 @@ class VRMLLoader2 extends Loader {
 				case 'PositionInterpolator':
 				case 'ScalarInterpolator':
 
-				case 'Fog':
 				case 'NavigationInfo':
 				case 'Viewpoint':
 					// node not supported yet
@@ -1855,6 +1868,69 @@ class VRMLLoader2 extends Loader {
 			lightGroup.add(al);
 			lightGroup.position.copy(location);
 			return lightGroup;
+		}
+
+		// GAHA
+		// 「霧」。拡大・縮小された時にはもっとちゃんと
+		// 処理すべきことがあるけど、実装できていない。
+		// 実際の霧ノードはvrmlLoaderFog変数経由で
+		// 受け渡されるので、この関数で返すのは空の
+		// THREE.Object3D。
+		function buildFogNode( node ) {
+			const color = new Color( 1, 1, 1 );
+			let fogType = 'LINEAR';
+			let visibilityRange = 0;
+
+			const fields = node.fields;
+
+			for ( let i = 0, l = fields.length; i < l; i ++ ) {
+
+				const field = fields[ i ];
+				const fieldName = field.name;
+				const fieldValues = field.values;
+
+				switch ( fieldName ) {
+
+					case 'color':
+						color.set( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues [ 2 ]);
+						break;
+
+					case 'fogType':
+						fogType = fieldValues[ 0 ];
+						break;
+
+					case 'visibilityRange':
+						visibilityRange = fieldValues[ 0 ];
+						break;
+
+					case 'set_bind':
+						// field not supported
+						break;
+
+					case 'isBound':
+						// field not supported
+						break;
+
+					default:
+						console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown field:', fieldName );
+						break;
+				}
+			}
+
+			if ( fogType === 'LINEAR' ) {
+				vrmlLoaderFog = new Fog(color,0,visibilityRange);
+			} else if ( fogType === 'EXPONENTIAL' ) {
+				let density = 0.02; // デフォルト値
+				// 予想だけど、visibilityRange離れると霧の濃さが
+				// 99%になるdensityの計算。
+				if (visibilityRange!==0)
+				  density = 2.146/visibilityRange;
+console.log(`GAHA: density=${density}`);
+				vrmlLoaderFog = new FogExp2(color,density);
+			} else {
+				console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown fogType:', fogType );
+			}
+			return new Object3D();
 		}
 
 		function buildIndexedFaceSetNode( node ) {

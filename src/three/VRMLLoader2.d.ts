@@ -1,4 +1,4 @@
-import { Loader, LoadingManager, Scene, CubeTexture } from "three";
+import { Loader, LoadingManager, Scene, CubeTexture, Fog, FogExp2 } from "three";
 
 export class VRMLLoader2 extends Loader<Scene> {
     constructor(manager?: LoadingManager);
@@ -7,3 +7,4 @@ export class VRMLLoader2 extends Loader<Scene> {
 }
 
 export const vrmlLoaderBackgroundTexture: CubeTexture | undefined;
+export const vrmlLoaderFog: Fog | FogExp2 | undefined;
