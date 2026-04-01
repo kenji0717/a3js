@@ -68,7 +68,7 @@ export class Canvas extends HTMLElement implements View {
       this.camera3js = this.options.camera.camera;
       this.camera = this.options.camera;
     } else {
-      const camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.1, 1000);
+      const camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.01, 1000);
       camera3js.aspect = 300 / 150;
       this.camera3js = camera3js;
       this.camera = new GeneralCamera(this.camera3js);
