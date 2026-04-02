@@ -22,8 +22,6 @@
     <script type="module">
 import * as a3 from 'a3js';
 
-const view = new a3.Window(600,300);
-
 const list = [
 /*  0*/ 'dummy',
 /*  1*/ '007ぴぽや/09ちょっと失敗/pipo-btleffect108e.first/pipo-btleffect108e.a3',
@@ -56,7 +54,7 @@ const list = [
 /* 28*/ '3dwarehouse/Weapons/Weapons.a3', // OK
 /* 29*/ '3dwarehouse/ZAKU/ZAKU.a3', // OK
 /* 30*/ '3dwarehouse/gougui/gougui.a3', // OK
-/* 31*/ '3dwarehouse/horse/horse.a3', // VRMLパースエラーになる
+/* 31*/ '3dwarehouse/horse/horse.a3', // OK (たぶんちゃんと完成してなくて変だけど)
 /* 32*/ '3dwarehouse/imina/D_Shaped_Oval_Track/D_Shaped_Oval_Track.a3', // 調整してないので大きさや向きが変
 /* 33*/ '3dwarehouse/petbottle/petbottle.a3', // OK
 /* 34*/ '3dwarehouse/plane/plane.a3', // OK
@@ -66,7 +64,7 @@ const list = [
 /* 38*/ 'BattleField01/BattleField01.a3', // OK
 /* 39*/ 'Billboard/Billboard.a3', // まあ無理
 /* 40*/ 'BoneUtils/BoneUtils.a3', // OK
-/* 41*/ 'ChromaKey/ChromaKey.a3', // Backgroundノードのskyの方だけどダメだった
+/* 41*/ 'ChromaKey/ChromaKey.a3', // BAD VRMLLoaderのバグだと思われる
 /* 42*/ 'ClearBlocks/ClearBlocks.a3', // OK
 /* 43*/ 'ClearBlocks2/ClearBlocks2.a3', // OK
 /* 44*/ 'ColoredBlocks/ColoredBlocks.a3', // OK
@@ -481,18 +479,20 @@ const list = [
 /*453*/ 'weather/weather.a3', // OK
  ];
 
-//await view.alert('初期化！',async ()=>{
-//  await a3.initSound();
-//  await a3.initPhysics();
-//});
+const view = new a3.Window(600,300);
+await view.alert('初期化！',async ()=>{
+  await a3.initSound();
+  await a3.initPhysics();
+});
 
 const obj0 = new a3.Box(10,10,1,"gray");
 obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
-const obj = await new a3.Acerola3D('./assets/A3/'+list[453]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
+obj.setScale(1, 1, 1);
 console.log(obj.getActionNames());
-//obj.setState('Snow');
+obj.setState('run');
 //obj.setEmote('vertigo');
 view.scene.add(obj);
 

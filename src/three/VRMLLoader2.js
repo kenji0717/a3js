@@ -1021,17 +1021,23 @@ class VRMLLoader2 extends Loader {
 
 			if ( groundColor ) {
 
-				if ( groundColor.length > 0 ) {
+				const groundGeometry = new SphereGeometry( radius, 32, 16, 0, 2 * Math.PI, 0.5 * Math.PI, 1.5 * Math.PI );
+				const groundMaterial = new MeshBasicMaterial( { fog: false, side: BackSide, depthWrite: false, depthTest: false } );
 
-					const groundGeometry = new SphereGeometry( radius, 32, 16, 0, 2 * Math.PI, 0.5 * Math.PI, 1.5 * Math.PI );
-					const groundMaterial = new MeshBasicMaterial( { fog: false, side: BackSide, vertexColors: true, depthWrite: false, depthTest: false } );
+				if ( groundColor.length > 3 ) {
 
 					paintFaces( groundGeometry, radius, groundAngle, toColorArray( groundColor ), false );
+					groundMaterial.vertexColors = true;
 
-					const ground = new Mesh( groundGeometry, groundMaterial );
-					group.add( ground );
+
+				} else {
+
+					groundMaterial.color.setRGB( groundColor[ 0 ], groundColor[ 1 ], groundColor[ 2 ], SRGBColorSpace );
 
 				}
+
+				const ground = new Mesh( groundGeometry, groundMaterial );
+				group.add( ground );
 
 			}
 
@@ -3534,7 +3540,7 @@ console.log(`GAHA: density=${density}`);
 				thresholds.push( point );
 
 			}
-
+console.log(`GAHA: thresholdIndexA=`,thresholds);
 			// generate vertex colors
 
 			const indices = geometry.index;
