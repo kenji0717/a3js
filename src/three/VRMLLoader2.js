@@ -1,5 +1,5 @@
 import {
-	BackSide,
+	//BackSide,
 	BoxGeometry,
 	BufferAttribute,
 	BufferGeometry,
@@ -39,7 +39,9 @@ import {
 	AmbientLight,
 	CubeTextureLoader,
 	Fog,
-	FogExp2
+	FogExp2,
+	CubeTexture,
+	LinearFilter, LinearMipmapLinearFilter
 } from 'three';
 import chevrotain from './libs/chevrotain.module.min.js';
 
@@ -978,9 +980,8 @@ class VRMLLoader2 extends Loader {
 
 			}
 
-			// skybox
-
 			if ( backUrl && bottomUrl && frontUrl && leftUrl && rightUrl && topUrl ) {
+				// skybox
 				const loader = new CubeTextureLoader();
 				vrmlLoaderBackgroundTexture = loader.load([
 					rightUrl[0],
@@ -990,8 +991,28 @@ class VRMLLoader2 extends Loader {
 					frontUrl[0],
 					backUrl[0]
 				]);
+			} else {
+				// sky and ground
+				if (skyColor) {
+					const a = [];
+					for (let i=0; i<skyColor.length; i += 3)
+						a.push([skyColor[i],skyColor[i+1],skyColor[i+2]]);
+					skyColor = a;
+				}
+				if (groundColor) {
+					const a = [];
+					for (let i=0; i<groundColor.length; i += 3)
+						a.push([groundColor[i],groundColor[i+1],groundColor[i+2]]);
+					groundColor = a;
+				}
+				vrmlLoaderBackgroundTexture = new SkyGroundCubeTexture(
+					{skyColor,
+					skyAngle,
+					groundColor,
+					groundAngle}
+				).buildTexture();
 			}
-
+			/*
 			const radius = 10000;
 
 			// sky
@@ -1044,7 +1065,7 @@ class VRMLLoader2 extends Loader {
 			// render background group first
 
 			group.renderOrder = - Infinity;
-
+			*/
 			return group;
 
 		}
@@ -1931,7 +1952,6 @@ class VRMLLoader2 extends Loader {
 				// 99%になるdensityの計算。
 				if (visibilityRange!==0)
 				  density = 2.146/visibilityRange;
-console.log(`GAHA: density=${density}`);
 				vrmlLoaderFog = new FogExp2(color,density);
 			} else {
 				console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown fogType:', fogType );
@@ -3540,7 +3560,7 @@ console.log(`GAHA: density=${density}`);
 				thresholds.push( point );
 
 			}
-console.log(`GAHA: thresholdIndexA=`,thresholds);
+
 			// generate vertex colors
 
 			const indices = geometry.index;
@@ -3916,5 +3936,359 @@ const TEXTURE_TYPE = {
 	RGB: 3,
 	RGBA: 4
 };
+
+/**
+ * SkyGroundCubeTexture - VRML97 Background ノードの Three.js 実装
+ *
+ * skyColor/skyAngle/groundColor/groundAngle を Canvas でテクスチャ化し
+ * CubeTextureLoader 互換の scene.background に設定する。
+ *
+ * VRML97 仕様:
+ *   - skyAngle[i] は天頂(0)からの角度(ラジアン)
+ *   - skyColor[0] は常に天頂の色(skyAngle に対応する色なし)
+ *   - skyColor[i+1] が skyAngle[i] の色
+ *   - groundAngle/groundColor は地平線(0)からの角度(下方向)
+ *   - groundColor[0] は常に地平線直下の色
+ *
+ * 各 Canvas のピクセルは、そのピクセルが向く方向のピッチ角を計算し、
+ * VRML の skyAngle/groundAngle テーブルを線形補間して正確に着色する。
+ *
+ * 使い方:
+ *   const bg = new SkyGroundCubeTexture({
+ *     skyColor:    [ [0.0, 0.0, 1.0], [0.5, 0.5, 1.0] ],
+ *     skyAngle:    [ 1.571 ],
+ *     groundColor: [ [0.1, 0.5, 0.1], [0.0, 0.2, 0.0] ],
+ *     groundAngle: [ 1.571 ],
+ *   });
+ *   bg.applyToScene(scene);
+ */
+export class SkyGroundCubeTexture {
+  /**
+   * @param {object} options
+   * @param {number[][]} [options.skyColor]    - RGB 配列の配列 (0〜1)
+   * @param {number[]}   [options.skyAngle]    - ラジアン配列
+   * @param {number[][]} [options.groundColor] - RGB 配列の配列 (0〜1)
+   * @param {number[]}   [options.groundAngle] - ラジアン配列
+   * @param {number}     [options.size=128]    - Canvas の解像度 (px)
+   */
+  constructor({
+    skyColor    = [[0.0, 0.0, 0.0]],
+    skyAngle    = [],
+    groundColor = [],
+    groundAngle = [],
+    size        = 128,
+  } = {}) {
+    this._skyColor    = skyColor;
+    this._skyAngle    = skyAngle;
+    this._groundColor = groundColor;
+    this._groundAngle = groundAngle;
+    this._size        = size;
+    this._texture     = null;
+  }
+
+  // ------------------------------------------------------------------ //
+  // 公開 API
+  // ------------------------------------------------------------------ //
+
+  /**
+   * scene.background に適用する。
+   * @param {import('three').Scene} scene
+   */
+  applyToScene(scene) {
+    scene.background = this._buildCubeTexture();
+  }
+
+  /**
+   * CubeTexture を返す。
+   * @returns {CubeTexture}
+   */
+  buildTexture() {
+    if (!this._texture) {
+      this._texture = this._buildCubeTexture();
+    }
+    return this._texture;
+  }
+
+  /** 生成済みテクスチャを破棄する。 */
+  dispose() {
+    if (this._texture) {
+      this._texture.dispose();
+      this._texture = null;
+    }
+  }
+
+  // ------------------------------------------------------------------ //
+  // 内部実装: 色の計算
+  // ------------------------------------------------------------------ //
+
+  /**
+   * ピッチ角(天頂からの角度, ラジアン)から RGB を計算する。
+   *
+   * 0 〜 π/2: 天空側。skyAngle テーブルで線形補間。
+   * π/2 〜 π: 地面側。groundAngle テーブルで線形補間。
+   *            groundColor 未指定の場合は天空の最終色を返す。
+   *
+   * @param {number} pitch - 天頂からの角度 (0=天頂, π/2=地平線, π=真下)
+   * @returns {[number, number, number]} RGB (0〜1)
+   */
+  _colorAtPitch(pitch) {
+    const HALF_PI = Math.PI / 2;
+
+    if (pitch <= HALF_PI) {
+      // --- 天空側 ---
+      // skyAngle が空 → 全天 skyColor[0] の単色
+      if (this._skyAngle.length === 0) {
+        return this._skyColor[0];
+      }
+      // pitch が最初の skyAngle より小さい → skyColor[0] と skyColor[1] の間
+      if (pitch <= this._skyAngle[0]) {
+        return this._lerpColor(
+          this._skyColor[0],
+          this._skyColor[1],
+          pitch / this._skyAngle[0],
+        );
+      }
+      // pitch が最後の skyAngle より大きい → 最終色で固定
+      const lastIdx = this._skyAngle.length - 1;
+      if (pitch >= this._skyAngle[lastIdx]) {
+        return this._skyColor[lastIdx + 1] ?? this._skyColor[this._skyColor.length - 1];
+      }
+      // skyAngle テーブルの中間を線形補間
+      for (let i = 0; i < lastIdx; i++) {
+        if (pitch <= this._skyAngle[i + 1]) {
+          const t = (pitch - this._skyAngle[i]) / (this._skyAngle[i + 1] - this._skyAngle[i]);
+          return this._lerpColor(
+            this._skyColor[i + 1] ?? this._skyColor[this._skyColor.length - 1],
+            this._skyColor[i + 2] ?? this._skyColor[this._skyColor.length - 1],
+            t,
+          );
+        }
+      }
+      // ここには到達しないが念のため最終色を返す
+      return this._skyColor[this._skyColor.length - 1];
+
+    } else {
+      // --- 地面側 ---
+      // groundColor 未指定 → 天空の最終色を返す
+      if (this._groundColor.length === 0) {
+        return this._skyColor[this._skyColor.length - 1];
+      }
+
+      // 地平線からの角度に変換 (0=地平線, π/2=真下)
+      const gPitch = pitch - HALF_PI;
+
+      // groundAngle が空 → 全地面 groundColor[0] の単色
+      if (this._groundAngle.length === 0) {
+        return this._groundColor[0];
+      }
+      // gPitch が最初の groundAngle より小さい → groundColor[0] と groundColor[1] の間
+      if (gPitch <= this._groundAngle[0]) {
+        return this._lerpColor(
+          this._groundColor[0],
+          this._groundColor[1],
+          gPitch / this._groundAngle[0],
+        );
+      }
+      // gPitch が最後の groundAngle より大きい → 最終色で固定
+      const lastIdx = this._groundAngle.length - 1;
+      if (gPitch >= this._groundAngle[lastIdx]) {
+        return this._groundColor[lastIdx + 1] ?? this._groundColor[this._groundColor.length - 1];
+      }
+      // groundAngle テーブルの中間を線形補間
+      for (let i = 0; i < lastIdx; i++) {
+        if (gPitch <= this._groundAngle[i + 1]) {
+          const t = (gPitch - this._groundAngle[i]) / (this._groundAngle[i + 1] - this._groundAngle[i]);
+          return this._lerpColor(
+            this._groundColor[i + 1] ?? this._groundColor[this._groundColor.length - 1],
+            this._groundColor[i + 2] ?? this._groundColor[this._groundColor.length - 1],
+            t,
+          );
+        }
+      }
+      // ここには到達しないが念のため最終色を返す
+      return this._groundColor[this._groundColor.length - 1];
+    }
+  }
+
+  /**
+   * 2色を線形補間する。
+   * @param {number[]} c0 - RGB (0〜1)
+   * @param {number[]} c1 - RGB (0〜1)
+   * @param {number}   t  - 補間係数 (0〜1)
+   * @returns {[number, number, number]}
+   */
+  _lerpColor(c0, c1, t) {
+    return [
+      c0[0] + (c1[0] - c0[0]) * t,
+      c0[1] + (c1[1] - c0[1]) * t,
+      c0[2] + (c1[2] - c0[2]) * t,
+    ];
+  }
+
+  // ------------------------------------------------------------------ //
+  // 内部実装: Canvas 生成
+  // ------------------------------------------------------------------ //
+
+  /**
+   * 側面(+X/-X/+Z/-Z)用 Canvas を生成する。
+   *
+   * 側面テクスチャの各ピクセル(u, v)が向く方向ベクトルは面ごとに異なるが、
+   * ピッチ角(天頂からの仰角)は v 座標と面からの水平距離だけで決まる。
+   *
+   * 面の中心列(u=0.5)では水平距離=1、v=0が天頂、v=1が真下に対応。
+   * ただし u が端に近いほど水平方向に振れ、同じ v でもピッチ角が浅くなる。
+   * 正確な計算のため、各ピクセルの3Dベクトルからピッチ角を求める。
+   *
+   * 面の向き: +Z 面を例にとると、ローカル座標は
+   *   x: -1(左端)〜+1(右端)
+   *   y: +1(上端)〜-1(下端)
+   *   z: +1(面の法線)
+   * ピッチ角 = acos(y / length(x, y, z))
+   *
+   * @returns {HTMLCanvasElement}
+   */
+  _buildSideCanvas() {
+    const s    = this._size;
+    const cvs  = document.createElement('canvas');
+    cvs.width  = s;
+    cvs.height = s;
+    const ctx  = cvs.getContext('2d');
+    const data = ctx.createImageData(s, s);
+    const buf  = data.data;
+
+    for (let row = 0; row < s; row++) {
+      // v: 0(上端=天頂方向) 〜 1(下端=真下方向)
+      const v = (row + 0.5) / s;
+      // ローカル y 座標: +1(天頂) 〜 -1(真下)
+      const localY = 1.0 - 2.0 * v;
+
+      for (let col = 0; col < s; col++) {
+        // u: 0(左端) 〜 1(右端)
+        const u = (col + 0.5) / s;
+        // ローカル x 座標: -1(左端) 〜 +1(右端)
+        const localX = 2.0 * u - 1.0;
+        // 面の法線方向は z=+1 固定
+        const localZ = 1.0;
+
+        // ピッチ角 = 天頂(0,1,0)との角度 = acos(y / |v|)
+        const len   = Math.sqrt(localX * localX + localY * localY + localZ * localZ);
+        const pitch = Math.acos(Math.max(-1, Math.min(1, localY / len)));
+
+        const [r, g, b] = this._colorAtPitch(pitch);
+        const idx = (row * s + col) * 4;
+        buf[idx]     = Math.round(r * 255);
+        buf[idx + 1] = Math.round(g * 255);
+        buf[idx + 2] = Math.round(b * 255);
+        buf[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(data, 0, 0);
+    return cvs;
+  }
+
+  /**
+   * 上面(+Y)用 Canvas を生成する。
+   *
+   * +Y 面の各ピクセルは常に上半球を向くため、
+   * ピッチ角は 0(中心=真上) 〜 π/2(端=地平線) の範囲になる。
+   * ローカル座標: x: -1〜+1, z: -1〜+1, y=+1(面の法線)
+   *
+   * @returns {HTMLCanvasElement}
+   */
+  _buildTopCanvas() {
+    const s    = this._size;
+    const cvs  = document.createElement('canvas');
+    cvs.width  = s;
+    cvs.height = s;
+    const ctx  = cvs.getContext('2d');
+    const data = ctx.createImageData(s, s);
+    const buf  = data.data;
+
+    for (let row = 0; row < s; row++) {
+      const localZ = 2.0 * (row + 0.5) / s - 1.0;
+      for (let col = 0; col < s; col++) {
+        const localX = 2.0 * (col + 0.5) / s - 1.0;
+        const localY = 1.0; // +Y 面
+        const len    = Math.sqrt(localX * localX + localY * localY + localZ * localZ);
+        const pitch  = Math.acos(Math.max(-1, Math.min(1, localY / len)));
+
+        const [r, g, b] = this._colorAtPitch(pitch);
+        const idx = (row * s + col) * 4;
+        buf[idx]     = Math.round(r * 255);
+        buf[idx + 1] = Math.round(g * 255);
+        buf[idx + 2] = Math.round(b * 255);
+        buf[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(data, 0, 0);
+    return cvs;
+  }
+
+  /**
+   * 下面(-Y)用 Canvas を生成する。
+   *
+   * -Y 面の各ピクセルは常に下半球を向くため、
+   * ピッチ角は π/2(端=地平線) 〜 π(中心=真下) の範囲になる。
+   * ローカル座標: x: -1〜+1, z: -1〜+1, y=-1(面の法線)
+   *
+   * @returns {HTMLCanvasElement}
+   */
+  _buildBottomCanvas() {
+    const s    = this._size;
+    const cvs  = document.createElement('canvas');
+    cvs.width  = s;
+    cvs.height = s;
+    const ctx  = cvs.getContext('2d');
+    const data = ctx.createImageData(s, s);
+    const buf  = data.data;
+
+    for (let row = 0; row < s; row++) {
+      const localZ = 2.0 * (row + 0.5) / s - 1.0;
+      for (let col = 0; col < s; col++) {
+        const localX = 2.0 * (col + 0.5) / s - 1.0;
+        const localY = -1.0; // -Y 面
+        const len    = Math.sqrt(localX * localX + localY * localY + localZ * localZ);
+        const pitch  = Math.acos(Math.max(-1, Math.min(1, localY / len)));
+
+        const [r, g, b] = this._colorAtPitch(pitch);
+        const idx = (row * s + col) * 4;
+        buf[idx]     = Math.round(r * 255);
+        buf[idx + 1] = Math.round(g * 255);
+        buf[idx + 2] = Math.round(b * 255);
+        buf[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(data, 0, 0);
+    return cvs;
+  }
+
+  /**
+   * CubeTexture を組み立てる。
+   * Three.js の CubeTexture の面順: px, nx, py, ny, pz, nz
+   * @returns {CubeTexture}
+   */
+  _buildCubeTexture() {
+    const side   = this._buildSideCanvas();
+    const top    = this._buildTopCanvas();
+    const bottom = this._buildBottomCanvas();
+
+    // px=+X, nx=-X, py=+Y, ny=-Y, pz=+Z, nz=-Z
+    // 側面4枚はすべて同じ Canvas でよい
+    // (ピッチ角の計算は面の向きによらず z=+1 として行っており、
+    //  CubeMap のサンプリング時に GPU が各面の向きを正しく処理する)
+    const images = [side, side, top, bottom, side, side];
+
+    const texture       = new CubeTexture(images);
+    texture.needsUpdate = true;
+
+    texture.minFilter = LinearMipmapLinearFilter;
+    texture.magFilter = LinearFilter;
+
+    return texture;
+  }
+}
 
 export { VRMLLoader2 };

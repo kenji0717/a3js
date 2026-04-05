@@ -64,7 +64,7 @@ const list = [
 /* 38*/ 'BattleField01/BattleField01.a3', // OK
 /* 39*/ 'Billboard/Billboard.a3', // まあ無理
 /* 40*/ 'BoneUtils/BoneUtils.a3', // OK
-/* 41*/ 'ChromaKey/ChromaKey.a3', // BAD VRMLLoaderのバグだと思われる
+/* 41*/ 'ChromaKey/ChromaKey.a3', // OK
 /* 42*/ 'ClearBlocks/ClearBlocks.a3', // OK
 /* 43*/ 'ClearBlocks2/ClearBlocks2.a3', // OK
 /* 44*/ 'ColoredBlocks/ColoredBlocks.a3', // OK
@@ -379,8 +379,8 @@ const list = [
 /*353*/ 'axis2/axis2.a3', // OK (352の細いやつ。1アクション)
 /*354*/ 'background0/background0.a3', // OK (緑の地面)
 /*355*/ 'background1/background1.a3', // OK (緑の地面。メッシュ多め)
-/*356*/ 'background2/background2.a3', // BAD 変なBackgroundノード
-/*357*/ 'background3/background3.a3', // BAD skyとgroundだけのBackgroundノード
+/*356*/ 'background2/background2.a3', // BAD? 厳密に判断しないとよくわからない
+/*357*/ 'background3/background3.a3', // BAD? 厳密に判断しないとよくわからない
 /*358*/ 'background4/background4.a3', // BAD 6つのUrlのBackgroundノード。画像の縦横比が1でないとダメと警告出てる。
 /*359*/ 'background5/background5.a3', // BAD 色々おかしい。音も出てない。
 /*360*/ 'background6/background6.a3', // BAD 359と同じ状況。
@@ -490,6 +490,7 @@ obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
 const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
+//const obj = await new a3.Acerola3D('./assets/A3/'+list[361]).ready;
 obj.setScale(1, 1, 1);
 console.log(obj.getActionNames());
 obj.setState('run');
