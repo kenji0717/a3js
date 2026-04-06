@@ -85,10 +85,10 @@ const list = [
 /* 59*/ 'ETRobo/ETRobo2017CourseSVG/ETRobo2017CourseSVG.a3', // OK
 /* 60*/ 'ETRobo/ETRobo2017CourseSVG10/ETRobo2017CourseSVG10.a3', // OK
 /* 61*/ 'Effect/ColorAnim/ColorAnim.a3', // OK
-/* 62*/ 'Effect/ExpAtCE/ExpAtCE.a3', // 半透明になってない。63はLight版
-/* 63*/ 'Effect/ExpAtCELight/ExpAtCELight.a3', // 半透明になってない。62のLight版
+/* 62*/ 'Effect/ExpAtCE/ExpAtCE.a3', // OK 63はLight版
+/* 63*/ 'Effect/ExpAtCELight/ExpAtCELight.a3', // OK 62のLight版
 /* 64*/ 'Effect/TransAnim/TransAnim.a3', // OK
-/* 65*/ 'Effect/billboard/billboard.a3', // 半透明になってない
+/* 65*/ 'Effect/billboard/billboard.a3', // BAD 画像の透明判定はtrueなのに透明に表示されない。それとbillboardの機能は未実装。
 /* 66*/ 'Effect/cure/cure.a3', // 半透明になってない
 /* 67*/ 'Effect/earth/earth.a3', // 透明なってなくて中のmonkyが見えてない
 /* 68*/ 'Effect/exp/exp.a3', // 半透明になってない
@@ -480,20 +480,20 @@ const list = [
  ];
 
 const view = new a3.Window(600,300);
-await view.alert('初期化！',async ()=>{
-  await a3.initSound();
-  await a3.initPhysics();
-});
+//await view.alert('初期化！',async ()=>{
+//  await a3.initSound();
+//  await a3.initPhysics();
+//});
 
 const obj0 = new a3.Box(10,10,1,"gray");
 obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
-const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-//const obj = await new a3.Acerola3D('./assets/A3/'+list[361]).ready;
-obj.setScale(1, 1, 1);
+//const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[66]).ready;
+//obj.setScale(1, 1, 1);
 console.log(obj.getActionNames());
-obj.setState('run');
+//obj.setState('run');
 //obj.setEmote('vertigo');
 view.scene.add(obj);
 

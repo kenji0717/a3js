@@ -1337,6 +1337,15 @@ class VRMLLoader2 extends Loader {
 
 			}
 
+			// 追加の処理
+			if (material.map && material.map.fookHolder) {
+				material.map.fookHolder.fook=async (t)=>{
+					const trans = await isTransparent(t.source.data);
+					material.transparent=trans;
+					console.log(`GAHA: trans=`,trans);
+				};
+			}
+
 			return material;
 
 		}
@@ -1558,7 +1567,16 @@ class VRMLLoader2 extends Loader {
 
 					case 'url':
 						const url = fieldValues[ 0 ];
-						if ( url ) texture = textureLoader.load( url );
+						// GAHA こんな方法しか思いつかない。上のbuildAppearanceNode()
+						// にてテクスチャの画像が読み込まれた後に、その画像にアルファ
+						// チャンネルがあって処理透明部分があるかどうか判定させたい
+						// ので、テクスチャオブジェクトにfookHolderというオブジェクトを
+						// つけさせてもらって、その中のfookプロパティに処理を行う
+						// 関数をセットすることにした。
+						const fookHolder={fook:null};
+						const loadFook = (t)=>{if (fookHolder.fook) fookHolder.fook(t);};
+						if ( url ) texture = textureLoader.load( url, loadFook );
+						if ( texture ) texture.fookHolder = fookHolder;
 						break;
 
 					case 'repeatS':
@@ -4289,6 +4307,39 @@ export class SkyGroundCubeTexture {
 
     return texture;
   }
+}
+
+/**
+ * Claude作
+ * img要素の画像にアルファチャンネルがあって透明な
+ * 部分があればtrue、そうでなければfalseを返す関数。
+ * @param {*} imgElement 
+ * @returns 
+ */
+async function isTransparent(imgElement) {
+  // 画像の読み込みを待つ
+  await new Promise((resolve, reject) => {
+    if (imgElement.complete) return resolve();
+    imgElement.onload = resolve;
+    imgElement.onerror = reject;
+  });
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = imgElement.naturalWidth;
+  canvas.height = imgElement.naturalHeight;
+
+  ctx.drawImage(imgElement, 0, 0);
+
+  // ピクセルデータを取得
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data; // [R, G, B, A, R, G, B, A, ...] の配列
+
+  // アルファ値が255未満のピクセルがあれば透明部分あり
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 255) return true;
+  }
+  return false;
 }
 
 export { VRMLLoader2 };
