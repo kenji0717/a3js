@@ -88,15 +88,15 @@ const list = [
 /* 62*/ 'Effect/ExpAtCE/ExpAtCE.a3', // OK 63はLight版
 /* 63*/ 'Effect/ExpAtCELight/ExpAtCELight.a3', // OK 62のLight版
 /* 64*/ 'Effect/TransAnim/TransAnim.a3', // OK
-/* 65*/ 'Effect/billboard/billboard.a3', // BAD 画像の透明判定はtrueなのに透明に表示されない。それとbillboardの機能は未実装。
-/* 66*/ 'Effect/cure/cure.a3', // 半透明になってない
-/* 67*/ 'Effect/earth/earth.a3', // 透明なってなくて中のmonkyが見えてない
-/* 68*/ 'Effect/exp/exp.a3', // 半透明になってない
-/* 69*/ 'Effect/explosion/explosion.a3', // 半透明になってない
+/* 65*/ 'Effect/billboard/billboard.a3', // OK
+/* 66*/ 'Effect/cure/cure.a3', // OK
+/* 67*/ 'Effect/earth/earth.a3', // BAD 透明だけど中のmonkyが表示されてない
+/* 68*/ 'Effect/exp/exp.a3', // OK
+/* 69*/ 'Effect/explosion/explosion.a3', // OK
 /* 70*/ 'Effect/flare.old/flare.a3', // たぶん家にしかない
-/* 71*/ 'Effect/flare/flare.a3', // 半透明になってない
+/* 71*/ 'Effect/flare/flare.a3', // OK 視点を上にしないと見えなかった
 /* 72*/ 'Effect/stars/stars.a3', // OK
-/* 73*/ 'Effect/transparency/transparency.a3', // 透明が不自然？
+/* 73*/ 'Effect/transparency/transparency.a3', // 透明が不自然？そんなもん？
 /* 74*/ 'FPS_ARM/FPS_ARM.a3', // OK
 /* 75*/ 'Fog/FogDemo00/FogDemo00.a3', // OK 視点を上にしないと見えなかった
 /* 76*/ 'Fog/fog1/fog1.a3', // OK
@@ -114,9 +114,9 @@ const list = [
 /* 88*/ 'Minecraft/Minecraft.a3', // たぶんテクスチャが変
 /* 89*/ 'Minecraft2/Minecraft2.a3', // 読めるけど、完成してない
 /* 90*/ 'NeverwinterNights/Iron_Golem/Iron_Golem.a3', // OK
-/* 91*/ 'PlayingCards/Backup/PlayingCards/PlayingCards.a3', // 透明になってない
-/* 92*/ 'PlayingCards/Backup/PlayingCardsLight/PlayingCardsLight.a3', // 透明になってない
-/* 93*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightC1.a3', // 透明になってない
+/* 91*/ 'PlayingCards/Backup/PlayingCards/PlayingCards.a3', // OK 透明になってる
+/* 92*/ 'PlayingCards/Backup/PlayingCardsLight/PlayingCardsLight.a3', // OK 透明になってる
+/* 93*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightC1.a3', // OK 透明になってる
 /* 94*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightC10.a3',
 /* 95*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightC11.a3',
 /* 96*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightC12.a3',
@@ -169,7 +169,7 @@ const list = [
 /*143*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightS7.a3',
 /*144*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightS8.a3',
 /*145*/ 'PlayingCards/Backup/PlayingCardsLightSep/PlayingCardsLightS9.a3',
-/*146*/ 'PlayingCards/Backup/PlayingCardsSep/PlayingCardsC1.a3', // 透明になってない
+/*146*/ 'PlayingCards/Backup/PlayingCardsSep/PlayingCardsC1.a3', // OK 透明になってる
 /*147*/ 'PlayingCards/Backup/PlayingCardsSep/PlayingCardsC10.a3',
 /*148*/ 'PlayingCards/Backup/PlayingCardsSep/PlayingCardsC11.a3',
 /*149*/ 'PlayingCards/Backup/PlayingCardsSep/PlayingCardsC12.a3',
@@ -340,7 +340,7 @@ const list = [
 /*314*/ 'SkyBox/SkyBox01/SkyBox01.a3', // OK
 /*315*/ 'SkyBox/SkyBox02/SkyBox02.a3', // OK
 /*316*/ 'SlotReels/SlotReels.a3', // OK
-/*317*/ 'Smiley/Smiley.a3', // なぜか横向き。透明になってない
+/*317*/ 'Smiley/Smiley.a3', // なぜか横向き
 /*318*/ 'VESMA/adviser/adviser.a3', // OK
 /*319*/ 'VESMA/applet/applet.a3', // OK
 /*320*/ 'VESMA/bbs/bbs.a3', // OK
@@ -397,8 +397,8 @@ const list = [
 /*371*/ 'car01/car01.a3', // OK (しょぼ)
 /*372*/ 'car01/sozai/PrototypeS.a3', // OK (前にも見た)
 /*373*/ 'car02/car02.a3', // OK (まあまあ)
-/*374*/ 'clock01/clock01.a3', // 透明になってない
-/*375*/ 'clock01/testProg/clock01.a3', // 透明になってない
+/*374*/ 'clock01/clock01.a3', // 透明はOKだけど、表示されてないものがある
+/*375*/ 'clock01/testProg/clock01.a3', // 透明はOKだけど、表示されてないものがある
 /*376*/ 'dragon01/dragon01.a3', // OK (ちょっと重い)
 /*377*/ 'empty/empty.a3', // OK (empty)
 /*378*/ 'error/error.a3', // OK
@@ -490,10 +490,10 @@ obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
 //const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-const obj = await new a3.Acerola3D('./assets/A3/'+list[66]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[443]).ready;
 //obj.setScale(1, 1, 1);
 console.log(obj.getActionNames());
-//obj.setState('run');
+obj.setState('base');
 //obj.setEmote('vertigo');
 view.scene.add(obj);
 

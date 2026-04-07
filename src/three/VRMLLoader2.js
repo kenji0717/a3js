@@ -1339,11 +1339,11 @@ class VRMLLoader2 extends Loader {
 
 			// 追加の処理
 			if (material.map && material.map.fookHolder) {
-				material.map.fookHolder.fook=async (t)=>{
+				material.map.fookHolder.fooks.push(async (t)=>{
 					const trans = await isTransparent(t.source.data);
 					material.transparent=trans;
-					console.log(`GAHA: trans=`,trans);
-				};
+					material.needsUpdate=trans;
+				});
 			}
 
 			return material;
@@ -1571,10 +1571,10 @@ class VRMLLoader2 extends Loader {
 						// にてテクスチャの画像が読み込まれた後に、その画像にアルファ
 						// チャンネルがあって処理透明部分があるかどうか判定させたい
 						// ので、テクスチャオブジェクトにfookHolderというオブジェクトを
-						// つけさせてもらって、その中のfookプロパティに処理を行う
-						// 関数をセットすることにした。
-						const fookHolder={fook:null};
-						const loadFook = (t)=>{if (fookHolder.fook) fookHolder.fook(t);};
+						// つけさせてもらって、その中のfooksプロパティ(配列)に処理を行う
+						// 関数を入れていくことにした。
+						const fookHolder={fooks:[]};
+						const loadFook = (t)=>{if (fookHolder.fooks) fookHolder.fooks.map((f)=>f(t));};
 						if ( url ) texture = textureLoader.load( url, loadFook );
 						if ( texture ) texture.fookHolder = fookHolder;
 						break;
