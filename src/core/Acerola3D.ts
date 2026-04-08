@@ -27,7 +27,18 @@ const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まない
  * まだ適当。
  */
 export class Acerola3D extends ActionObject<Acerola3D> {
+  haltActionNo: number = 0; // 未実装 GAHA
+  walkActionNo: number = 0; // 未実装 GAHA
+  runActionNo: number = 0; // 未実装 GAHA
+  minWalkSpeed: number = 0.1; // 未実装 GAHA
+  minRunSpeed: number = 1.0; // 未実装 GAHA
+  billboard: boolean = false; // 未実装 GAHA
   comment: string | null = null; // CATALOG.XMLの<c>の中
+  tags: string[] = []; // 未実装 GAHA
+  profiles: string[] = []; // 未実装 GAHA
+  thumbnails: Blob[] = []; // 未実装 GAHA
+  rdf: Element | null = null; // 未実装 GAHA
+  htmlfile: string = ''; // 未実装 GAHA
 
   constructor(url: string) {
     super(url);
@@ -43,8 +54,38 @@ export class Acerola3D extends ActionObject<Acerola3D> {
       return this;
     }
     const ns = 'http://acerola3d.sourceforge.jp/a3/catalog';
+    const a3Elms = xmlDoc.getElementsByTagNameNS(ns,'a3');
+    if (a3Elms[0]) {
+      this.haltActionNo = Number(a3Elms[0].getAttribute('haltActionN0'));
+      this.walkActionNo = Number(a3Elms[0].getAttribute('walkActionN0'));
+      this.runActionNo = Number(a3Elms[0].getAttribute('runActionN0'));
+      this.minWalkSpeed = Number(a3Elms[0].getAttribute('minWalkSpeed'));
+      this.minRunSpeed = Number(a3Elms[0].getAttribute('minRunSpeed'));
+      this.billboard = Boolean(a3Elms[0].getAttribute('billboard'));
+    }
     const cs = xmlDoc.getElementsByTagNameNS(ns,'c');
     if (cs[0]) this.comment = cs[0].textContent;
+    const ts = xmlDoc.getElementsByTagNameNS(ns,'tag');
+    Array.from(ts).forEach((t)=>{const n=t.getAttribute('name'); if(n) this.tags.push(n);});
+    const ps = xmlDoc.getElementsByTagNameNS(ns,'profile');
+    Array.from(ps).forEach((p)=>{const n=p.getAttribute('uri'); if(n) this.profiles.push(n);});
+    const tns = xmlDoc.getElementsByTagNameNS(ns,'thumbnail');
+    Array.from(tns).forEach((tn)=>{
+      const n=tn.getAttribute('src');
+      if(n) {
+        const img = readBlobFromUnzippedA3(unzippedA3,n);
+        this.thumbnails.push(img);
+      }
+    });
+    const rdfs = xmlDoc.getElementsByTagNameNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#','RDF');
+    if (rdfs[0]) this.rdf = rdfs[0];
+    const hs = xmlDoc.getElementsByTagNameNS(ns,'htmlfile');
+    if (hs[0]) {
+      const n = hs[0].getAttribute('src');
+      if (n)
+        this.htmlfile = readStringFromUnzippedA3(unzippedA3,n);
+    }
+
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
     const actions: Record<string,Action> = {};
     let firstActionName;
@@ -54,7 +95,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         if (!firstActionName) firstActionName = actionName;
         let bvh: BVH | undefined;
         const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
-        if (actionBVH) {
+        if (actionBVH && actionBVH!=='none') {
           const bvhKey = unzippedA3.zipUrl + '!' + actionBVH;
           if (!bvhs[bvhKey])
             bvhs[bvhKey] = await loadBvhInUnzippedA3(unzippedA3, actionBVH);
@@ -83,10 +124,22 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           const ar = actionRot.split(" ");
           rot.set(Number(ar[0]),Number(ar[1]),Number(ar[2]));
         }
+        /*
+        GAHA!!! <a>の未実装属性
+        loop
+        rightBalloonOffset
+        leftBalloonOffset
+        topBalloonOffset
+        bottomBalloonOffset
+        labelOffset
+        segno
+        dalsegno
+        */
         let backgroundTexture: THREE.Texture | undefined;
         let fog: THREE.Fog | THREE.FogExp2 | undefined;
         const parts: Record<string,THREE.Object3D> = {};
         const ps = a.getElementsByTagNameNS(ns,'p');
+        const noneParts = [];
         for (const p of Array.from(ps)) {
           const partName = p.getAttribute('name');
           const wrl = p.getAttribute('wrl');
@@ -101,13 +154,45 @@ export class Acerola3D extends ActionObject<Acerola3D> {
                 fog = vrmlFog;
               }
             }
-            parts[partName] = vrmls[vrmlKey].clone(true);
+            const s = p.getAttribute('scale');
+            if (s) {
+              const ss = Number(s);
+              vrmls[vrmlKey].scale.set(ss,ss,ss);
+            }
+            // GAHA 以下の回転の順番が　Z,Y,Xの順でなければ
+            // ならないけど、多分ダメ。テストもしてない。
+            const r = p.getAttribute('rot');
+            if (r) {
+              const rs = r.split(' ');
+              vrmls[vrmlKey].rotation.set(
+                Number(rs[0]),
+                Number(rs[0]),
+                Number(rs[0]));
+            }
+            const o = p.getAttribute('offset');
+            if (o) {
+              const os = o.split(' ');
+              vrmls[vrmlKey].position.set(
+                Number(os[0]),
+                Number(os[0]),
+                Number(os[0]));
+            }
+            /*
+            GAHA!!! <p>の未実装属性
+            offset
+            rot
+            */
+            if (partName==='none')
+              noneParts.push(vrmls[vrmlKey].clone(true));
+            else
+              parts[partName] = vrmls[vrmlKey].clone(true);
           }
         }
         const root = new THREE.Object3D();
         root.add(bvh.skeleton.bones[0]);
         if (!(bvh instanceof DummyBVH)) {
           appendPartToBone(root,parts);
+          noneParts.forEach((p)=>{root.add(p);});
         } else {
           Object.values(parts).forEach((p)=>{
             root.add(p);

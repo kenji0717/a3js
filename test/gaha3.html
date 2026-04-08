@@ -382,8 +382,8 @@ const list = [
 /*356*/ 'background2/background2.a3', // BAD? 厳密に判断しないとよくわからない
 /*357*/ 'background3/background3.a3', // BAD? 厳密に判断しないとよくわからない
 /*358*/ 'background4/background4.a3', // BAD 6つのUrlのBackgroundノード。画像の縦横比が1でないとダメと警告出てる。
-/*359*/ 'background5/background5.a3', // BAD 色々おかしい。音も出てない。
-/*360*/ 'background6/background6.a3', // BAD 359と同じ状況。
+/*359*/ 'background5/background5.a3', // OK? 音は偶然うまく行ってる？
+/*360*/ 'background6/background6.a3', // BAD 音が途中でループ
 /*361*/ 'background7/background7.a3', // BAD 359と同じ状況。
 /*362*/ 'ballet/ballet.a3', // OK
 /*363*/ 'ballet2/ballet2.a3', // OK
@@ -432,8 +432,8 @@ const list = [
 /*406*/ 'lights/SpotLight/test/axis.a3', // 無視
 /*407*/ 'lights/SpotLight/test/background1.a3', // 無視
 /*408*/ 'lights/SpotLightSet/SpotLightSet.a3', // OK (強さ選べる11アクション)
-/*409*/ 'lightsDemo/LightDemo00/LightDemo00.a3', // BAD <p name="none">が表示されてない
-/*410*/ 'lightsDemo/LightDemo01/LightDemo01.a3', // BAD <p name="none">が表示されてない
+/*409*/ 'lightsDemo/LightDemo00/LightDemo00.a3', // BAD? Javaと比べて光が弱い。ライトの動きが変。
+/*410*/ 'lightsDemo/LightDemo01/LightDemo01.a3', // OK? 
 /*411*/ 'maoudamashii/md_rock55/md_rock55.a3', // BAD 音声がBVHと連動しててダメ
 /*412*/ 'measure/measure.a3', // OK (いつものmeasure)
 /*413*/ 'movie/movie.a3', // BAD 対応してない。
@@ -443,16 +443,16 @@ const list = [
 /*417*/ 'othelloBoard/board.a3', // OK
 /*418*/ 'sample_b/sample_b.a3', // OK
 /*419*/ 'screwdriver/screwdriver.a3', // OK
-/*420*/ 'semi/BGM001/BGM001.a3', // BAD <a bvh="none">でエラー
-/*421*/ 'semi/BGM002/BGM002.a3', // BAD <a bvh="none">でエラー
-/*422*/ 'semi/BGM003/BGM003.a3', // BAD <a bvh="none">でエラー
-/*423*/ 'semi/SoundEffect001/SoundEffect001.a3', // BAD <a bvh="none">でエラー
+/*420*/ 'semi/BGM001/BGM001.a3', // BAD setState()だとだめでsetEmote()だと出る
+/*421*/ 'semi/BGM002/BGM002.a3', // BAD setState()だとだめでsetEmote()だと出る
+/*422*/ 'semi/BGM003/BGM003.a3', // BAD setState()だとだめでsetEmote()だと出る
+/*423*/ 'semi/SoundEffect001/SoundEffect001.a3', // BAD setState()だとだめでsetEmote()だと出る
 /*424*/ 'slime/slime.a3', // OK
-/*425*/ 'sound/bullet/bullet.a3', // BAD なぜか音が出てない
-/*426*/ 'sound/dog_cat/dog_cat.a3', // OK たぶん
+/*425*/ 'sound/bullet/bullet.a3', // BAD setState()だとだめでsetEmote()だと出るけど繰り返す
+/*426*/ 'sound/dog_cat/dog_cat.a3', // BAD setEmote('spin')で２回なるとかがだめ
 /*427*/ 'sound/footfalls/footfalls.a3', // OK
-/*428*/ 'sound/mp3test/mp3test.a3', // BAD <a bvh="none">でエラー
-/*429*/ 'sound/soundTest/sound.a3', // BAD 音が途中で切れる
+/*428*/ 'sound/mp3test/mp3test.a3', // BAD setState()だとだめでsetEmote()だと出るけど繰り返す
+/*429*/ 'sound/soundTest/sound.a3', // BAD 音がが色々ダメ
 /*430*/ 'sound/vrml_sound/vrml_sound.a3', // BAD 対応予定なし
 /*431*/ 'speaker2/speaker2.a3', // OK
 /*432*/ 'supertuxkart/karts/hexley2.old/stk_hexley2.a3', // OK
@@ -460,13 +460,13 @@ const list = [
 /*434*/ 'supertuxkart/karts/tux/stk_tux.a3', // OK (435とかぶった)
 /*435*/ 'supertuxkart/karts/tux/stk_tux.a3', // OK (434とかぶった)
 /*436*/ 'supertuxkart/karts/wilber2/stk_wilber2.a3', // OK
-/*437*/ 'supertuxkart/music/Boom3/stk_Boom3.a3', // BAD noneを読もうとしてエラー
+/*437*/ 'supertuxkart/music/Boom3/stk_Boom3.a3', // BAD 音がブツブツになる
 /*438*/ 'supertuxkart/tracks/city/stk_city.a3', // OK (アスファルトだけダメ)
 /*439*/ 'supertuxkart/tracks/olivermath/stk_olivermath.a3', // OK
 /*440*/ 'supertuxkart/tracks/racetrack/stk_racetrack.a3', // OK
 /*441*/ 'supertuxkart/tracks/startrack/stk_startrack.a3', // OK
 /*442*/ 'supertuxkart/tracks/tuxtollway/stk_tuxtollway.a3', // OK
-/*443*/ 'supertuxkart/tracks/xr591/stk_xr591.a3', // BAD VRMLLoader2.js:1614でエラー
+/*443*/ 'supertuxkart/tracks/xr591/stk_xr591.a3', // OK
 /*444*/ 'sys/sys.a3', // OK
 /*445*/ 'test/test.a3', // 古いフォーマット
 /*446*/ 'texture/texture.a3', // OK
@@ -480,21 +480,21 @@ const list = [
  ];
 
 const view = new a3.Window(600,300);
-//await view.alert('初期化！',async ()=>{
-//  await a3.initSound();
-//  await a3.initPhysics();
-//});
+await view.alert('初期化！',async ()=>{
+  await a3.initSound();
+  await a3.initPhysics();
+});
+//view.camera.setHeadLightEnable(false);
 
-const obj0 = new a3.Box(10,10,1,"gray");
-obj0.setLocation(0,0,-3);
-view.scene.add(obj0);
+//const obj0 = new a3.Box(10,10,1,"gray");
+//obj0.setLocation(0,0,-3);
+//view.scene.add(obj0);
 
 //const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-const obj = await new a3.Acerola3D('./assets/A3/'+list[443]).ready;
-//obj.setScale(1, 1, 1);
+const obj = await new a3.Acerola3D('./assets/A3/'+list[410]).ready;
 console.log(obj.getActionNames());
-obj.setState('base');
-//obj.setEmote('vertigo');
+obj.setState('default');
+//obj.setEmote('bgm');
 view.scene.add(obj);
 
 //let t = 0;

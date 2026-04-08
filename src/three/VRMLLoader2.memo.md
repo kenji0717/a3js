@@ -7,6 +7,13 @@ VRMLとThree.jsでピッタリ整合性があるわけではないので、
 
 -----
 
+VRMLファイルの中でIndexedFaceSetを使っているのに、
+coord属性のところで、point属性が空のCoordinateが
+指定されているものがあった。対処する義理はなさそうだけど、
+buildGeometricNode()の中で簡単に対処できたのでやっといた。
+
+-----
+
 VRMLのBackgroundノードにはtopUrlとかbottomUrlとかのプロパティ
 で画像を指定することで6面のスカイボックスを実現する仕様になって
 いるけど、もともとのVRMLLoader.jsは、その実装は省略されていた。

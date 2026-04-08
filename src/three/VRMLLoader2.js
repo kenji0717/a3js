@@ -1655,8 +1655,11 @@ class VRMLLoader2 extends Loader {
 		}
 
 		function buildGeometricNode( node ) {
-
-			return node.fields[ 0 ].values;
+			// Coordinate { 空 } という変なVRMLに対処
+			if (node.fields[0])
+				return node.fields[ 0 ].values;
+			else
+				return {};
 
 		}
 
@@ -1905,9 +1908,9 @@ class VRMLLoader2 extends Loader {
 			const penumbra = 1-beamWidth/cutOffAngle;
 			const sl = new SpotLight(color,intensity,radius,cutOffAngle,penumbra);
 			direction.normalize();
-			direction.multiplyScalar(-0.1);
+			//direction.multiplyScalar(-0.1);
 			sl.position.copy(direction);
-			sl.decay = 2; // attenuation=(1,0,0)固定
+			sl.decay = 0; // attenuationに関係する値だけど0にしないと減衰しすぎるっぽい
 			lightGroup.add(sl);
 			const al = new AmbientLight(color,intensity*ambientIntensity);
 			lightGroup.add(al);
