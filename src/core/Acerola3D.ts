@@ -139,7 +139,6 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         let fog: THREE.Fog | THREE.FogExp2 | undefined;
         const parts: Record<string,THREE.Object3D> = {};
         const ps = a.getElementsByTagNameNS(ns,'p');
-        const noneParts = [];
         for (const p of Array.from(ps)) {
           const partName = p.getAttribute('name');
           const wrl = p.getAttribute('wrl');
@@ -175,22 +174,17 @@ export class Acerola3D extends ActionObject<Acerola3D> {
                 Number(os[1]),
                 Number(os[2]));
             }
-            if (partName==='none')
-              noneParts.push(vrmls[vrmlKey].clone(true));
-            else
-              parts[partName] = vrmls[vrmlKey].clone(true);
+            parts[partName] = vrmls[vrmlKey].clone(true);
           }
         }
         const root = new THREE.Object3D();
         root.add(bvh.skeleton.bones[0]);
         if (!(bvh instanceof DummyBVH)) {
           appendPartToBone(root,parts);
-          noneParts.forEach((p)=>{root.add(p);});
-        } else {
-          Object.values(parts).forEach((p)=>{
-            root.add(p);
-          });
         }
+        Object.values(parts).forEach((p)=>{
+          root.add(p);
+        });
         root.scale.set(scale,scale,scale);
         rot.scale(Math.PI/180);
         root.setRotationFromEuler(new THREE.Euler(rot.x,rot.y,rot.z,'ZXY')); // 'ZXY'は仕様で決まってる
@@ -264,8 +258,10 @@ export class Acerola3D extends ActionObject<Acerola3D> {
 function appendPartToBone(obj: THREE.Object3D, parts: Record<string,THREE.Object3D>) {
   if (TG.isBone(obj)) {
     const part = parts[obj.name]; 
-    if (part)
+    if (part) {
       obj.add(part);
+      delete parts[obj.name];
+    }
   }
   if (obj.children) {
     obj.children.forEach( o => {

@@ -24,11 +24,11 @@ import * as a3 from 'a3js';
 
 const list = [
 /*  0*/ 'dummy',
-/*  1*/ '007ぴぽや/09ちょっと失敗/pipo-btleffect108e.first/pipo-btleffect108e.a3',
-/*  2*/ '007ぴぽや/09ちょっと失敗/pipo-btleffect145/pipo-btleffect145.a3',
-/*  3*/ '007ぴぽや/pipo-btleffect108e.old/pipo-btleffect108e.a3',
+/*  1*/ '007ぴぽや/09ちょっと失敗/pipo-btleffect108e.first/pipo-btleffect108e.a3', // OK = 3
+/*  2*/ '007ぴぽや/09ちょっと失敗/pipo-btleffect145/pipo-btleffect145.a3', // OK
+/*  3*/ '007ぴぽや/pipo-btleffect108e.old/pipo-btleffect108e.a3', // OK
 /*  4*/ '007ぴぽや/pipo-btleffect108e/pipo-btleffect108e.a3', // OK
-/*  5*/ '007ぴぽや/pipo-mapeffect014.old/pipo-mapeffect014.a3',
+/*  5*/ '007ぴぽや/pipo-mapeffect014.old/pipo-mapeffect014.a3', // OK
 /*  6*/ '007ぴぽや/pipo-mapeffect014/pipo-mapeffect014.a3', // OK
 /*  7*/ '3dwarehouse/BikeAndRacer/BikeAndRacer.a3', // OK
 /*  8*/ '3dwarehouse/Cabin/Cabin.a3', // OK
@@ -42,7 +42,7 @@ const list = [
 /* 16*/ '3dwarehouse/MosquitoRepellent/MosquitoRepellent.a3', // OK
 /* 17*/ '3dwarehouse/OreoCookie/OreoCookie.a3', // OK
 /* 18*/ '3dwarehouse/PrototypeS/PrototypeS.a3', // OK
-/* 19*/ '3dwarehouse/RG-RedOak1/RG-RedOak1.a3', // 透明でない
+/* 19*/ '3dwarehouse/RG-RedOak1/RG-RedOak1.a3', // OK
 /* 20*/ '3dwarehouse/SonyZ1U/SonyZ1U.a3', // OK
 /* 21*/ '3dwarehouse/StickIce/StickIc.a3', // OK
 /* 22*/ '3dwarehouse/Sword02/Sword02.a3', // OK
@@ -50,7 +50,7 @@ const list = [
 /* 24*/ '3dwarehouse/USS_ARIZONA/USS_ARIZONA.a3', // OK
 /* 25*/ '3dwarehouse/USS_Fitzgerald/USS_Fitzgerald.a3', // OK
 /* 26*/ '3dwarehouse/USS_JohnC/USS_JohnC.a3', // OK
-/* 27*/ '3dwarehouse/WCtree/WCtree.a3', // 透明でない
+/* 27*/ '3dwarehouse/WCtree/WCtree.a3', // OK
 /* 28*/ '3dwarehouse/Weapons/Weapons.a3', // OK
 /* 29*/ '3dwarehouse/ZAKU/ZAKU.a3', // OK
 /* 30*/ '3dwarehouse/gougui/gougui.a3', // OK
@@ -69,8 +69,8 @@ const list = [
 /* 43*/ 'ClearBlocks2/ClearBlocks2.a3', // OK
 /* 44*/ 'ColoredBlocks/ColoredBlocks.a3', // OK
 /* 45*/ 'Coordinates/Coordinates.a3', // OK
-/* 46*/ 'DEBUG/asano.a3', // 何も表示されない？
-/* 47*/ 'DefUse/DefUse.a3', // たぶん家にしかない
+/* 46*/ 'DEBUG/asano.a3', // BAD メチャメチャ(エディタで作ったやつっぽい)
+/* 47*/ 'DefUse/DefUse.a3', // OK 家にしかない
 /* 48*/ 'DressUp/du_arm/du_arm.a3', // OK
 /* 49*/ 'DressUp/du_body/du_body.a3', // OK
 /* 50*/ 'DressUp/du_foot/du_foot.a3', // OK
@@ -90,13 +90,13 @@ const list = [
 /* 64*/ 'Effect/TransAnim/TransAnim.a3', // OK
 /* 65*/ 'Effect/billboard/billboard.a3', // OK
 /* 66*/ 'Effect/cure/cure.a3', // OK
-/* 67*/ 'Effect/earth/earth.a3', // BAD 透明だけど中のmonkyが表示されてない
+/* 67*/ 'Effect/earth/earth.a3', // OK
 /* 68*/ 'Effect/exp/exp.a3', // OK
 /* 69*/ 'Effect/explosion/explosion.a3', // OK
-/* 70*/ 'Effect/flare.old/flare.a3', // たぶん家にしかない
+/* 70*/ 'Effect/flare.old/flare.a3', // OK 家にしかない
 /* 71*/ 'Effect/flare/flare.a3', // OK 視点を上にしないと見えなかった
 /* 72*/ 'Effect/stars/stars.a3', // OK
-/* 73*/ 'Effect/transparency/transparency.a3', // 透明が不自然？そんなもん？
+/* 73*/ 'Effect/transparency/transparency.a3', // OK? 透明が不自然？そんなもん？
 /* 74*/ 'FPS_ARM/FPS_ARM.a3', // OK
 /* 75*/ 'Fog/FogDemo00/FogDemo00.a3', // OK 視点を上にしないと見えなかった
 /* 76*/ 'Fog/fog1/fog1.a3', // OK
@@ -105,14 +105,14 @@ const list = [
 /* 79*/ 'Football/Field/FootballField.a3', // OK
 /* 80*/ 'ForkLift01/ForkLift01.a3', // OK プロコンで使ったやつかな
 /* 81*/ 'Jewel/Jewel.a3', // OK
-/* 82*/ 'KyedBMC/CR3.a3', // Kyedさんのやつ。OK
-/* 83*/ 'MORIKAWA/ChoroQ.old/ChoroQ.a3', // 表示されない。CATALOG.XMLで<p name="none">が特別だったかも
-/* 84*/ 'MORIKAWA/ChoroQ/ChoroQ.a3', // テクスチャが何か変
-/* 85*/ 'MORIKAWA/RenChoroQ/RenChoroQB.a3', // テクスチャが何か変
-/* 86*/ 'MORIKAWA/RenChoroQ/RenChoroQR.a3', // テクスチャが何か変
+/* 82*/ 'KyedBMC/CR3.a3', // OK Kyedさんのやつ。OK
+/* 83*/ 'MORIKAWA/ChoroQ.old/ChoroQ.a3', // 無視
+/* 84*/ 'MORIKAWA/ChoroQ/ChoroQ.a3', // OK? でもemissiveColorの効果が・・・
+/* 85*/ 'MORIKAWA/RenChoroQ/RenChoroQB.a3', // OK? でもemissiveColorの効果が・・・
+/* 86*/ 'MORIKAWA/RenChoroQ/RenChoroQR.a3', // OK? でもemissiveColorの効果が・・・
 /* 87*/ 'MarkPingel/MarkPingel.a3', // OK
-/* 88*/ 'Minecraft/Minecraft.a3', // たぶんテクスチャが変
-/* 89*/ 'Minecraft2/Minecraft2.a3', // 読めるけど、完成してない
+/* 88*/ 'Minecraft/Minecraft.a3', // OK でもぼやけるのであきらめたやつ
+/* 89*/ 'Minecraft2/Minecraft2.a3', // OK でも途中で面倒になってなげだしてる
 /* 90*/ 'NeverwinterNights/Iron_Golem/Iron_Golem.a3', // OK
 /* 91*/ 'PlayingCards/Backup/PlayingCards/PlayingCards.a3', // OK 透明になってる
 /* 92*/ 'PlayingCards/Backup/PlayingCardsLight/PlayingCardsLight.a3', // OK 透明になってる
@@ -333,14 +333,14 @@ const list = [
 /*307*/ 'Primitives/Box/Box.a3', // OK
 /*308*/ 'Primitives/Cone/Cone.a3', // OK
 /*309*/ 'Primitives/Cylinder/Cylinder.a3', // OK
-/*310*/ 'ProgressBar/ProgressBar01/ProgressBar01.a3', // 何か変になってる
+/*310*/ 'ProgressBar/ProgressBar01/ProgressBar01.a3', // OK
 /*311*/ 'SevenSegmentDisplay/SevenSegmentDisplay.a3', // OK (ちっちゃい)
 /*312*/ 'SimpleBox/SimpleBox.a3', // OK
 /*313*/ 'SimpleSphere/SimpleSphere.a3', // OK
 /*314*/ 'SkyBox/SkyBox01/SkyBox01.a3', // OK
 /*315*/ 'SkyBox/SkyBox02/SkyBox02.a3', // OK
 /*316*/ 'SlotReels/SlotReels.a3', // OK
-/*317*/ 'Smiley/Smiley.a3', // なぜか横向き
+/*317*/ 'Smiley/Smiley.a3', // BAD なぜか横向き。(もしかしてテクスチャ貼るのとTransformの適用順の問題？またはシリンダーの上面にテクスチャ貼る向きが、Three.jsとJava3Dで違うとか。)
 /*318*/ 'VESMA/adviser/adviser.a3', // OK
 /*319*/ 'VESMA/applet/applet.a3', // OK
 /*320*/ 'VESMA/bbs/bbs.a3', // OK
@@ -374,7 +374,7 @@ const list = [
 /*348*/ 'Yukkuri/marisa/marisa.a3', // OK (3アクション)
 /*349*/ 'Yukkuri/reimu/reimu.a3', // OK (3アクション)
 /*350*/ 'anaana/anaana.a3', // OK (金太郎、6アクション、Javaの時は問題あったらしい)
-/*351*/ 'api_test/api_test.a3', // BAD これデバッグ用だった。現在<a bvh="none">でエラー
+/*351*/ 'api_test/api_test.a3', // BAD これデバッグ用だった。色々あるので一番下にまとめる。
 /*352*/ 'axis/axis.a3', // OK (4アクション)
 /*353*/ 'axis2/axis2.a3', // OK (352の細いやつ。1アクション)
 /*354*/ 'background0/background0.a3', // OK (緑の地面)
@@ -480,21 +480,22 @@ const list = [
  ];
 
 const view = new a3.Window(600,300);
-//await view.alert('初期化！',async ()=>{
-//  await a3.initSound();
+await view.alert('初期化！',async ()=>{
+  await a3.initSound();
 //  await a3.initPhysics();
-//});
+});
 //view.camera.setHeadLightEnable(false);
 
 const obj0 = new a3.Box(10,10,1,"gray");
 obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
-//const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-const obj = await new a3.Acerola3D('./assets/A3/'+list[27]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
+//const obj = await new a3.Acerola3D('./assets/A3/'+list[317]).ready;
 console.log(obj.getActionNames());
-//obj.setState('base');
-//obj.setEmote('bgm');
+console.log(obj);
+obj.setState('halt');
+obj.setEmote('balloonOffsetTest2');
 view.scene.add(obj);
 
 //let t = 0;
@@ -503,6 +504,26 @@ view.scene.add(obj);
 //  obj.setRotation(t*100,0,0);
 //}
 
+// 351のapi_test.a3の色々
+// spacemusic.auがデコードできない。
+// spin_quake_vertigoで
+//   segno, dalsegno未対応
+//   音の出るタイミングが変？
+// only_soundで
+//   表示がされちゃってる
+//   loop対応？
+//   gain対応？
+// no_bvh_soundで
+//   表示がされちゃってる
+//   loop対応？
+//   gain対応？
+// emptyで
+//   表示がされちゃってる
+// balloonOffsetTestで
+//   とにかく未対応
+// balloonOffsetTest2で
+//   とにかく未対応
+// rdfはちゃんと入ってたけど文字列で欲しいね。
     </script>
   </body>
 </html>

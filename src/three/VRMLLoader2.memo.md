@@ -7,6 +7,15 @@ VRMLとThree.jsでピッタリ整合性があるわけではないので、
 
 -----
 
+もともとのVRMLLoaderにTextureTransformNodeに関するバグがあった。
+VRMLLoader2.js.originalで言うと1509行目のrotationはnumber型でないと
+いけないのに、THREE.Vector2型になってて`new Vector2()`が設定されて
+いるけど、これは`0`だね。さらに1510行目のscaleの型がTHREE.Vector2型
+なのはいいけど、初期値が「new Vector2()」だと(0,0)になるので、
+「new Vector2(1,1)」が正解。
+
+-----
+
 VRMLファイルの中でIndexedFaceSetを使っているのに、
 coord属性のところで、point属性が空のCoordinateが
 指定されているものがあった。対処する義理はなさそうだけど、
