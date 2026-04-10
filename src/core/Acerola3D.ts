@@ -159,29 +159,22 @@ export class Acerola3D extends ActionObject<Acerola3D> {
               const ss = Number(s);
               vrmls[vrmlKey].scale.set(ss,ss,ss);
             }
-            // GAHA 以下の回転の順番が　Z,Y,Xの順でなければ
-            // ならないけど、多分ダメ。テストもしてない。
             const r = p.getAttribute('rot');
             if (r) {
               const rs = r.split(' ');
               vrmls[vrmlKey].rotation.set(
-                Number(rs[0]),
-                Number(rs[0]),
-                Number(rs[0]));
+                Number(rs[0])/180*Math.PI,
+                Number(rs[1])/180*Math.PI,
+                Number(rs[2])/180*Math.PI,'ZXY');
             }
             const o = p.getAttribute('offset');
             if (o) {
               const os = o.split(' ');
               vrmls[vrmlKey].position.set(
                 Number(os[0]),
-                Number(os[0]),
-                Number(os[0]));
+                Number(os[1]),
+                Number(os[2]));
             }
-            /*
-            GAHA!!! <p>の未実装属性
-            offset
-            rot
-            */
             if (partName==='none')
               noneParts.push(vrmls[vrmlKey].clone(true));
             else
@@ -200,7 +193,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         }
         root.scale.set(scale,scale,scale);
         rot.scale(Math.PI/180);
-        root.setRotationFromEuler(new THREE.Euler(rot.x,rot.y,rot.z,'YXZ')); // 'YXZ'は仕様で決まってる
+        root.setRotationFromEuler(new THREE.Euler(rot.x,rot.y,rot.z,'ZXY')); // 'ZXY'は仕様で決まってる
         root.position.add(offset);
         // クリックなどへの対応
         root.traverse((o)=>{

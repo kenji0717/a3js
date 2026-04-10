@@ -62,7 +62,7 @@ const list = [
 /* 36*/ '3dwarehouse/spaceship_awsome/spaceship_awsome.a3', // OK
 /* 37*/ 'Acerola3D/acerola3d.a3', // OK Acerolaの花
 /* 38*/ 'BattleField01/BattleField01.a3', // OK
-/* 39*/ 'Billboard/Billboard.a3', // まあ無理
+/* 39*/ 'Billboard/Billboard.a3', // BAD VRMLのBillboard、対応予定なし
 /* 40*/ 'BoneUtils/BoneUtils.a3', // OK
 /* 41*/ 'ChromaKey/ChromaKey.a3', // OK
 /* 42*/ 'ClearBlocks/ClearBlocks.a3', // OK
@@ -369,7 +369,7 @@ const list = [
 /*343*/ 'VesmaGame/item/item.a3', // OK (弾丸で使ってたやつ)
 /*344*/ 'VesmaGame/kappa/kappa.a3', // OK (7アクション)
 /*345*/ 'VesmaGame/kintaro/kintaro.a3', // OK (7アクション)
-/*346*/ 'VesmaGame/kintaro2/kintaro2.a3', // 崩れてる (6アクション)
+/*346*/ 'VesmaGame/kintaro2/kintaro2.a3', // OK (6アクション)
 /*347*/ 'VesmaGame/strangeHole/strangeHole.a3', // OK (monkeyだった)
 /*348*/ 'Yukkuri/marisa/marisa.a3', // OK (3アクション)
 /*349*/ 'Yukkuri/reimu/reimu.a3', // OK (3アクション)
@@ -480,20 +480,20 @@ const list = [
  ];
 
 const view = new a3.Window(600,300);
-await view.alert('初期化！',async ()=>{
-  await a3.initSound();
-  await a3.initPhysics();
-});
+//await view.alert('初期化！',async ()=>{
+//  await a3.initSound();
+//  await a3.initPhysics();
+//});
 //view.camera.setHeadLightEnable(false);
 
-//const obj0 = new a3.Box(10,10,1,"gray");
-//obj0.setLocation(0,0,-3);
-//view.scene.add(obj0);
+const obj0 = new a3.Box(10,10,1,"gray");
+obj0.setLocation(0,0,-3);
+view.scene.add(obj0);
 
 //const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-const obj = await new a3.Acerola3D('./assets/A3/'+list[410]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[27]).ready;
 console.log(obj.getActionNames());
-obj.setState('default');
+//obj.setState('base');
 //obj.setEmote('bgm');
 view.scene.add(obj);
 
