@@ -6,7 +6,6 @@ import type { PhysicsWorld } from './Physics';
 import { Sound } from '../three/Sound';
 
 export interface Action {
-  name: string; // 本当はこのnameを取り除きたい。GAHA
   shape: Shape;
   motion: Motion;
   sound?: Sound;
@@ -296,7 +295,7 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
 
 
 export type Morph = {
-  name: string,
+  name: string, // これは省略不可。
   vals: number[]
 }
 /**
@@ -329,11 +328,6 @@ export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs
  * Three.jsではTHREE.AnimationClipに対応する対象と考えてもらいたい。
  */
 export interface Motion {
-  /**
-   * このMotionにつける名前。「GAHA不要である可能性」
-   */
-  name: string;
-
   /**
    * このMotionが何回再生されたかを保存している。
    *

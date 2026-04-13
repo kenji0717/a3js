@@ -110,7 +110,6 @@ export class GLTF extends ActionObject<GLTF> {
         if (!firstActionName)
           firstActionName = anim.name;
         actions[anim.name] = {
-          name: anim.name,
           shape,
           motion: new ClipMotion(anim),
           sound: undefined,
@@ -122,7 +121,6 @@ export class GLTF extends ActionObject<GLTF> {
       } else {
         firstActionName = 'dummy';
         actions['dummy'] = {
-          name: 'dummy',
           shape,
           motion: new DummyMotion(),
           sound: undefined,
@@ -138,7 +136,6 @@ export class GLTF extends ActionObject<GLTF> {
       const firstActionName = 'dummy';
       const actions: Record<string,Action> = {};
       actions['dummy'] = {
-        name: 'dummy',
         shape: {root: mesh},
         motion: new DummyMotion(),
         sound: undefined,

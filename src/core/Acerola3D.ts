@@ -239,7 +239,6 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         }
 
         actions[actionName] = {
-          name: actionName,
           shape: { root, bones, skeleton: bvh.skeleton },
           motion: new ClipMotion(bvh.clip,actionName),
           sound,
