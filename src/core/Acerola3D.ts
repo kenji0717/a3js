@@ -25,14 +25,18 @@ const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
 const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
 
 export class A3Action extends Action {
+  loop: boolean;
   sound?: Sound;
+  soundLoop: boolean;
   soundContinue: boolean;
   backgroundTexture?: THREE.Texture; // 入ってたらscene.backgroundなどに使われる
   fog?: THREE.Fog | THREE.FogExp2; // 入ってたらscene.fogに使われる
 
-  constructor(shape: Shape, motion: Motion, sound?: Sound, soundContinue: boolean = true, backgroundTexture?: THREE.Texture, fog?: THREE.Fog | THREE.FogExp2) {
+  constructor(shape: Shape, motion: Motion, loop: boolean, sound?: Sound, soundLoop: boolean = false, soundContinue: boolean = true, backgroundTexture?: THREE.Texture, fog?: THREE.Fog | THREE.FogExp2) {
     super(shape, motion);
+    this.loop = loop;
     this.sound = sound;
+    this.soundLoop = soundLoop;
     this.soundContinue = soundContinue;
     this.backgroundTexture = backgroundTexture;
     this.fog = fog;
@@ -42,9 +46,16 @@ export class A3Action extends Action {
     super.enable(rootObject, scene);
     if (this.sound) {
       this.sound.play();
-      this.motion.setFinishListener(()=>{
-        this.sound?.play();
-      });
+      if (this.loop && !this.soundContinue) { // background7.a3の場合
+        this.motion.setFinishListener(()=>{
+          this.sound?.play();
+        });
+      }
+      if (this.loop && !this.soundLoop) { // footfalls.a3の場合
+        this.motion.setFinishListener(()=>{
+          this.sound?.play();
+        });
+      }
     }
     // GAHA 以下のプログラムはこのタイミングで必要か？
     if (scene) {
@@ -60,6 +71,8 @@ export class A3Action extends Action {
   disable(rootObject: THREE.Object3D, scene?: Scene) {
     super.disable(rootObject, scene);
     if (this.sound) {
+      if (this.loop)
+        this.sound.stop();
       if (!this.soundContinue)
         this.sound.stop();
       // このタイミングで消すのはおかしい
@@ -68,6 +81,7 @@ export class A3Action extends Action {
       //  this.scene.scene.environment = null;
       //  this.scene.scene.fog = null;
       //}
+      this.motion.setFinishListener = ()=>{};
     }
   }
 }
@@ -174,9 +188,9 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           const ar = actionRot.split(" ");
           rot.set(Number(ar[0]),Number(ar[1]),Number(ar[2]));
         }
+        const loop = a.getAttribute('loop') === 'true';
         /*
         GAHA!!! <a>の未実装属性
-        loop
         rightBalloonOffset
         leftBalloonOffset
         topBalloonOffset
@@ -245,12 +259,14 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         });
 //root.add(new THREE.SkeletonHelper(bvh.skeleton.bones[0])); // GAHA!
         let sound: Sound | undefined;
+        let soundLoop: boolean = false;
         let soundContinue: boolean = true;
         const ss = a.getElementsByTagNameNS(ns,'s');
         if (ss[0]) {
           const file = ss[0].getAttribute('file');
           const sType = ss[0].getAttribute('type') || 'PointSound';
           const loop = ss[0].getAttribute('loop') || 'false';
+          soundLoop = loop === 'true';
           const gain = ss[0].getAttribute('gain') || '1.0';
           const offset = ss[0].getAttribute('offset') || '0.0 0.0 0.0';
           const direction = ss[0].getAttribute('direction') || '0.0 0.0 1.0';
@@ -269,8 +285,8 @@ export class Acerola3D extends ActionObject<Acerola3D> {
             const url = URL.createObjectURL(blob);
             const opt: SoundOptionsInput = {
               type: ssType,
-              //autoplay: false,
-              loop: loop==='true',
+              autoplay: false,
+              loop: loop === 'true',
               volume: Number(gain),
               positional: {
                 //refDistance: 1,
@@ -291,7 +307,9 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         actions[actionName] = new A3Action(
           { root, bones, skeleton: bvh.skeleton },
           new ClipMotion(bvh.clip,actionName),
+          loop,
           sound,
+          soundLoop,
           soundContinue,
           backgroundTexture,
           fog);

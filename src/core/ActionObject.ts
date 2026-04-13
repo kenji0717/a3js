@@ -81,8 +81,8 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.stateAction = this.actions[defaultName];
     this.currentAction = this.stateAction;
     this.object.clear();
-    this.object.add(this.currentAction.shape.root);
     this.morphs = morphs;
+    this.stateAction?.enable(this.object, this.scene);
   }
 
   /**

@@ -105,7 +105,7 @@ const list = [
 /* 79*/ 'Football/Field/FootballField.a3', // OK
 /* 80*/ 'ForkLift01/ForkLift01.a3', // OK プロコンで使ったやつかな
 /* 81*/ 'Jewel/Jewel.a3', // OK
-/* 82*/ 'KyedBMC/CR3.a3', // OK Kyedさんのやつ。OK
+/* 82*/ 'KyedBMC/CR3.a3', // OK Kyedさんのやつ。
 /* 83*/ 'MORIKAWA/ChoroQ.old/ChoroQ.a3', // 無視
 /* 84*/ 'MORIKAWA/ChoroQ/ChoroQ.a3', // OK? でもemissiveColorの効果が・・・
 /* 85*/ 'MORIKAWA/RenChoroQ/RenChoroQB.a3', // OK? でもemissiveColorの効果が・・・
@@ -382,9 +382,9 @@ const list = [
 /*356*/ 'background2/background2.a3', // BAD? 厳密に判断しないとよくわからない
 /*357*/ 'background3/background3.a3', // BAD? 厳密に判断しないとよくわからない
 /*358*/ 'background4/background4.a3', // BAD 6つのUrlのBackgroundノード。画像の縦横比が1でないとダメと警告出てる。
-/*359*/ 'background5/background5.a3', // OK? 音は偶然うまく行ってる？
-/*360*/ 'background6/background6.a3', // BAD 音が途中でループ
-/*361*/ 'background7/background7.a3', // BAD 359と同じ状況。
+/*359*/ 'background5/background5.a3', // OK 今の所
+/*360*/ 'background6/background6.a3', // OK 今の所
+/*361*/ 'background7/background7.a3', // OK 今の所
 /*362*/ 'ballet/ballet.a3', // OK
 /*363*/ 'ballet2/ballet2.a3', // OK
 /*364*/ 'baseballpitch/baseballpitch.a3', // OK
@@ -443,16 +443,16 @@ const list = [
 /*417*/ 'othelloBoard/board.a3', // OK
 /*418*/ 'sample_b/sample_b.a3', // OK
 /*419*/ 'screwdriver/screwdriver.a3', // OK
-/*420*/ 'semi/BGM001/BGM001.a3', // BAD setState()だとだめでsetEmote()だと出る
-/*421*/ 'semi/BGM002/BGM002.a3', // BAD setState()だとだめでsetEmote()だと出る
-/*422*/ 'semi/BGM003/BGM003.a3', // BAD setState()だとだめでsetEmote()だと出る
-/*423*/ 'semi/SoundEffect001/SoundEffect001.a3', // BAD setState()だとだめでsetEmote()だと出る
+/*420*/ 'semi/BGM001/BGM001.a3', // BAD? フライング音
+/*421*/ 'semi/BGM002/BGM002.a3', // BAD? フライング音
+/*422*/ 'semi/BGM003/BGM003.a3', // BAD? フライング音
+/*423*/ 'semi/SoundEffect001/SoundEffect001.a3', // BAD フライング音
 /*424*/ 'slime/slime.a3', // OK
-/*425*/ 'sound/bullet/bullet.a3', // BAD setState()だとだめでsetEmote()だと出るけど繰り返す
-/*426*/ 'sound/dog_cat/dog_cat.a3', // BAD setEmote('spin')で２回なるとかがだめ
-/*427*/ 'sound/footfalls/footfalls.a3', // OK
-/*428*/ 'sound/mp3test/mp3test.a3', // BAD setState()だとだめでsetEmote()だと出るけど繰り返す
-/*429*/ 'sound/soundTest/sound.a3', // BAD 音がが色々ダメ
+/*425*/ 'sound/bullet/bullet.a3', // BAD? フライング音
+/*426*/ 'sound/dog_cat/dog_cat.a3', // BAD? フライング音。その他のチェックも必要。
+/*427*/ 'sound/footfalls/footfalls.a3', //? OK 今のところ
+/*428*/ 'sound/mp3test/mp3test.a3', // BAD? フライング音
+/*429*/ 'sound/soundTest/sound.a3', // BAD 音が色々ダメ
 /*430*/ 'sound/vrml_sound/vrml_sound.a3', // BAD 対応予定なし
 /*431*/ 'speaker2/speaker2.a3', // OK
 /*432*/ 'supertuxkart/karts/hexley2.old/stk_hexley2.a3', // OK
@@ -460,7 +460,7 @@ const list = [
 /*434*/ 'supertuxkart/karts/tux/stk_tux.a3', // OK (435とかぶった)
 /*435*/ 'supertuxkart/karts/tux/stk_tux.a3', // OK (434とかぶった)
 /*436*/ 'supertuxkart/karts/wilber2/stk_wilber2.a3', // OK
-/*437*/ 'supertuxkart/music/Boom3/stk_Boom3.a3', // BAD 音がブツブツになる
+/*437*/ 'supertuxkart/music/Boom3/stk_Boom3.a3', // BAD? フライング音
 /*438*/ 'supertuxkart/tracks/city/stk_city.a3', // OK (アスファルトだけダメ)
 /*439*/ 'supertuxkart/tracks/olivermath/stk_olivermath.a3', // OK
 /*440*/ 'supertuxkart/tracks/racetrack/stk_racetrack.a3', // OK
@@ -490,12 +490,11 @@ const obj0 = new a3.Box(10,10,1,"gray");
 obj0.setLocation(0,0,-3);
 view.scene.add(obj0);
 
-const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
-//const obj = await new a3.Acerola3D('./assets/A3/'+list[317]).ready;
+//const obj = await new a3.Acerola3D('./assets/A3/'+list[351]).ready;
+const obj = await new a3.Acerola3D('./assets/A3/'+list[360]).ready;
 console.log(obj.getActionNames());
-console.log(obj);
-obj.setState('halt');
-obj.setEmote('balloonOffsetTest2');
+obj.setState('walk');
+//obj.setEmote('default');
 view.scene.add(obj);
 
 //let t = 0;
@@ -503,6 +502,8 @@ view.scene.add(obj);
 //  t += await view.waitForRender();
 //  obj.setRotation(t*100,0,0);
 //}
+
+// サウンド関係はsceneにaddする前にnewした段階で音が出ちゃってるのがある。あと、setState()だとだめでsetEmote()だと出るとかもある。これらは要注意。
 
 // 351のapi_test.a3の色々
 // spacemusic.auがデコードできない。
