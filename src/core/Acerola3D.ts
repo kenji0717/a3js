@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { ActionObject } from './ActionObject';
-import type { Action } from './ActionObject';
+import { ActionObject, Action } from './ActionObject';
+import { Scene } from './Scene';
+import type { Shape, Motion } from './ActionObject';
 import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3, vrmlBackgroundTexture,
@@ -22,6 +23,55 @@ class DummyBVH implements BVH {
 
 const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
 const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
+
+export class A3Action extends Action {
+  sound?: Sound;
+  soundContinue: boolean;
+  backgroundTexture?: THREE.Texture; // 入ってたらscene.backgroundなどに使われる
+  fog?: THREE.Fog | THREE.FogExp2; // 入ってたらscene.fogに使われる
+
+  constructor(shape: Shape, motion: Motion, sound?: Sound, soundContinue: boolean = true, backgroundTexture?: THREE.Texture, fog?: THREE.Fog | THREE.FogExp2) {
+    super(shape, motion);
+    this.sound = sound;
+    this.soundContinue = soundContinue;
+    this.backgroundTexture = backgroundTexture;
+    this.fog = fog;
+  }
+
+  enable(rootObject: THREE.Object3D, scene?: Scene) {
+    super.enable(rootObject, scene);
+    if (this.sound) {
+      this.sound.play();
+      this.motion.setFinishListener(()=>{
+        this.sound?.play();
+      });
+    }
+    // GAHA 以下のプログラムはこのタイミングで必要か？
+    if (scene) {
+      if (this.backgroundTexture) {
+        scene.scene.background = this.backgroundTexture;
+        scene.scene.environment = this.backgroundTexture;
+      }
+      if (this.fog)
+        scene.scene.fog = this.fog;
+    }
+  }
+
+  disable(rootObject: THREE.Object3D, scene?: Scene) {
+    super.disable(rootObject, scene);
+    if (this.sound) {
+      if (!this.soundContinue)
+        this.sound.stop();
+      // このタイミングで消すのはおかしい
+      //if (this.scene) {
+      //  this.scene.scene.background = null;
+      //  this.scene.scene.environment = null;
+      //  this.scene.scene.fog = null;
+      //}
+    }
+  }
+}
+
 
 /**
  * まだ適当。
@@ -238,14 +288,13 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           }
         }
 
-        actions[actionName] = {
-          shape: { root, bones, skeleton: bvh.skeleton },
-          motion: new ClipMotion(bvh.clip,actionName),
+        actions[actionName] = new A3Action(
+          { root, bones, skeleton: bvh.skeleton },
+          new ClipMotion(bvh.clip,actionName),
           sound,
           soundContinue,
           backgroundTexture,
-          fog
-        };
+          fog);
       }
     }
     if (firstActionName)

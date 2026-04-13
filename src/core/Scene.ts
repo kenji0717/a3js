@@ -3,6 +3,7 @@ import { ObjectA3 } from './ObjectA3';
 import { ActionObject } from './ActionObject';
 import { physicsEngineInstance, RapierPhysicsWorld } from '../rapier/RapierPhysics';
 import type { PhysicsWorld, Collision } from './Physics';
+import { Acerola3D, A3Action } from './Acerola3D';
 
 /**
   * 3D仮想空間を表すクラス。THREE.Sceneを内包していて
@@ -41,8 +42,8 @@ export class Scene {
     }
     // backgroundTextureやfogがあれば適用
     // GAHA この方法が適切？
-    if (object instanceof ActionObject) {
-      if (object.currentAction) {
+    if (object instanceof Acerola3D) {
+      if (object.currentAction instanceof A3Action) {
         if (object.currentAction.backgroundTexture) {
           this.scene.background = object.currentAction.backgroundTexture;
           this.scene.environment = object.currentAction.backgroundTexture;
@@ -75,7 +76,7 @@ export class Scene {
     // backgroundTextureやfogがあれば削除
     // GAHA この方法が適切？
     if (object instanceof ActionObject) {
-      if (object.currentAction) {
+      if (object.currentAction instanceof A3Action) {
         if (object.currentAction.backgroundTexture) {
           this.scene.background = null;
           this.scene.environment = null;

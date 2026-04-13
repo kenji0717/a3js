@@ -3,8 +3,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { ActionObject, DummyMotion } from './ActionObject';
-import type { Action, Shape } from './ActionObject';
+import { ActionObject, Action, DummyMotion } from './ActionObject';
+import type { Shape, Motion } from './ActionObject';
 import { ClipMotion } from '../three/ClipMotion';
 import { isString } from '../utils/TypeGuard';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -69,6 +69,13 @@ export function regenerateGLTFLoader(options: Partial<GLTFOptions>={}) {
 let gltfLoader = new GLTFLoader();
 gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
+class GLTFAction extends Action {
+  constructor(shape: Shape, motion: Motion) {
+    super(shape, motion);
+  }
+}
+
+
 /**
  * glTFモデルを読み込み表示するためのクラス。
  */
@@ -109,23 +116,17 @@ export class GLTF extends ActionObject<GLTF> {
       this.gltf.animations.forEach((anim)=>{
         if (!firstActionName)
           firstActionName = anim.name;
-        actions[anim.name] = {
+        actions[anim.name] = new GLTFAction(
           shape,
-          motion: new ClipMotion(anim),
-          sound: undefined,
-          soundContinue: true
-        };
+          new ClipMotion(anim));
       });
       if (firstActionName) {
         this.syncInit(firstActionName,actions,morphs);
       } else {
         firstActionName = 'dummy';
-        actions['dummy'] = {
+        actions['dummy'] = new GLTFAction(
           shape,
-          motion: new DummyMotion(),
-          sound: undefined,
-          soundContinue: true
-        };
+          new DummyMotion());
         this.syncInit(firstActionName,actions,morphs);
       }
     } else {
@@ -135,12 +136,9 @@ export class GLTF extends ActionObject<GLTF> {
 
       const firstActionName = 'dummy';
       const actions: Record<string,Action> = {};
-      actions['dummy'] = {
-        shape: {root: mesh},
-        motion: new DummyMotion(),
-        sound: undefined,
-        soundContinue: true
-      };
+      actions['dummy'] = new GLTFAction(
+        {root: mesh},
+        new DummyMotion());
       this.syncInit(firstActionName,actions);
       
     }

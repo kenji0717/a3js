@@ -3,15 +3,26 @@ import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
 import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
-import { Sound } from '../three/Sound';
+import { Scene } from './Scene';
 
-export interface Action {
+export abstract class Action {
   shape: Shape;
   motion: Motion;
-  sound?: Sound;
-  soundContinue: boolean;
-  backgroundTexture?: THREE.Texture; // 入ってたらscene.backgroundなどに使われる
-  fog?: THREE.Fog | THREE.FogExp2; // 入ってたらscene.fogに使われる
+
+  constructor(shape: Shape, motion: Motion) {
+    this.shape = shape;
+    this.motion = motion;
+  }
+
+  enable(rootObject: THREE.Object3D, _scene?: Scene): void {
+    this.motion.playCount = 0;
+    this.motion.time = 0;
+    rootObject.add(this.shape.root);
+  };
+
+  disable(rootObject: THREE.Object3D, _scene?: Scene): void {
+    rootObject.remove(this.shape.root);
+  }
 }
 
 export interface Shape {
@@ -122,37 +133,9 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   setState(name: string) {
     const a = this.actions[name];
     if (a) {
-      if (this.currentAction) {
-        if (this.currentAction.sound) {
-          if (!this.currentAction.soundContinue)
-            this.currentAction.sound.stop();
-        }
-        // このタイミングで消すのはおかしい
-        //if (this.scene) {
-        //  this.scene.scene.background = null;
-        //  this.scene.scene.environment = null;
-        //  this.scene.scene.fog = null;
-        //}
-        this.object.remove(this.currentAction.shape.root);
-      }
-      this.object.add(a.shape.root);
-      a.motion.playCount = 0;
-      a.motion.time = 0;
-      if (a.sound) {
-        a.sound.play();
-        a.motion.setFinishListener(()=>{
-          a.sound?.play();
-        });
-      }
-      // GAHA 以下のプログラムはこのタイミングで必要か？
-      if (this.scene) {
-        if (a.backgroundTexture) {
-          this.scene.scene.background = a.backgroundTexture;
-          this.scene.scene.environment = a.backgroundTexture;
-        }
-        if (a.fog)
-          this.scene.scene.fog = a.fog;
-      }
+      if (this.currentAction)
+        this.currentAction.disable(this.object,this.scene);
+      a.enable(this.object, this.scene);
 
       this.currentAction = a;
       this.stateAction = a;
@@ -162,37 +145,9 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   setEmote(name: string) {
     const a = this.actions[name];
     if (a) {
-      if (this.currentAction) {
-        if (this.currentAction.sound) {
-          if (!this.currentAction.soundContinue)
-            this.currentAction.sound.stop();
-        }
-        // このタイミングで消すのはおかしい
-        //if (this.scene) {
-        //  this.scene.scene.background = null;
-        //  this.scene.scene.environment = null;
-        //  this.scene.scene.fog = null;
-        //}
-        this.object.remove(this.currentAction.shape.root);
-      }
-      this.object.add(a.shape.root);
-      a.motion.playCount = 0;
-      a.motion.time = 0;
-      if (a.sound) {
-        a.sound.play();
-        a.motion.setFinishListener(()=>{
-          a.sound?.play();
-        });
-      }
-      // GAHA 以下のプログラムはこのタイミングで必要か？
-      if (this.scene) {
-        if (a.backgroundTexture) {
-          this.scene.scene.background = a.backgroundTexture;
-          this.scene.scene.environment = a.backgroundTexture;
-        }
-        if (a.fog)
-          this.scene.scene.fog = a.fog;
-      }
+      if (this.currentAction)
+        this.currentAction.disable(this.object, this.scene);
+      a.enable(this.object, this.scene);
       this.currentAction = a;
       this.emoteAction = a;
     }
@@ -223,27 +178,14 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
       pose = this.emoteAction.motion.update(dt);
       if (this.emoteAction.motion.playCount>0) {
         // emoteAction再生終了で切り替え
-        // まずはcurrentActionの停止
-        if (this.currentAction?.shape.root) {
-          this.object.remove(this.currentAction.shape.root);
-        }
-        if (this.currentAction?.sound) {
-          if (!this.currentAction.soundContinue)
-            this.currentAction.sound.stop();
-        }
+        // まずはemoteActionの停止
+        this.emoteAction.disable(this.object, this.scene);
         // emoteActionはundefinedに
         this.emoteAction = undefined;
         // stateActionがあれば開始
         if (this.stateAction) {
-          this.object.add(this.stateAction.shape.root);
+          this.stateAction.enable(this.object, this.scene);
           this.currentAction = this.stateAction;
-          if (this.stateAction.sound) {
-            const sound = this.stateAction.sound;
-            sound.play();
-            this.stateAction.motion.setFinishListener(()=>{
-              sound.play();
-            });
-          }
         }
       }
     } else if (this.stateAction) {
