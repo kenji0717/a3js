@@ -45,11 +45,10 @@ class JointTest extends a3.ActionObject {
     bones['leftWheel'] = leftWheelWrapper;
 
     const actions = {};
-    actions['JointTest'] = {
-      name: 'JointTest',
-      shape: { root, bones },
-      motion: jointTestTransformer.motion
-    };
+    actions['JointTest'] = new a3.Action(
+      { root, bones },
+      jointTestTransformer.motion
+    );
     this.syncInit('JointTest',actions);
     return this;
   }

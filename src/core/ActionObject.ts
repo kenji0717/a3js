@@ -5,7 +5,7 @@ import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
 import { Scene } from './Scene';
 
-export abstract class Action {
+export class Action {
   shape: Shape;
   motion: Motion;
 
