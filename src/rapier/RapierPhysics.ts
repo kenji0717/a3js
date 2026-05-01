@@ -108,7 +108,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
 }
 
 export class RapierTransformer implements Transformer {
-  trans: Transform;
+  transform: Transform;
   objectA3?: ObjectA3;
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
@@ -122,7 +122,7 @@ export class RapierTransformer implements Transformer {
       ...defaultPhysicsMotionOptions,
       ...options
     };
-    this.trans = new Transform();
+    this.transform = new Transform();
     this.colliderDescs = [];
     this.colliders = [];
   }
@@ -142,15 +142,15 @@ export class RapierTransformer implements Transformer {
         break;
     }
     bodyDesc.setTranslation(
-      this.trans.loc.x,
-      this.trans.loc.y,
-      this.trans.loc.z
+      this.transform.loc.x,
+      this.transform.loc.y,
+      this.transform.loc.z
     );
     bodyDesc.setRotation({
-      x: this.trans.quat.x,
-      y: this.trans.quat.y,
-      z: this.trans.quat.z,
-      w: this.trans.quat.w
+      x: this.transform.quat.x,
+      y: this.transform.quat.y,
+      z: this.transform.quat.z,
+      w: this.transform.quat.w
     });
 
     return bodyDesc;
@@ -160,7 +160,7 @@ export class RapierTransformer implements Transformer {
     if (!this.objectA3) return; // あっちゃいけない
     const opt = this.completeOptions;
     const volumes: number[] = [];
-    this.objectA3.object.traverse((obj)=>{
+    this.objectA3.object3D.traverse((obj: any)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
         const collisionGroups = (opt.membership << 16) | opt.filter;
@@ -202,7 +202,7 @@ export class RapierTransformer implements Transformer {
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
     this.objectA3 = objectA3;
     this.colliderDescs = [];
     this.colliders = [];
@@ -229,45 +229,45 @@ export class RapierTransformer implements Transformer {
     });
   }
   // ここはなんとかできそうな気もするけど、とりあえず。
-  isGrounded(): boolean { return this.trans.loc.y <= 0; }
+  isGrounded(): boolean { return this.transform.loc.y <= 0; }
 
-  setLocation(_: Vec3): void {
+  setPosition(_: Vec3): void {
     // これはできない物とする
   }
-  setLocationNow(v: Vec3): void {
+  snapPosition(v: Vec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
     else
       this.bodyDesc?.setTranslation(v.x,v.y,v.z);
-    this.trans.loc.set(v);
+    this.transform.loc.set(v);
   }
 
   setQuat(_: Quat): void {
     // これはできない物とする
   }
-  setQuatNow(q: Quat): void {
+  snapQuat(q: Quat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
     else
       this.bodyDesc?.setRotation(q); // true? false?
-    this.trans.quat.set(q);
+    this.transform.quat.set(q);
   }
 
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  setScaleNow(_: Vec3): void {
+  snapScale(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 
-  setLinvel(vel: Vec3): void {
+  setLinearVelocity(vel: Vec3): void {
     if (this.body)
       this.body.setLinvel({x:vel.x, y:vel.y, z:vel.z},true);
     else
       this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
   }
 
-  getLinvel(v: Vec3 | undefined) {
+  getLinearVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
     if (this.body)
@@ -277,14 +277,14 @@ export class RapierTransformer implements Transformer {
     return v;
   }
 
-  setAngvel(av: Vec3): void {
+  setAngularVelocity(av: Vec3): void {
     if (this.body)
       this.body.setAngvel({x:av.x, y:av.y, z:av.z},true);
     else
       this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
   }
 
-  getAngvel(v: Vec3 | undefined) {
+  getAngularVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
     if (this.body)
@@ -329,9 +329,9 @@ export class RapierTransformer implements Transformer {
   update(_dt: number): void {
     if (this.body) {
       const t = this.body.translation();
-      this.trans.loc.set(t.x, t.y, t.z);
+      this.transform.loc.set(t.x, t.y, t.z);
       const r = this.body.rotation();
-      this.trans.quat.set(r.x, r.y, r.z, r.w);
+      this.transform.quat.set(r.x, r.y, r.z, r.w);
     }
   }
 }

@@ -5,7 +5,7 @@ import { ObjectA3 } from '../core/ObjectA3';
  * PlaneGeometryにテクスチャとして画像を貼り付けて
  * 3D空間中に画像を表示させる。
  */
-export class Image extends ObjectA3 {
+export class ImagePlane extends ObjectA3 {
   constructor(file: string) {
     super(file);
   }

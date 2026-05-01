@@ -363,7 +363,7 @@ const q3 = new Quat(); // 計算のテンポラリで使う
  * a3.ObjectA3.lookAt()をオーバーライドすることで反対方向を向く
  * ようにしている。
  */
-export function getQuatOfLookAt(me: Vec3,target: Vec3,up: Vec3) {
+export function getLookAtQuaternion(me: Vec3,target: Vec3,up: Vec3) {
   up.normalize();
   const forward = me.clone().sub(target).normalize();
   const right = new Vec3().cross(forward,up).normalize();
@@ -416,7 +416,7 @@ export function getQuatOfLookAt(me: Vec3,target: Vec3,up: Vec3) {
  * オイラー角(ラジアン)を四元数に変換する関数、2番目の引数は
  * 軸の回転順番を指定するRotationOrder。
  */
-export function vec3EulerToQuat(rot: Vec3, order: RotationOrder = "XYZ" ): Quat {
+export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "XYZ" ): Quat {
   const quat = new Quat(0,0,0,1);
   for (let i=0;i<3;i++) {
     const c = order.charAt(i);
@@ -567,7 +567,7 @@ export class Transform {
       this.quat.set(tOrO.quat);
       this.scale.set(tOrO.scale);
     } else {
-      const t = tOrO.trans;
+      const t = tOrO.transform;
       this.loc.set(t.loc);
       this.quat.set(t.quat);
       this.scale.set(t.scale);
@@ -579,9 +579,9 @@ export class Transform {
   write(object3D: THREE.Object3D): void;
   write(obj: ObjectA3 | THREE.Object3D): void {
     if (obj instanceof ObjectA3) {
-      obj.object.position.set(this.loc.x,this.loc.y,this.loc.z);
-      obj.object.quaternion.set(this.quat.x,this.quat.y,this.quat.z,this.quat.w);
-      obj.object.scale.set(this.scale.x,this.scale.y,this.scale.z);
+      obj.object3D.position.set(this.loc.x,this.loc.y,this.loc.z);
+      obj.object3D.quaternion.set(this.quat.x,this.quat.y,this.quat.z,this.quat.w);
+      obj.object3D.scale.set(this.scale.x,this.scale.y,this.scale.z);
     } else {
       obj.position.set(this.loc.x,this.loc.y,this.loc.z);
       obj.quaternion.set(this.quat.x,this.quat.y,this.quat.z,this.quat.w);

@@ -21,7 +21,7 @@ import { Sound } from '../three/Sound';
   * 細かいこととして、これを実装するクラスでは、Cameraは
   * Sceneに配置した上で、座標(0,0,3)の場所に配置し、
   * (0,0,-1)の方向を向かせて、上は(0,1,0)にするように統一する。
-  * ViewBaseクラスも参照。
+  * BaseViewクラスも参照。
   */
 export interface View {
   scene: Scene;
@@ -41,20 +41,20 @@ export interface View {
  * Viewに必須な機能だけを実装したクラス。
  * これを拡張して新しい表示クラスを作っても良い。
  * CanvasなどはHTMLElementのサブクラスとして実装
- * しないといけないので、このViewBaseのインスタンスを
+ * しないといけないので、このBaseViewのインスタンスを
  * プロパティに保存してラッパーとして実装している。
  */
-export class ViewBase implements View {
+export class BaseView implements View {
   scene: Scene;
   camera: Camera;
   controller: Controller;
-  
+
   constructor(camera: Camera) {
     this.scene = new Scene();
     this.camera = camera;
     this.camera.setAudioListener(Sound.listener);
-    this.scene.scene.add(this.camera.object);
-    this.camera.setLocation(0, 0, 3);
+    this.scene.scene.add(this.camera.object3D);
+    this.camera.setPosition(0, 0, 3);
     this.controller = new OrbitController(0,0,0);
     this.controller.setView(this);
     this.controller.activate();
@@ -62,8 +62,8 @@ export class ViewBase implements View {
   }
 
   replaceScene(newScene: Scene): Scene {
-    this.scene.scene.remove(this.camera.object);
-    newScene.scene.add(this.camera.object);
+    this.scene.scene.remove(this.camera.object3D);
+    newScene.scene.add(this.camera.object3D);
     const oldScene = this.scene;
     this.scene = newScene;
     return oldScene;
@@ -84,48 +84,48 @@ export class ViewBase implements View {
   }
 
   /**
-   * ViewBaseはworldToScreen()を実装することは不可能なので、
+   * BaseViewはworldToScreen()を実装することは不可能なので、
    * サブクラスで必ずオーバーライドして自分で実装して下さい。
-   * ViewBaseをラップして使っている場合も同様です。
+   * BaseViewをラップして使っている場合も同様です。
    */
   worldToScreen(loc: Vec3): { x: number, y: number } {
-    throw new Error(`ViewBaseはworldToScreen()は実装していません`);
+    throw new Error(`BaseViewはworldToScreen()は実装していません`);
     loc;
     return {x:0, y:0};
   }
   /**
-   * ViewBaseはscreenToWorld()を実装することは不可能なので、
+   * BaseViewはscreenToWorld()を実装することは不可能なので、
    * サブクラスで必ずオーバーライドして自分で実装して下さい。
-   * ViewBaseをラップして使っている場合も同様です。
+   * BaseViewをラップして使っている場合も同様です。
    */
   screenToWorld(x: number, y: number, depth: number): Vec3 {
-    throw new Error(`ViewBaseはscreenToWorld()は実装していません`);
+    throw new Error(`BaseViewはscreenToWorld()は実装していません`);
     x; y; depth;
     return new Vec3();
   }
   /**
-   * ViewBaseはcameraToScreen()を実装することは不可能なので、
+   * BaseViewはcameraToScreen()を実装することは不可能なので、
    * サブクラスで必ずオーバーライドして自分で実装して下さい。
-   * ViewBaseをラップして使っている場合も同様です。
+   * BaseViewをラップして使っている場合も同様です。
    */
   cameraToScreen(loc: Vec3): { x: number, y: number } {
-    throw new Error(`ViewBaseはcameraToScreen()は実装していません`);
+    throw new Error(`BaseViewはcameraToScreen()は実装していません`);
     loc;
     return {x:0,y:0};
   }
   /**
-   * ViewBaseはscreenToCamera()を実装することは不可能なので、
+   * BaseViewはscreenToCamera()を実装することは不可能なので、
    * サブクラスで必ずオーバーライドして自分で実装して下さい。
-   * ViewBaseをラップして使っている場合も同様です。
+   * BaseViewをラップして使っている場合も同様です。
    */
   screenToCamera(x: number, y: number, depth: number): Vec3 {
-    throw new Error(`ViewBaseはscreenToCamera()は実装していません`);
+    throw new Error(`BaseViewはscreenToCamera()は実装していません`);
     x; y; depth;
     return new Vec3();
   }
 
   async waitForRender(): Promise<number> {
-    throw new Error(`ViewBaseはwaitForRender()は実装していません`);
+    throw new Error(`BaseViewはwaitForRender()は実装していません`);
     return 0;
   }
 }

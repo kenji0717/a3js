@@ -117,3 +117,48 @@
 | `getQuatOfLookAt(...)` | `getLookAtQuaternion(...)` |
 | `vec3EulerToQuat(...)` | `eulerToQuaternion(...)` |
 | `regenerateGLTFLoader()` | `recreateGLTFLoader()` |
+
+-----
+
+コードを一通り確認しました。以下の点が曖昧または不明です。
+
+1. TransformMode の文字列値（最重要）
+prepare-naming.md には「InterpolationTransformer 系のリネームに合わせて mode 定数も同様に変更する」とありますが、具体的な新しい文字列値が書かれていません。現在の定義：
+
+
+type TransformMode = "Default" | "Interpolation" | "Billboard" | "InterpolationBillboard" | "SimplePhysics";
+これは想定通りでしょうか？
+
+"Interpolation" → "Smooth"
+"InterpolationBillboard" → "SmoothBillboard"
+残りの "Default", "Billboard", "SimplePhysics" はそのまま
+2. ファイル名の変更
+クラス名と同名のファイルが複数あります。ファイル名もリネームしますか？
+
+変更前ファイル	変更後候補
+src/three/Image.ts	ImagePlane.ts
+src/three/HTML.ts	Html3D.ts
+src/three/ThreeJS.ts	ThreeObject.ts
+src/core/GeneralCamera.ts	ThreeCamera.ts
+src/core/Test.ts	SampleObject.ts
+src/rapier/CharacterTransformer.ts	KinematicCharacterTransformer.ts
+src/rapier/CharacterTransformer2.ts	DynamicCharacterTransformer.ts
+3. Transform.loc の扱い
+loc → position のリネーム対象について確認です。loc プロパティは ObjectA3 のゲッターだけでなく、LinearMath.ts の Transform クラスにも同名プロパティがあります（Transform はパブリックAPIとして export されています）。
+
+
+// LinearMath.ts
+export class Transform {
+  loc: Vec3;  // これも position に変えますか？
+  ...
+}
+4. デフォルト値変数の扱い
+以下の変数はリネームリストに含まれていませんが、クラス名が変わるため一貫性の観点で変えるかどうか確認です：
+
+defaultACOptions → 変更しない？（対応する型 ACOptions → AvatarPositionControllerOptions は変更対象）
+defaultCharacterTransOptions → 変更しない？
+defaultCharacterTrans2Options → 変更しない？
+以上4点を確認できれば、作業に入れます。
+
+
+１．のTransformModeの文字列地については提案してもらった通りの変更をしてください。２．はファイル名もクラス名同様に変更をお願いします。３．については後で検討しようと思っていたいので、今は変更しないでください。４．についてはピックアップしてもらった３つについて他の変更に合わせて理ネームしてください。この回答に従って作業に入ってください。

@@ -8,7 +8,7 @@ import { Vec3 } from './LinearMath';
  * a3jsのカメラにするためのラッパー。ヘッドライトは
  * SpotLightで実装。
  */
-export class GeneralCamera extends Camera {
+export class ThreeCamera extends Camera {
   camera: THREE.Camera;
   headLight: THREE.SpotLight;
 
@@ -20,9 +20,9 @@ export class GeneralCamera extends Camera {
     const lightTarget = new THREE.Object3D();
     lightTarget.position.set(0,0,-10);
     this.headLight.target = lightTarget;
-    this.object.add(this.camera);
-    this.object.add(this.headLight);
-    this.object.add(lightTarget);
+    this.object3D.add(this.camera);
+    this.object3D.add(this.headLight);
+    this.object3D.add(lightTarget);
   }
 
   initObject() {
@@ -55,4 +55,3 @@ export class GeneralCamera extends Camera {
     return { x: v.x, y: v.y };
   }
 }
-

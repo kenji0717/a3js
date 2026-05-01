@@ -99,7 +99,7 @@ export class Sound extends ObjectA3 implements AsyncInitRequired<Sound> {
       sound.setLoop(this.options.loop);
       this.sound = sound;
     }
-    this.object.add(this.sound);
+    this.object3D.add(this.sound);
     return new Promise((resolve)=>{
       Sound.audioLoader.load(soundFile, (buffer) => {
         if (this.sound)

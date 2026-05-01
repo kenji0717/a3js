@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ActionObject, Action } from './ActionObject';
 import { Scene } from './Scene';
-import type { Shape, Motion } from './ActionObject';
+import type { Figure, Motion } from './ActionObject';
 import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 import { loadVrmlInUnzippedA3, vrmlBackgroundTexture,
@@ -32,7 +32,7 @@ export class A3Action extends Action {
   backgroundTexture?: THREE.Texture; // 入ってたらscene.backgroundなどに使われる
   fog?: THREE.Fog | THREE.FogExp2; // 入ってたらscene.fogに使われる
 
-  constructor(shape: Shape, motion: Motion, loop: boolean, sound?: Sound, soundLoop: boolean = false, soundContinue: boolean = true, backgroundTexture?: THREE.Texture, fog?: THREE.Fog | THREE.FogExp2) {
+  constructor(shape: Figure, motion: Motion, loop: boolean, sound?: Sound, soundLoop: boolean = false, soundContinue: boolean = true, backgroundTexture?: THREE.Texture, fog?: THREE.Fog | THREE.FogExp2) {
     super(shape, motion);
     this.loop = loop;
     this.sound = sound;
@@ -96,7 +96,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
   runActionNo: number = 0; // 未実装 GAHA
   minWalkSpeed: number = 0.1; // 未実装 GAHA
   minRunSpeed: number = 1.0; // 未実装 GAHA
-  billboard: boolean = false; // 未実装 GAHA
+  isBillboard: boolean = false; // 未実装 GAHA
   comment: string | null = null; // CATALOG.XMLの<c>の中
   tags: string[] = []; // 未実装 GAHA
   profiles: string[] = []; // 未実装 GAHA
@@ -125,7 +125,7 @@ export class Acerola3D extends ActionObject<Acerola3D> {
       this.runActionNo = Number(a3Elms[0].getAttribute('runActionN0'));
       this.minWalkSpeed = Number(a3Elms[0].getAttribute('minWalkSpeed'));
       this.minRunSpeed = Number(a3Elms[0].getAttribute('minRunSpeed'));
-      this.billboard = Boolean(a3Elms[0].getAttribute('billboard'));
+      this.isBillboard = Boolean(a3Elms[0].getAttribute('billboard'));
     }
     const cs = xmlDoc.getElementsByTagNameNS(ns,'c');
     if (cs[0]) this.comment = cs[0].textContent;
@@ -296,10 +296,10 @@ export class Acerola3D extends ActionObject<Acerola3D> {
               }
             };
             sound = await new Sound(url,opt).ready;
-            sound.setLocation(offsetVec3);
+            sound.setPosition(offsetVec3);
             sound.lookAt(directionVec3);
             URL.revokeObjectURL(url);
-            root.add(sound.object); // この処理が強引 GAHA
+            root.add(sound.object3D); // この処理が強引 GAHA
             //this.add(sound); // この処理が強引 GAHA
           }
         }

@@ -3,18 +3,18 @@ import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
-import { ViewBase } from './View';
-import { GeneralCamera } from './GeneralCamera';
+import { BaseView } from './View';
+import { ThreeCamera } from './ThreeCamera';
 import type { Controller } from './Controller';
 import { Vec3 } from './LinearMath';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
-import { regenerateGLTFLoader } from './GLTF';
+import { recreateGLTFLoader } from './GLTF';
 
 export interface WindowOptions {
   width: number;
   height: number;
-  camera: GeneralCamera | undefined;
+  camera: ThreeCamera | undefined;
 }
 
 export const defaultWindowOptions: WindowOptions = {
@@ -46,7 +46,7 @@ export class Window extends HTMLElement implements View {
   // ########## WebComponent関係のセットアップ終り ##########
 
   options: WindowOptions;
-  base: ViewBase;
+  base: BaseView;
   renderer;
   css2DRenderer: CSS2DRenderer;
   scene: Scene;
@@ -119,9 +119,9 @@ export class Window extends HTMLElement implements View {
       const camera3js = new THREE.PerspectiveCamera(75, width/height, 0.01, 1000);
       camera3js.aspect = width / height;
       this.camera3js = camera3js;
-      this.camera = new GeneralCamera(this.camera3js);
+      this.camera = new ThreeCamera(this.camera3js);
     }
-    this.base = new ViewBase(this.camera);
+    this.base = new BaseView(this.camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
@@ -129,7 +129,7 @@ export class Window extends HTMLElement implements View {
     //this.timer.connect(document); // 複数Window生成したらダメなのでコメントアウト
 
     this.renderer = new THREE.WebGLRenderer();
-    regenerateGLTFLoader({renderer: this.renderer});
+    recreateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(width, height);
     this.renderer.domElement.width = width;
     this.renderer.domElement.height = height;
@@ -414,7 +414,7 @@ export class Window extends HTMLElement implements View {
   // イベントを発生させられる。addEventListener()とか、
   // 自分で作らなくてOK。
   myMouseClickedListener = async (e: any) => {
-    if (this.camera instanceof GeneralCamera) {
+    if (this.camera instanceof ThreeCamera) {
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       const rect = e.target.getBoundingClientRect();

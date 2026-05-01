@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { Controller } from './Controller';
-import { Vec3, Quat, getQuatOfLookAt } from './LinearMath';
+import { Vec3, Quat, getLookAtQuaternion } from './LinearMath';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -36,21 +36,21 @@ export abstract class Camera extends ObjectA3 {
    * コントローラによって挙動が異なる。
    * @param v 座標
    */
-  setLocation(v: Vec3): void;
-  setLocation(x: number, y: number, z: number): void;
-  setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
+  setPosition(v: Vec3): void;
+  setPosition(x: number, y: number, z: number): void;
+  setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
     const v = new Vec3();
     if (typeof xOrV === 'number') {
-      super.setLocation(xOrV,y!,z!);
+      super.setPosition(xOrV,y!,z!);
       v.set(xOrV,y!,z!);
     } else {
-      super.setLocation(xOrV);
+      super.setPosition(xOrV);
       v.set(xOrV);
     }
     if (this.controller)
       this.controller.setCameraLocation(v);
     else
-      super.setLocation(v);
+      super.setPosition(v);
   }
 
   /**
@@ -59,21 +59,21 @@ export abstract class Camera extends ObjectA3 {
    * コントローラによって挙動が異なる。
    * @param v 座標
    */
-  setLocationNow(v: Vec3): void;
-  setLocationNow(x: number, y: number, z: number): void;
-  setLocationNow(xOrV: number | Vec3, y?: number, z?: number): void {
+  snapPosition(v: Vec3): void;
+  snapPosition(x: number, y: number, z: number): void;
+  snapPosition(xOrV: number | Vec3, y?: number, z?: number): void {
     const v = new Vec3();
     if (typeof xOrV === 'number') {
-      super.setLocation(xOrV,y!,z!);
+      super.setPosition(xOrV,y!,z!);
       v.set(xOrV,y!,z!);
     } else {
-      super.setLocation(xOrV);
+      super.setPosition(xOrV);
       v.set(xOrV);
     }
     if (this.controller)
       this.controller.setCameraLocationNow(v);
     else
-      super.setLocationNow(v);
+      super.snapPosition(v);
   }
 
   /**
@@ -103,9 +103,9 @@ export abstract class Camera extends ObjectA3 {
    * コントローラによって挙動が異なる。
    * @param q 回転
    */
-  setQuatNow(q: Quat): void;
-  setQuatNow(x: number, y: number, z: number, w: number): void;
-  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+  snapQuat(q: Quat): void;
+  snapQuat(x: number, y: number, z: number, w: number): void;
+  snapQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     const q = new Quat();
     if (typeof xOrQ === "number") {
       q.set(xOrQ, y!, z!, w!);
@@ -115,7 +115,7 @@ export abstract class Camera extends ObjectA3 {
     if (this.controller)
       this.controller.setCameraQuatNow(q);
     else
-      this.transformer.setQuatNow(q);
+      this.transformer.snapQuat(q);
   }
 
 
@@ -132,12 +132,12 @@ export abstract class Camera extends ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.loc);
+      target.set(xVO.position);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.loc,target,up);
+    const newQuat = getLookAtQuaternion(this.position,target,up);
     newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
     this.setQuat(newQuat);
   }
@@ -155,13 +155,13 @@ export abstract class Camera extends ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.loc);
+      target.set(xVO.position);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.loc,target,up);
+    const newQuat = getLookAtQuaternion(this.position,target,up);
     newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
-    this.setQuatNow(newQuat);
+    this.snapQuat(newQuat);
   }
 }

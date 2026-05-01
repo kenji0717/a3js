@@ -4,7 +4,7 @@ import type { GLTF as THREE_GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { ActionObject, Action, DummyMotion } from './ActionObject';
-import type { Shape, Motion } from './ActionObject';
+import type { Figure, Motion } from './ActionObject';
 import { ClipMotion } from '../three/ClipMotion';
 import { isString } from '../utils/TypeGuard';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -44,7 +44,7 @@ export const defaultGLTFOptions = {
   meshopt: true
 };
 
-export function regenerateGLTFLoader(options: Partial<GLTFOptions>={}) {
+export function recreateGLTFLoader(options: Partial<GLTFOptions>={}) {
   const opt = {
     ...defaultGLTFOptions,
     ...options
@@ -70,7 +70,7 @@ let gltfLoader = new GLTFLoader();
 gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 class GLTFAction extends Action {
-  constructor(shape: Shape, motion: Motion) {
+  constructor(shape: Figure, motion: Motion) {
     super(shape, motion);
   }
 }
@@ -91,7 +91,7 @@ export class GLTF extends ActionObject<GLTF> {
       let firstActionName: string | null = null;
       this.gltf = await gltfLoader.loadAsync(data);
       const actions: Record<string,Action> = {};
-      const shape: Shape = {
+      const shape: Figure = {
         root: this.gltf.scene,
         bones: {},
         skeleton: undefined

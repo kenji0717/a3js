@@ -1,4 +1,4 @@
-import { Vec3, Quat, getQuatOfLookAt, quatToVec3Euler, Transform } from './LinearMath';
+import { Vec3, Quat, getLookAtQuaternion, quatToVec3Euler, Transform } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 import type { Transformer } from "./ObjectA3";
@@ -14,7 +14,7 @@ import type { Transformer } from "./ObjectA3";
  * するのがお勧め。
  */
 export class DefaultTransformer implements Transformer {
-  trans: Transform;
+  transform: Transform;
 
   /**
    * コンストラクタ。生成する段階ではObjectA3と独立に
@@ -22,39 +22,39 @@ export class DefaultTransformer implements Transformer {
    * してから使うことになる。
    */
   constructor() {
-    this.trans = new Transform();
+    this.transform = new Transform();
   }
 
   init(trans: Transform, _objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
-  isGrounded(): boolean { return this.trans.loc.y <= 0; }
+  isGrounded(): boolean { return this.transform.loc.y <= 0; }
 
-  setLocation(loc: Vec3) {
-    this.trans.loc.set(loc);
+  setPosition(loc: Vec3) {
+    this.transform.loc.set(loc);
   }
-  setLocationNow(loc: Vec3) {
-    this.trans.loc.set(loc);
+  snapPosition(loc: Vec3) {
+    this.transform.loc.set(loc);
   }
   setQuat(quat: Quat) {
-    this.trans.quat.set(quat);
+    this.transform.quat.set(quat);
   }
-  setQuatNow(quat: Quat) {
-    this.trans.quat.set(quat);
+  snapQuat(quat: Quat) {
+    this.transform.quat.set(quat);
   }
   setScale(scale: Vec3) {
-    this.trans.scale.set(scale);
+    this.transform.scale.set(scale);
   }
-  setScaleNow(scale: Vec3) {
-    this.trans.scale.set(scale);
+  snapScale(scale: Vec3) {
+    this.transform.scale.set(scale);
   }
-  setLinvel(_vel: Vec3): void {}
-  getLinvel(v: Vec3) { return v?v:new Vec3(); }
-  setAngvel(_angvel: Vec3): void {}
-  getAngvel(v: Vec3) { return v?v:new Vec3(); }
+  setLinearVelocity(_vel: Vec3): void {}
+  getLinearVelocity(v: Vec3) { return v?v:new Vec3(); }
+  setAngularVelocity(_angvel: Vec3): void {}
+  getAngularVelocity(v: Vec3) { return v?v:new Vec3(); }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}
@@ -72,8 +72,8 @@ export class DefaultTransformer implements Transformer {
  * よりも、こちらの方をベースにした方がやりやすい場合があると
  * 思う。
  */
-export class FixedTransformer implements Transformer {
-  trans: Transform;
+export class StaticTransformer implements Transformer {
+  transform: Transform;
 
   /**
    * コンストラクタ。生成する段階ではObjectA3と独立に
@@ -81,27 +81,27 @@ export class FixedTransformer implements Transformer {
    * してから使うことになる。
    */
   constructor() {
-    this.trans = new Transform();
+    this.transform = new Transform();
   }
 
   init(trans: Transform, _objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
-  isGrounded(): boolean { return this.trans.loc.y <= 0; }
+  isGrounded(): boolean { return this.transform.loc.y <= 0; }
 
-  setLocation(_loc: Vec3) {}
-  setLocationNow(_loc: Vec3) {}
+  setPosition(_loc: Vec3) {}
+  snapPosition(_loc: Vec3) {}
   setQuat(_quat: Quat) {}
-  setQuatNow(_quat: Quat) {}
+  snapQuat(_quat: Quat) {}
   setScale(_scale: Vec3) {}
-  setScaleNow(_scale: Vec3) {}
-  setLinvel(_vel: Vec3): void {}
-  getLinvel(v: Vec3) { return v?v:new Vec3(); }
-  setAngvel(_angvel: Vec3): void {}
-  getAngvel(v: Vec3) { return v?v:new Vec3(); }
+  snapScale(_scale: Vec3) {}
+  setLinearVelocity(_vel: Vec3): void {}
+  getLinearVelocity(v: Vec3) { return v?v:new Vec3(); }
+  setAngularVelocity(_angvel: Vec3): void {}
+  getAngularVelocity(v: Vec3) { return v?v:new Vec3(); }
   resetForce(): void {}
   addForce(_f: Vec3): void {}
   addForceAtPoint(_v: Vec3, _p: Vec3): void {}
@@ -113,84 +113,84 @@ export class FixedTransformer implements Transformer {
   update(_dt: number) {}
 }
 
-export class InterpolationTransformer implements Transformer {
-  firstTrans: Transform;
-  trans: Transform; // 現在のTransform
-  lastTrans: Transform;
-  nowTime: number;
+export class SmoothTransformer implements Transformer {
+  startTransform: Transform;
+  transform: Transform; // 現在のTransform
+  endTransform: Transform;
+  currentTime: number;
   duration: number;
 
   constructor() {
-    this.firstTrans = new Transform();
-    this.trans = new Transform();
-    this.lastTrans = new Transform();
-    this.nowTime = 0;
+    this.startTransform = new Transform();
+    this.transform = new Transform();
+    this.endTransform = new Transform();
+    this.currentTime = 0;
     this.duration = 1;
   }
 
   init(trans: Transform, _objectA3: ObjectA3) {
-    this.firstTrans.set(trans);
-    this.trans.set(trans);
-    this.lastTrans.set(trans);
+    this.startTransform.set(trans);
+    this.transform.set(trans);
+    this.endTransform.set(trans);
   }
 
   addOneselfToPhysics(_world: PhysicsWorld): void {}
   removeOneselfFromPhysics(_world: PhysicsWorld): void {}
-  isGrounded(): boolean { return this.trans.loc.y <= 0; }
+  isGrounded(): boolean { return this.transform.loc.y <= 0; }
 
-  setLocation(newLoc: Vec3) {
-    this.firstTrans.set(this.trans);
-    this.lastTrans.loc.set(newLoc);
-    this.nowTime = 0;
+  setPosition(newLoc: Vec3) {
+    this.startTransform.set(this.transform);
+    this.endTransform.loc.set(newLoc);
+    this.currentTime = 0;
   }
 
-  setLocationNow(newLoc: Vec3) {
-    this.setLocation(newLoc);
-    this.nowTime = 1;
+  snapPosition(newLoc: Vec3) {
+    this.setPosition(newLoc);
+    this.currentTime = 1;
   }
 
   setQuat(newQuat: Quat) {
-    this.firstTrans.set(this.trans);
-    this.lastTrans.quat.set(newQuat);
-    this.nowTime = 0;
+    this.startTransform.set(this.transform);
+    this.endTransform.quat.set(newQuat);
+    this.currentTime = 0;
   }
 
-  setQuatNow(newQuat: Quat) {
+  snapQuat(newQuat: Quat) {
     this.setQuat(newQuat);
-    this.nowTime = 1;
+    this.currentTime = 1;
   }
 
   setScale(newScale: Vec3) {
-    this.firstTrans.set(this.trans);
-    this.lastTrans.scale.set(newScale);
-    this.nowTime = 0;
+    this.startTransform.set(this.transform);
+    this.endTransform.scale.set(newScale);
+    this.currentTime = 0;
   }
 
-  setScaleNow(newScale: Vec3) {
+  snapScale(newScale: Vec3) {
     this.setScale(newScale);
-    this.nowTime = 1;
+    this.currentTime = 1;
   }
 
-  setLinvel(_vel: Vec3): void {}
-  getLinvel(v: Vec3 | undefined) {
+  setLinearVelocity(_vel: Vec3): void {}
+  getLinearVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
-    const x = this.lastTrans.loc.x-this.firstTrans.loc.x;
-    const y = this.lastTrans.loc.y-this.firstTrans.loc.y;
-    const z = this.lastTrans.loc.z-this.firstTrans.loc.z;
+    const x = this.endTransform.loc.x-this.startTransform.loc.x;
+    const y = this.endTransform.loc.y-this.startTransform.loc.y;
+    const z = this.endTransform.loc.z-this.startTransform.loc.z;
     v.set(x,y,z);
-    const t = this.nowTime<this.duration?this.nowTime:this.duration;
+    const t = this.currentTime<this.duration?this.currentTime:this.duration;
     v.scale((-6*t*t+6*t)/this.duration)
     return v;
   }
-  setAngvel(_angvel: Vec3): void {}
-  getAngvel(v: Vec3 | undefined) {
+  setAngularVelocity(_angvel: Vec3): void {}
+  getAngularVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
-    const first = quatToVec3Euler(this.firstTrans.quat,'XYZ');
-    const last = quatToVec3Euler(this.lastTrans.quat,'XYZ');
+    const first = quatToVec3Euler(this.startTransform.quat,'XYZ');
+    const last = quatToVec3Euler(this.endTransform.quat,'XYZ');
     v.set(last.x-first.x, last.y-first.y, last.z-first.z);
-    const t = this.nowTime<this.duration?this.nowTime:this.duration;
+    const t = this.currentTime<this.duration?this.currentTime:this.duration;
     v.scale((-6*t*t+6*t)/this.duration)
     return v;
   }
@@ -210,13 +210,13 @@ export class InterpolationTransformer implements Transformer {
   }
 
   update(dt: number): void {
-    this.nowTime += dt;
-    if (this.nowTime > this.duration) this.nowTime = this.duration;
-    const t0 = this.nowTime/this.duration;
+    this.currentTime += dt;
+    if (this.currentTime > this.duration) this.currentTime = this.duration;
+    const t0 = this.currentTime/this.duration;
     const t = this.smoothstep(t0);
 
-    this.trans.set(this.firstTrans);
-    this.trans.blend(this.lastTrans,t);
+    this.transform.set(this.startTransform);
+    this.transform.blend(this.endTransform,t);
   }
 }
 
@@ -255,17 +255,17 @@ export class BillboardTransformer extends DefaultTransformer {
   }
 
   setQuat(_quat: Quat) {}
-  setQuatNow(_quat: Quat) {}
+  snapQuat(_quat: Quat) {}
 
   update(_dt: number): void {
-    tmpObjLoc.set(this.trans.loc);
-    tmpTargetLoc.set(this.target.trans.loc);
-    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
-    this.trans.quat.set(quat);
+    tmpObjLoc.set(this.transform.loc);
+    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
+    this.transform.quat.set(quat);
   }
 }
 
-export class InterpolationBillboardTransformer extends InterpolationTransformer {
+export class SmoothBillboardTransformer extends SmoothTransformer {
   up: Vec3;
   target: ObjectA3;
 
@@ -285,14 +285,14 @@ export class InterpolationBillboardTransformer extends InterpolationTransformer 
   }
 
   setQuat(_newQuat: Quat) { /* do nothing. */ }
-  setQuatNow(_newQuat: Quat) { /* do nothing. */ }
+  snapQuat(_newQuat: Quat) { /* do nothing. */ }
 
   update(dt: number) {
     super.update(dt);
-    tmpObjLoc.set(this.trans.loc);
-    tmpTargetLoc.set(this.target.trans.loc);
-    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
-    this.trans.quat.set(quat);
+    tmpObjLoc.set(this.transform.loc);
+    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
+    this.transform.quat.set(quat);
   }
 }
 
@@ -312,9 +312,9 @@ export const defaultFollowTransformerOptions: FollowTransformerOptions = {
  * targetの動きに常に追従するオブジェクトを作りたい時に
  * 使用するのはもちろん、view.cameraにセットすれば、
  * 特定のキャラクタを追尾するカメラにすることができる。
- * そのかわりsetLocation()などでは動かせなくなる。
+ * そのかわりsetPosition()などでは動かせなくなる。
  */
-export class FollowTransformer extends FixedTransformer {
+export class FollowTransformer extends StaticTransformer {
   options: FollowTransformerOptions;
   target: ObjectA3;
   lookFrom: Vec3;
@@ -342,19 +342,18 @@ export class FollowTransformer extends FixedTransformer {
   update(dt: number) {
     super.update(dt);
     const goalTrans = new Transform();
-    tmpObjLoc.set(this.trans.loc);
-    tmpTargetLoc.set(this.target.trans.loc);
-    const quat = getQuatOfLookAt(tmpObjLoc,tmpTargetLoc,this.up);
+    tmpObjLoc.set(this.transform.loc);
+    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
     quat.mul(new Quat(0,1,0,0));
     goalTrans.quat.set(quat);
 
     tmpObjLoc.set(this.lookFrom);
     tmpObjLoc.apply(this.target.quat);
-    tmpObjLoc.add(this.target.loc);
+    tmpObjLoc.add(this.target.position);
     goalTrans.loc.set(tmpObjLoc);
 
-    this.trans.loc.lerp(this.trans.loc,goalTrans.loc,(1-this.options.smoothness));
-    this.trans.quat.slerp(this.trans.quat,goalTrans.quat,(1-this.options.smoothness));
+    this.transform.loc.lerp(this.transform.loc,goalTrans.loc,(1-this.options.smoothness));
+    this.transform.quat.slerp(this.transform.quat,goalTrans.quat,(1-this.options.smoothness));
   }
 }
-

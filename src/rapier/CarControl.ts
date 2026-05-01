@@ -116,19 +116,19 @@ export class CarControl {
     this.motion = new CarMotion(this);
   }
 
-  handle(h: number) {
+  steer(angle: number) {
     if (this.trans.controller) {
-      this.trans.controller.setWheelSteering(0,h);
-      this.trans.controller.setWheelSteering(1,h);
+      this.trans.controller.setWheelSteering(0,angle);
+      this.trans.controller.setWheelSteering(1,angle);
     }
   }
 
-  accelerator(a: number) {
+  accelerate(value: number) {
     if (this.trans.controller) {
-      this.trans.controller.setWheelEngineForce(0,a);
-      this.trans.controller.setWheelEngineForce(1,a);
-      this.trans.controller.setWheelEngineForce(2,a);
-      this.trans.controller.setWheelEngineForce(3,a);
+      this.trans.controller.setWheelEngineForce(0,value);
+      this.trans.controller.setWheelEngineForce(1,value);
+      this.trans.controller.setWheelEngineForce(2,value);
+      this.trans.controller.setWheelEngineForce(3,value);
     }
   }
 
@@ -165,7 +165,7 @@ export class CarControl {
 
 export class CarTransformer implements Transformer {
   cc: CarControl;
-  trans: Transform;
+  transform: Transform;
   objectA3?: ObjectA3;
   controller?: Rapier.DynamicRayCastVehicleController;
   //
@@ -176,11 +176,11 @@ export class CarTransformer implements Transformer {
 
   constructor(cm: CarControl) {
     this.cc = cm;
-    this.trans = new Transform();
+    this.transform = new Transform();
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
     this.objectA3 = objectA3;
     this.chassisBodyDesc = new RAPIER.RigidBodyDesc(RAPIER.RigidBodyType.Dynamic);
     this.chassisColliderDesc = RAPIER.ColliderDesc.cuboid(
@@ -281,15 +281,15 @@ export class CarTransformer implements Transformer {
     }
   }
 
-  setLocation(_v: Vec3): void {}
-  setLocationNow(_v: Vec3): void {}
+  setPosition(_v: Vec3): void {}
+  snapPosition(_v: Vec3): void {}
   setQuat(_q: Quat): void {}
-  setQuatNow(_q: Quat): void {}
+  snapQuat(_q: Quat): void {}
   setScale(_s: Vec3): void {}
-  setScaleNow(_s: Vec3): void {}
+  snapScale(_s: Vec3): void {}
 
-  setLinvel(_vel: Vec3): void {}
-  getLinvel(v: Vec3 | undefined) {
+  setLinearVelocity(_vel: Vec3): void {}
+  getLinearVelocity(v: Vec3 | undefined) {
     if (!v) v = new Vec3();
     if (this.chassisBody)
       v.set(this.chassisBody.linvel());
@@ -297,8 +297,8 @@ export class CarTransformer implements Transformer {
       v.set(this.chassisBodyDesc.linvel)
     return v;
   }
-  setAngvel(_angvel: Vec3): void {}
-  getAngvel(v: Vec3 | undefined) {
+  setAngularVelocity(_angvel: Vec3): void {}
+  getAngularVelocity(v: Vec3 | undefined) {
     if (!v) v = new Vec3();
     if (this.chassisBody)
       v.set(this.chassisBody.angvel());
@@ -355,9 +355,9 @@ export class CarTransformer implements Transformer {
 
     this.controller?.updateVehicle(dt);
     if (this.chassisBody)
-      this.trans.loc.set(this.chassisBody.translation());
+      this.transform.loc.set(this.chassisBody.translation());
     if (this.chassisBody)
-      this.trans.quat.set(this.chassisBody.rotation());
+      this.transform.quat.set(this.chassisBody.rotation());
   }
 }
 

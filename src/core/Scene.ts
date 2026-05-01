@@ -29,7 +29,7 @@ export class Scene {
   }
 
   add(object: ObjectA3) {
-    this.scene.add(object.object);
+    this.scene.add(object.object3D);
     this.objects.push(object);
     object.scene = this;
     if (this.physicsWorld) {
@@ -55,7 +55,7 @@ export class Scene {
   }
 
   remove(object: ObjectA3) {
-    this.scene.remove(object.object);
+    this.scene.remove(object.object3D);
     {
       // やりたいのはthis.objects.remove(object);なんだけど無い
       // そして順番は変になるけど以下の方法はゲーム系では速くて
@@ -120,7 +120,7 @@ export class Scene {
     }
   }
 
-  rapierDebug(debug: boolean) {
+  setPhysicsDebugMode(debug: boolean) {
     if (debug) {
       this.rapierLines = new THREE.LineSegments(
         new THREE.BufferGeometry(),

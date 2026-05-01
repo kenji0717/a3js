@@ -5,22 +5,22 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transformer } from '../core/ObjectA3';
 
-export interface CharacterTrans2Options {
+export interface DynamicCharacterTransformerOptions {
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharacterTrans2Options = {
+export const defaultDynamicCharacterTransformerOptions = {
   auto: true,
   height: 1.5,
   radius: 0.3
 };
 
-export class CharacterTransformer2 implements Transformer {
-  trans: Transform;
+export class DynamicCharacterTransformer implements Transformer {
+  transform: Transform;
   objectA3?: ObjectA3;
-  completeOptions: CharacterTrans2Options;
+  completeOptions: DynamicCharacterTransformerOptions;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
   bodyDesc?: Rapier.RigidBodyDesc;
@@ -31,12 +31,12 @@ export class CharacterTransformer2 implements Transformer {
   tmpV2: Vec3;
   physicsWorld?: RapierPhysicsWorld;
 
-  constructor(options: Partial<CharacterTrans2Options> = {}) {
+  constructor(options: Partial<DynamicCharacterTransformerOptions> = {}) {
     this.completeOptions = {
-      ...defaultCharacterTrans2Options,
+      ...defaultDynamicCharacterTransformerOptions,
       ...options
     };
-    this.trans = new Transform();
+    this.transform = new Transform();
     this.capsuleCenter = new Vec3();
     this.nextLocation = new Vec3();
     this.tmpV1 = new Vec3();
@@ -44,18 +44,18 @@ export class CharacterTransformer2 implements Transformer {
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
     if (this.completeOptions.auto) {
       const tmpV = new THREE.Vector3();
       const tmpQ = new THREE.Quaternion();
       const o = new THREE.Object3D();
-      o.add(objectA3.object);
+      o.add(objectA3.object3D);
       { // transformerから持ってこないと
-        objectA3.transformer.trans.loc.write(tmpV);
+        objectA3.transformer.transform.loc.write(tmpV);
         o.position.set(tmpV.x,tmpV.y,tmpV.z);
-        objectA3.transformer.trans.quat.write(tmpQ);
+        objectA3.transformer.transform.quat.write(tmpQ);
         o.quaternion.set(tmpQ.x,tmpQ.y,tmpQ.z,tmpQ.w);
-        objectA3.transformer.trans.scale.write(tmpV);
+        objectA3.transformer.transform.scale.write(tmpV);
         o.scale.set(tmpV.x,tmpV.y,tmpV.z);
       }
       const box = new THREE.Box3().setFromObject(o);
@@ -103,18 +103,18 @@ export class CharacterTransformer2 implements Transformer {
     this.physicsWorld = undefined;
   }
 
-  setLocation(v: Vec3): void {
+  setPosition(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     this.nextLocation.set(this.tmpV1);
   }
-  setLocationNow(v: Vec3): void {
+  snapPosition(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
     if (this.collider)
       this.collider.setTranslation(v);
-    this.trans.loc.set(v);
+    this.transform.loc.set(v);
     this.nextLocation.set(v);
   }
 
@@ -122,29 +122,29 @@ export class CharacterTransformer2 implements Transformer {
     // Capluleだし、制限なしとする
     if (this.collider)
       this.collider.setRotation(q);
-    this.trans.quat.set(q);
+    this.transform.quat.set(q);
   }
-  setQuatNow(q: Quat): void {
+  snapQuat(q: Quat): void {
     if (this.collider)
       this.collider.setRotation(q);
-    this.trans.quat.set(q);
+    this.transform.quat.set(q);
   }
 
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  setScaleNow(_: Vec3): void {
+  snapScale(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 
-  setLinvel(vel: Vec3): void {
+  setLinearVelocity(vel: Vec3): void {
     if (this.body)
       this.body.setLinvel({x:vel.x, y:vel.y, z:vel.z},true);
     else
       this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
   }
 
-  getLinvel(v: Vec3 | undefined) {
+  getLinearVelocity(v: Vec3 | undefined) {
     if (!v) v = new Vec3();
     if (this.body)
       v.set(this.body.linvel());
@@ -153,14 +153,14 @@ export class CharacterTransformer2 implements Transformer {
     return v;
   }
 
-  setAngvel(av: Vec3): void {
+  setAngularVelocity(av: Vec3): void {
     if (this.body)
       this.body.setAngvel({x:av.x, y:av.y, z:av.z},true);
     else
       this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
   }
 
-  getAngvel(v: Vec3 | undefined) {
+  getAngularVelocity(v: Vec3 | undefined) {
     if (!v) v = new Vec3();
     if (this.body)
       v.set(this.body.angvel());
@@ -212,7 +212,7 @@ export class CharacterTransformer2 implements Transformer {
         undefined, undefined,this.collider);
       return hit !== null;
     } else {
-      return this.trans.loc.y <= 0;
+      return this.transform.loc.y <= 0;
     }
   }
 
@@ -222,7 +222,7 @@ export class CharacterTransformer2 implements Transformer {
 
     const tmpV1 = new Vec3(this.body.translation());
     tmpV1.sub(this.capsuleCenter);
-    this.trans.loc.set(tmpV1);
-    this.trans.quat.set(this.body.rotation());
+    this.transform.loc.set(tmpV1);
+    this.transform.quat.set(this.body.rotation());
   }
 }

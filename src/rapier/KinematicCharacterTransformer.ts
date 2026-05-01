@@ -5,24 +5,24 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transformer } from '../core/ObjectA3';
 
-export interface CharacterTransOptions {
+export interface KinematicCharacterTransformerOptions {
   offset: number,
   auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
   height: number,
   radius: number
 }
 
-export const defaultCharacterTransOptions = {
+export const defaultKinematicCharacterTransformerOptions = {
   offset: 0.01,
   auto: true,
   height: 1.5,
   radius: 0.3
 };
 
-export class CharacterTransformer implements Transformer {
-  trans: Transform;
+export class KinematicCharacterTransformer implements Transformer {
+  transform: Transform;
   objectA3?: ObjectA3;
-  completeOptions: CharacterTransOptions;
+  completeOptions: KinematicCharacterTransformerOptions;
   controller?: Rapier.KinematicCharacterController;
   colliderDesc?: Rapier.ColliderDesc; // Capsule
   collider?: Rapier.Collider; // Capsule
@@ -31,12 +31,12 @@ export class CharacterTransformer implements Transformer {
   tmpV1: Vec3;
   tmpV2: Vec3;
 
-  constructor(options: Partial<CharacterTransOptions> = {}) {
+  constructor(options: Partial<KinematicCharacterTransformerOptions> = {}) {
     this.completeOptions = {
-      ...defaultCharacterTransOptions,
+      ...defaultKinematicCharacterTransformerOptions,
       ...options
     };
-    this.trans = new Transform();
+    this.transform = new Transform();
     this.capsuleCenter = new Vec3();
     this.nextLocation = new Vec3();
     this.tmpV1 = new Vec3();
@@ -44,22 +44,22 @@ export class CharacterTransformer implements Transformer {
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
-    this.trans.set(trans);
+    this.transform.set(trans);
     if (this.completeOptions.auto) {
       const tmpV = new THREE.Vector3();
       const tmpQ = new THREE.Quaternion();
       const o = new THREE.Object3D();
-      o.add(objectA3.object);
+      o.add(objectA3.object3D);
       { // transformerから持ってこないと
-        objectA3.transformer.trans.loc.write(tmpV);
+        objectA3.transformer.transform.loc.write(tmpV);
         o.position.set(tmpV.x,tmpV.y,tmpV.z);
-        objectA3.transformer.trans.quat.write(tmpQ);
+        objectA3.transformer.transform.quat.write(tmpQ);
         o.quaternion.set(tmpQ.x,tmpQ.y,tmpQ.z,tmpQ.w);
-        objectA3.transformer.trans.scale.write(tmpV);
+        objectA3.transformer.transform.scale.write(tmpV);
         o.scale.set(tmpV.x,tmpV.y,tmpV.z);
       }
       const box = new THREE.Box3().setFromObject(o);
-      o.remove(objectA3.object);
+      o.remove(objectA3.object3D);
       box.getSize(tmpV);
       this.completeOptions.radius = Math.max(tmpV.x, tmpV.z) / 2;
       this.completeOptions.height = tmpV.y - this.completeOptions.radius * 2;
@@ -96,18 +96,18 @@ export class CharacterTransformer implements Transformer {
     }
   }
 
-  setLocation(v: Vec3): void {
+  setPosition(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     this.nextLocation.set(this.tmpV1);
   }
-  setLocationNow(v: Vec3): void {
+  snapPosition(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
     if (this.collider)
       this.collider.setTranslation(v);
-    this.trans.loc.set(v);
+    this.transform.loc.set(v);
     this.nextLocation.set(v);
   }
 
@@ -115,29 +115,29 @@ export class CharacterTransformer implements Transformer {
     // Capluleだし、制限なしとする
     if (this.collider)
       this.collider.setRotation(q);
-    this.trans.quat.set(q);
+    this.transform.quat.set(q);
   }
-  setQuatNow(q: Quat): void {
+  snapQuat(q: Quat): void {
     if (this.collider)
       this.collider.setRotation(q);
-    this.trans.quat.set(q);
+    this.transform.quat.set(q);
   }
 
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  setScaleNow(_: Vec3): void {
+  snapScale(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 
-  setLinvel(_vel: Vec3): void {}
-  getLinvel(v: Vec3 | undefined) { // 適当
+  setLinearVelocity(_vel: Vec3): void {}
+  getLinearVelocity(v: Vec3 | undefined) { // 適当
     if (!v) v = new Vec3();
     v.set(0,0,0);
     return v;
   }
-  setAngvel(_angvel: Vec3): void {}
-  getAngvel(v: Vec3 | undefined) { // 適当
+  setAngularVelocity(_angvel: Vec3): void {}
+  getAngularVelocity(v: Vec3 | undefined) { // 適当
     if (!v) v = new Vec3();
     v.set(0,0,0);
     return v;
@@ -161,7 +161,7 @@ export class CharacterTransformer implements Transformer {
     if (!this.controller || !this.collider)
       return;
 
-    this.trans.quat.set(this.collider.rotation());
+    this.transform.quat.set(this.collider.rotation());
 
     this.tmpV1.set(this.collider.translation());
     this.tmpV2.set(this.nextLocation);
@@ -173,7 +173,7 @@ export class CharacterTransformer implements Transformer {
     this.collider.setTranslation(this.tmpV1);
 
     this.tmpV1.sub(this.capsuleCenter);
-    this.trans.loc.set(this.tmpV1);
+    this.transform.loc.set(this.tmpV1);
     this.nextLocation.set(this.tmpV1);
   }
 }

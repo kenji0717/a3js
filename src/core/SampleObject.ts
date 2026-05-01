@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { Transformer } from './ObjectA3';
-import { Vec3, vec3EulerToQuat } from './LinearMath';
+import { Vec3, eulerToQuaternion } from './LinearMath';
 import { DefaultTransformer } from './Transformers';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { deepMerge } from '../utils/math';
@@ -18,22 +18,22 @@ const labelCSS = `
   pointer-events: none; /* マウスイベントを透過させて背後の操作を邪魔しない */
 `;
 
-export interface TestOptions {
+export interface SampleObjectOptions {
   testMode: boolean;
 }
 
-export const defaultTestOptions: TestOptions = {
+export const defaultSampleObjectOptions: SampleObjectOptions = {
   testMode: true,
 }
 
-export class Test extends ObjectA3 {
-  constructor(options: DeepPartial<TestOptions> = {}) {
+export class SampleObject extends ObjectA3 {
+  constructor(options: DeepPartial<SampleObjectOptions> = {}) {
     super(options);
     const opt = {
-      ...defaultTestOptions,
+      ...defaultSampleObjectOptions,
       ...options
     };
-    this.setTransformer(new TestMotion(opt));
+    this.setTransformer(new SampleObjectMotion(opt));
   }
 
   initObject() {
@@ -49,17 +49,17 @@ export class Test extends ObjectA3 {
     return mesh;
   }
 
-  initTransformer(option: DeepPartial<TestOptions>): Transformer {
-    const opt = deepMerge<TestOptions>(defaultTestOptions,option);
-    return new TestMotion(opt);
+  initTransformer(option: DeepPartial<SampleObjectOptions>): Transformer {
+    const opt = deepMerge<SampleObjectOptions>(defaultSampleObjectOptions,option);
+    return new SampleObjectMotion(opt);
   }
 }
 
-class TestMotion extends DefaultTransformer {
+class SampleObjectMotion extends DefaultTransformer {
   testMode: boolean = true;
   rot: Vec3 = new Vec3();
 
-  constructor(options: TestOptions) {
+  constructor(options: SampleObjectOptions) {
     super();
     this.testMode = options.testMode;
   }
@@ -68,8 +68,8 @@ class TestMotion extends DefaultTransformer {
     super.update(dt);
     if (this.testMode) {
       this.rot.add(dt,dt,dt);
-      const q = vec3EulerToQuat(this.rot);
-      this.trans.quat.set(q);
+      const q = eulerToQuaternion(this.rot);
+      this.transform.quat.set(q);
     }
   }
 }

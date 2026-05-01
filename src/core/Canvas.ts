@@ -3,16 +3,16 @@ import { ObjectA3 } from './ObjectA3';
 import { Scene } from './Scene';
 import { Camera } from './Camera';
 import type { View } from './View';
-import { ViewBase } from './View';
-import { GeneralCamera } from './GeneralCamera';
+import { BaseView } from './View';
+import { ThreeCamera } from './ThreeCamera';
 import type { Controller } from './Controller';
 import { Vec3 } from './LinearMath';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
-import { regenerateGLTFLoader } from './GLTF';
+import { recreateGLTFLoader } from './GLTF';
 
 export interface CanvasOptions {
-  camera: GeneralCamera | undefined;
+  camera: ThreeCamera | undefined;
   antialias: boolean;
   transparent: boolean;
 }
@@ -29,7 +29,7 @@ export const defaultCanvasOptions: CanvasOptions = {
 export class Canvas extends HTMLElement implements View {
   options: CanvasOptions;
   private ro?: ResizeObserver;
-  base: ViewBase;
+  base: BaseView;
   renderer;
   css2DRenderer: CSS2DRenderer;
   scene: Scene;
@@ -71,9 +71,9 @@ export class Canvas extends HTMLElement implements View {
       const camera3js = new THREE.PerspectiveCamera(75, 300/150, 0.01, 1000);
       camera3js.aspect = 300 / 150;
       this.camera3js = camera3js;
-      this.camera = new GeneralCamera(this.camera3js);
+      this.camera = new ThreeCamera(this.camera3js);
     }
-    this.base = new ViewBase(this.camera);
+    this.base = new BaseView(this.camera);
     this.scene = this.base.scene;
     this.camera = this.base.camera;
     this.controller = this.base.controller;
@@ -85,7 +85,7 @@ export class Canvas extends HTMLElement implements View {
       alpha: this.options.transparent
     };
     this.renderer = new THREE.WebGLRenderer(o);
-    regenerateGLTFLoader({renderer: this.renderer});
+    recreateGLTFLoader({renderer: this.renderer});
     this.renderer.setSize(600,300);
     this.shadowRoot!.appendChild(this.renderer.domElement);
     this._canvas = this.shadowRoot!.querySelector('canvas')!;
@@ -219,7 +219,7 @@ export class Canvas extends HTMLElement implements View {
   // イベントを発生させられる。addEventListener()とか、
   // 自分で作らなくてOK。
   myMouseClickedListener = async (e: any) => {
-    if (this.camera instanceof GeneralCamera) {
+    if (this.camera instanceof ThreeCamera) {
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       const rect = e.target.getBoundingClientRect();

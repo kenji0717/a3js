@@ -6,10 +6,10 @@ import type { PhysicsWorld } from './Physics';
 import { Scene } from './Scene';
 
 export class Action {
-  shape: Shape;
+  shape: Figure;
   motion: Motion;
 
-  constructor(shape: Shape, motion: Motion) {
+  constructor(shape: Figure, motion: Motion) {
     this.shape = shape;
     this.motion = motion;
   }
@@ -25,7 +25,7 @@ export class Action {
   }
 }
 
-export interface Shape {
+export interface Figure {
   root: THREE.Object3D;
   bones?: Record<string,THREE.Object3D>;
   skeleton?: THREE.Skeleton;
@@ -47,13 +47,13 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   stateAction?: Action;
   emoteAction?: Action;
   morphs: Record<string, {array: Array<number>, idx: number}>;
-  morphsOverwrite: boolean;
+  overwriteMorphs: boolean;
 
   constructor(data?: any) {
     super(data);
     this.actions = {};
     this.morphs = {};
-    this.morphsOverwrite = false;
+    this.overwriteMorphs = false;
     this.ready = this.asyncInit(data);
   }
 
@@ -80,9 +80,9 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.actions = actions;
     this.stateAction = this.actions[defaultName];
     this.currentAction = this.stateAction;
-    this.object.clear();
+    this.object3D.clear();
     this.morphs = morphs;
-    this.stateAction?.enable(this.object, this.scene);
+    this.stateAction?.enable(this.object3D, this.scene);
   }
 
   /**
@@ -134,8 +134,8 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     const a = this.actions[name];
     if (a) {
       if (this.currentAction)
-        this.currentAction.disable(this.object,this.scene);
-      a.enable(this.object, this.scene);
+        this.currentAction.disable(this.object3D,this.scene);
+      a.enable(this.object3D, this.scene);
 
       this.currentAction = a;
       this.stateAction = a;
@@ -146,8 +146,8 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     const a = this.actions[name];
     if (a) {
       if (this.currentAction)
-        this.currentAction.disable(this.object, this.scene);
-      a.enable(this.object, this.scene);
+        this.currentAction.disable(this.object3D, this.scene);
+      a.enable(this.object3D, this.scene);
       this.currentAction = a;
       this.emoteAction = a;
     }
@@ -156,10 +156,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   // 今のところ、こんな感じでにげる。AnimationMixerを
   // 完全に真似するまでは時間がかかりそう。
   setMorphsOverwrite(b: boolean) {
-    this.morphsOverwrite = b;
+    this.overwriteMorphs = b;
   }
 
-  morph(name: string, value: number) {
+  setMorph(name: string, value: number) {
     if (name in this.morphs) {
       const { array, idx } = this.morphs[name];
       array[idx] = value;
@@ -179,12 +179,12 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
       if (this.emoteAction.motion.playCount>0) {
         // emoteAction再生終了で切り替え
         // まずはemoteActionの停止
-        this.emoteAction.disable(this.object, this.scene);
+        this.emoteAction.disable(this.object3D, this.scene);
         // emoteActionはundefinedに
         this.emoteAction = undefined;
         // stateActionがあれば開始
         if (this.stateAction) {
-          this.stateAction.enable(this.object, this.scene);
+          this.stateAction.enable(this.object3D, this.scene);
           this.currentAction = this.stateAction;
         }
       }
@@ -202,7 +202,7 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
         }
         // モーフィング対応。無いと動かないglTFもある。
         // モーフィングのデータの保存のしかた失敗してる説ある。GAHA
-        if (!this.morphsOverwrite) {
+        if (!this.overwriteMorphs) {
           if (data.morphs) {
             for (const pMorph of data.morphs) {
               for (const myMName of Object.keys(this.morphs)) {
@@ -219,7 +219,7 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
         }
       }
     }
-    this.object.updateMatrixWorld(true); // 必要なのか？
+    this.object3D.updateMatrixWorld(true); // 必要なのか？
     if (this.currentAction)
       this.currentAction.shape.skeleton?.update(); // 必要なのか？
   }

@@ -1,35 +1,35 @@
 import { ObjectA3 } from './ObjectA3';
 import type { View } from './View';
-import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
+import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
 import { tmp } from '../utils/math';
 
 /**
  * キーやマウスなどの様々なイベントを受け取り
  * ナビゲーションなどを行うコントローラのインターフェース。
- * 
+ *
  * a3.Windowやa3.Canvasなどのa3.Viewにセットして使う。
  * a3.Viewの方で発生した色々なイベントを受け取ることが
  * 可能でそれに応答して様々な処理を行わせるための基盤。
- * 
+ *
  * update()メソッド内のプログラムでは様々な処理を書いて
  * 良いのだが、カメラの位置、回転、拡大縮小をする
  * 時には注意が必要。例えばカメラの位置を変更する
  * 場合はthis.view.camera.object.position.set()や
- * this.view.camera.setLocation()ではなく、
- * this.view.camera.transformer.setLocation()を
- * 
+ * this.view.camera.setPosition()ではなく、
+ * this.view.camera.transformer.setPosition()を
+ *
  * このControllerインタフェースのupdate()以外の
  * メソッドでは基本的に外部に影響を及ぼす処理は
  * 書かないようにしておき、update()の中で外部に
  * 影響を及ぼすプログラムを書くようにして下さい。
  * 特に、位置、回転、拡大縮小をセットするメソッド
  * (例: setCameraLoc)があるが、これはCameraの
- * インタンスのメソッド(例:camera.setLocation())
+ * インタンスのメソッド(例:camera.setPosition())
  * から呼び出される。このメソッド内ではtransformer
  * 同様に、直接カメラに操作を加えてはならず、
  * 一旦このController内の情報として要求を
  * 保存しておき、update()メソッドが呼ばれた時に、
- * this.view.camera.transformer.setLocation()など
+ * this.view.camera.transformer.setPosition()など
  * で反映させる必要がある。(GAHA: もう少しわかり
  * やすい仕様に改善したいけど・・・)
  */
@@ -69,19 +69,19 @@ export interface Controller {
   * カメラの方から呼び出されるsetCameraLocation()など
   * に対して自然に応答するだけの処理。
   */
-export class ControllerBase implements Controller {
+export class BaseController implements Controller {
   view?: View;
-  trans: Transform;
+  transform: Transform;
 
   constructor() {
-    this.trans = new Transform();
+    this.transform = new Transform();
   }
   setView(view: View) { this.view = view; }
   update(_dt: number): void {
     if (!this.view) return;
-    this.view.camera.transformer.setLocation(this.trans.loc);
-    this.view.camera.transformer.setQuat(this.trans.quat);
-    this.view.camera.transformer.setScale(this.trans.scale);
+    this.view.camera.transformer.setPosition(this.transform.loc);
+    this.view.camera.transformer.setQuat(this.transform.quat);
+    this.view.camera.transformer.setScale(this.transform.scale);
   }
   activate(): void {}
   deactivate(): void {}
@@ -99,12 +99,12 @@ export class ControllerBase implements Controller {
   touchEnd(_event: TouchEvent): void {}
   touchMove(_event: TouchEvent): void {}
   touchCancel(_event: TouchEvent): void {}
-  setCameraLocation(loc: Vec3): void {this.trans.loc.set(loc);}
-  setCameraLocationNow(loc: Vec3): void {this.trans.loc.set(loc);}
-  setCameraQuat(quat: Quat): void {this.trans.quat.set(quat);}
-  setCameraQuatNow(quat: Quat): void {this.trans.quat.set(quat);}
-  setCameraScale(scale: Vec3): void {this.trans.scale.set(scale);}
-  setCameraScaleNow(scale: Vec3): void {this.trans.scale.set(scale);}
+  setCameraLocation(loc: Vec3): void {this.transform.loc.set(loc);}
+  setCameraLocationNow(loc: Vec3): void {this.transform.loc.set(loc);}
+  setCameraQuat(quat: Quat): void {this.transform.quat.set(quat);}
+  setCameraQuatNow(quat: Quat): void {this.transform.quat.set(quat);}
+  setCameraScale(scale: Vec3): void {this.transform.scale.set(scale);}
+  setCameraScaleNow(scale: Vec3): void {this.transform.scale.set(scale);}
 }
 
 /**
@@ -112,10 +112,10 @@ export class ControllerBase implements Controller {
   * Ctrl || Shift || Metaキーを押してマウスドラッグすると、
   * 平行移動も可能。
   */
-export class OrbitController extends ControllerBase {
-  preMouse: {x:number,y:number};
-  leftClick: boolean = false;
-  rightClick: boolean = false;
+export class OrbitController extends BaseController {
+  lastMousePosition: {x:number,y:number};
+  isLeftDown: boolean = false;
+  isRightDown: boolean = false;
   target: Vec3;
   cameraLoc: Vec3 = new Vec3(0,0,3);
   cameraQuat: Quat = new Quat(0,0,0,1);
@@ -124,7 +124,7 @@ export class OrbitController extends ControllerBase {
   constructor(tx: number, ty: number, tz: number);
   constructor(xOrV: number | Vec3, y?: number, z?: number) {
     super();
-    this.preMouse = {x:0,y:0};
+    this.lastMousePosition = {x:0,y:0};
     if (typeof xOrV === "number") {
       this.target = new Vec3(xOrV,y!,z!);
     } else {
@@ -134,27 +134,27 @@ export class OrbitController extends ControllerBase {
 
   update(_dt: number): void {
     if (!this.view) return;
-    this.view.camera.transformer.setLocation(this.cameraLoc);
+    this.view.camera.transformer.setPosition(this.cameraLoc);
     this.view.camera.transformer.setQuat(this.cameraQuat);
   }
 
   mouseDown(e: MouseEvent): void {
     if (e.button === 0) {
-      this.leftClick = true;
-      this.preMouse.x = e.clientX;
-      this.preMouse.y = e.clientY;
+      this.isLeftDown = true;
+      this.lastMousePosition.x = e.clientX;
+      this.lastMousePosition.y = e.clientY;
     } else if (e.button === 2) {
-      this.rightClick = true;
-      this.preMouse.x = e.clientX;
-      this.preMouse.y = e.clientY;
+      this.isRightDown = true;
+      this.lastMousePosition.x = e.clientX;
+      this.lastMousePosition.y = e.clientY;
     }
   }
   mouseMove(e: MouseEvent): void {
     if (!this.view) return;
-    if (this.leftClick && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    if (this.isLeftDown && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       const epsilon = 0.01;
-      const dx = epsilon*(e.clientX - this.preMouse.x);
-      const dy = epsilon*(e.clientY - this.preMouse.y);
+      const dx = epsilon*(e.clientX - this.lastMousePosition.x);
+      const dy = epsilon*(e.clientY - this.lastMousePosition.y);
       const sinX = Math.sin(-dx); const cosX = Math.cos(-dx);
       const sinY = Math.sin(-dy); const cosY = Math.cos(-dy);
       const vecX = new Vec3(1,0,0).apply(this.cameraQuat);
@@ -167,33 +167,33 @@ export class OrbitController extends ControllerBase {
       newCameraLoc.apply(quatY);
       newCameraLoc.add(this.target);
       this.cameraLoc.set(newCameraLoc);
-      const newCameraQuat = getQuatOfLookAt(this.cameraLoc,this.target,new Vec3(0,1,0));
+      const newCameraQuat = getLookAtQuaternion(this.cameraLoc,this.target,new Vec3(0,1,0));
       newCameraQuat.mul(new Quat(0,1,0,0)); // カメラは-Zが前なのでY軸まわりに180度回転！
       this.cameraQuat.set(newCameraQuat);
-      this.preMouse.x = e.clientX;
-      this.preMouse.y = e.clientY;
-    } else if (this.leftClick) {
+      this.lastMousePosition.x = e.clientX;
+      this.lastMousePosition.y = e.clientY;
+    } else if (this.isLeftDown) {
       tmp.v0.set(this.target);
       tmp.v0.sub(this.cameraLoc);
       const dist = tmp.v0.length();
       const epsilon = 0.005*dist;
-      const dx = epsilon*(e.clientX - this.preMouse.x);
-      const dy = epsilon*(e.clientY - this.preMouse.y);
+      const dx = epsilon*(e.clientX - this.lastMousePosition.x);
+      const dy = epsilon*(e.clientY - this.lastMousePosition.y);
       const left = new Vec3(1,0,0).apply(this.cameraQuat).scale(-dx);
       const up = new Vec3(0,1,0).apply(this.cameraQuat).scale(dy);
       this.cameraLoc.add(left);
       this.cameraLoc.add(up);
       this.target.add(left);
       this.target.add(up);
-      this.preMouse.x = e.clientX;
-      this.preMouse.y = e.clientY;
+      this.lastMousePosition.x = e.clientX;
+      this.lastMousePosition.y = e.clientY;
     }
   }
   mouseUp(e: MouseEvent): void {
     if (e.button === 0) {
-      this.leftClick = false;
+      this.isLeftDown = false;
     } else if (e.button === 2) {
-      this.rightClick = false;
+      this.isRightDown = false;
     }
   }
   mouseWheel(e: WheelEvent): void {
@@ -210,7 +210,7 @@ export class OrbitController extends ControllerBase {
 console.log(`GAHA: touchStart()`,event);
     const loc = new Vec3(this.view.camera.location);
     loc.add(new Vec3(0.1,0,0));
-    this.view.camera.setLocation(loc);
+    this.view.camera.setPosition(loc);
   }
 */
   setCameraLocation(loc: Vec3): void {
@@ -236,12 +236,12 @@ console.log(`GAHA: touchStart()`,event);
   }
 }
 
-export interface ACOptions {
+export interface AvatarPositionControllerOptions {
   speed: number;
   angSpeed: number;
 }
 
-export const defaultACOptions: ACOptions = {
+export const defaultAvatarPositionControllerOptions: AvatarPositionControllerOptions = {
   speed: 0.1,
   angSpeed: 0.01
 };
@@ -249,15 +249,15 @@ export const defaultACOptions: ACOptions = {
 /**
   * コンストラクタで指定されているアバターをキーボードで
   * コントロールするコントローラ。こちらはRAPIERのCharacter
-  * controllerとavatar.transformer.Location()でコントロールする方。
+  * controllerとavatar.transformer.setPosition()でコントロールする方。
   * 地面判定が性格で安定性が高いけれど、まわりのRigidBodyから
   * 押されたり押したりできない。
   *
-  * RigidBodyとavatar.transformer.setLinvel()でコントロールする方は
-  * AvatarController2。
+  * RigidBodyとavatar.transformer.setLinearVelocity()でコントロールする方は
+  * AvatarVelocityController。
   */
-export class AvatarController extends ControllerBase {
-  options: ACOptions;
+export class AvatarPositionController extends BaseController {
+  options: AvatarPositionControllerOptions;
   private _avatar: ObjectA3;
   private _keyW: boolean;
   private _keyA: boolean;
@@ -270,10 +270,10 @@ export class AvatarController extends ControllerBase {
   private _avatarNextQuat: Quat;
   private _velY: number;
 
-  constructor(avatar: ObjectA3, options: Partial<ACOptions>) {
+  constructor(avatar: ObjectA3, options: Partial<AvatarPositionControllerOptions>) {
     super();
     this.options = {
-      ...defaultACOptions,
+      ...defaultAvatarPositionControllerOptions,
       ...options
     };
     this._avatar = avatar;
@@ -325,11 +325,9 @@ export class AvatarController extends ControllerBase {
       if (this._keySpace) this._velY = 0.5;
     }
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
-    if (this._keyLeft) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,this.options.angSpeed,0)));
-    if (this._keyRight) this._avatarNextQuat.mul(vec3EulerToQuat(new Vec3(0,-this.options.angSpeed,0)));
-    //avatar.setLocation(this._avatarNextLoc);
-    //avatar.setQuat(this._avatarNextQuat);
-    avatar.transformer.setLocation(this._avatarNextLoc);
+    if (this._keyLeft) this._avatarNextQuat.mul(eulerToQuaternion(new Vec3(0,this.options.angSpeed,0)));
+    if (this._keyRight) this._avatarNextQuat.mul(eulerToQuaternion(new Vec3(0,-this.options.angSpeed,0)));
+    avatar.transformer.setPosition(this._avatarNextLoc);
     avatar.transformer.setQuat(this._avatarNextQuat);
   }
 
@@ -339,13 +337,13 @@ export class AvatarController extends ControllerBase {
   //setCameraQuatNow(quat: Quat): void {}
 }
 
-export interface AC2Options {
+export interface AvatarVelocityControllerOptions {
   speed: number;
   angSpeed: number;
   jumpSpeed: number;
 }
 
-export const defaultAC2Options: AC2Options = {
+export const defaultAvatarVelocityControllerOptions: AvatarVelocityControllerOptions = {
   speed: 5.0,
   angSpeed: 0.3,
   jumpSpeed: 15.0
@@ -354,15 +352,15 @@ export const defaultAC2Options: AC2Options = {
 /**
   * コンストラクタで指定されているアバターをキーボードで
   * コントロールするコントローラ。こちらはRigidBodyと
-  * avatar.transformer.setLinvel()でコントロールする方。
+  * avatar.transformer.setLinearVelocity()でコントロールする方。
   * 地面判定が不正確だけど、まわりのRigidBodyから押されたり、
   * 押したりできる。
-  * 
-  * RAPIERのCharacter controllerとavatar.transformer.Location()で
-  * コントロールする方はAvatarController。
+  *
+  * RAPIERのCharacter controllerとavatar.transformer.setPosition()で
+  * コントロールする方はAvatarPositionController。
   */
-export class AvatarController2 extends ControllerBase {
-  options: AC2Options;
+export class AvatarVelocityController extends BaseController {
+  options: AvatarVelocityControllerOptions;
   private _avatar: ObjectA3;
   private _keyW: boolean;
   private _keyA: boolean;
@@ -375,10 +373,10 @@ export class AvatarController2 extends ControllerBase {
   private _avatarNextAngVel: Vec3;
   private _velY: number;
 
-  constructor(avatar: ObjectA3, options: Partial<AC2Options>) {
+  constructor(avatar: ObjectA3, options: Partial<AvatarVelocityControllerOptions>) {
     super();
     this.options = {
-      ...defaultAC2Options,
+      ...defaultAvatarVelocityControllerOptions,
       ...options
     };
     this._avatar = avatar;
@@ -433,10 +431,8 @@ export class AvatarController2 extends ControllerBase {
 
     if (this._keyLeft) this._avatarNextAngVel.add(new Vec3(0,this.options.angSpeed,0));
     if (this._keyRight) this._avatarNextAngVel.add(new Vec3(0,-this.options.angSpeed,0));
-    //avatar.setLinvel(this._avatarNextVel);
-    //avatar.setAngvel(this._avatarNextAngVel);
-    avatar.transformer.setLinvel(this._avatarNextVel);
-    avatar.transformer.setAngvel(this._avatarNextAngVel);
+    avatar.transformer.setLinearVelocity(this._avatarNextVel);
+    avatar.transformer.setAngularVelocity(this._avatarNextAngVel);
   }
 
   //setCameraLocation(loc: Vec3): void {}
@@ -444,4 +440,3 @@ export class AvatarController2 extends ControllerBase {
   //setCameraQuat(quat: Quat): void {}
   //setCameraQuatNow(quat: Quat): void {}
 }
-

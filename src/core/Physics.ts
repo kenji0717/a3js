@@ -53,16 +53,16 @@ export interface PhysicsWorld {
 }
 
 export type RigidBodyType = "dynamic" | "kinematic" | "fixed";
-export type ColliderKind = "solid" | "sensor";
-export type MeshColliderKind = "tri_mesh" | "convex_hull";
+export type ColliderType = "solid" | "sensor";
+export type MeshColliderType = "tri_mesh" | "convex_hull";
 /**
  * PhysicsMotionを生成する時に必要な情報をまとめたもの。
  * 現在はRapierの実装に合わせた物になってしまっている。
  */
 export interface PhysicsMotionOptions {
   rigidBody: RigidBodyType;
-  collider: ColliderKind;
-  meshCollider: MeshColliderKind;
+  collider: ColliderType;
+  meshCollider: MeshColliderType;
   mass: number;
   friction: number;
   restitution: number;

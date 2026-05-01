@@ -1,13 +1,13 @@
 
 import * as THREE from 'three';
 import type { Scene } from './Scene'; // ここをtypeにしないと循環参照になる。
-import { DefaultTransformer, InterpolationTransformer,
-         BillboardTransformer, InterpolationBillboardTransformer,
+import { DefaultTransformer, SmoothTransformer,
+         BillboardTransformer, SmoothBillboardTransformer,
        } from './Transformers';
 import { defaultPhysicsMotionOptions } from './Physics';
 import type { PhysicsMotionOptions, PhysicsWorld } from './Physics';
 import { RapierTransformer } from '../rapier/RapierPhysics';
-import { Vec3, Quat, Transform, getQuatOfLookAt, vec3EulerToQuat } from './LinearMath';
+import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
 
@@ -31,9 +31,9 @@ export type Dir =
  */
 export type TransformMode =
   | "Default"
-  | "Interpolation"
+  | "Smooth"
   | "Billboard"
-  | "InterpolationBillboard"
+  | "SmoothBillboard"
   | "SimplePhysics";
 
 const geo = new THREE.SphereGeometry();
@@ -58,7 +58,7 @@ export class ObjectA3 {
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
   rotationOrder?: RotationOrder;
   upVector?: Vec3;
-  object: THREE.Object3D;
+  object3D: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
   transformer: Transformer;
@@ -68,11 +68,11 @@ export class ObjectA3 {
 
   constructor(data?: any) {
     this.transformer = this.initTransformer(data);
-    this.object = new THREE.Object3D();
+    this.object3D = new THREE.Object3D();
     const r = this.initObject(data);
     if (r)
-      this.object.add(r);
-    this.object.traverse((o)=>{
+      this.object3D.add(r);
+    this.object3D.traverse((o)=>{
       o.userData['a3js'] = { objectA3: this };
     });
   }
@@ -102,7 +102,7 @@ export class ObjectA3 {
    * @param transformer 新しいTransformer
    */
   setTransformer(transformer: Transformer): void {
-    tmp.t0.set(this.transformer.trans);
+    tmp.t0.set(this.transformer.transform);
     transformer.init(tmp.t0, this);
     this.transformer = transformer;
   }
@@ -118,12 +118,12 @@ export class ObjectA3 {
   setTransformMode(mode: TransformMode,options?: any) {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
-    else if (mode === "Interpolation")
-      this.setTransformer(new InterpolationTransformer());
+    else if (mode === "Smooth")
+      this.setTransformer(new SmoothTransformer());
     else if (mode === "Billboard")
       this.setTransformer(new BillboardTransformer(options));
-    else if (mode === "InterpolationBillboard")
-      this.setTransformer(new InterpolationBillboardTransformer(options));
+    else if (mode === "SmoothBillboard")
+      this.setTransformer(new SmoothBillboardTransformer(options));
     else if (mode === "SimplePhysics") {
       const opt = {
         ...defaultPhysicsMotionOptions,
@@ -148,7 +148,7 @@ export class ObjectA3 {
 //console.log(`GAHA:g `,(this.transformer instanceof DefaultTransformer));
     //TransformMosionを反映
     this.transformer.update(dt);
-    this.transformer.trans.write(this);
+    this.transformer.transform.write(this);
     this.children.forEach((child)=>{
       child.update(dt);
     });
@@ -160,7 +160,7 @@ export class ObjectA3 {
     // if (this.children.includes(obj)) return; // ちゃんと管理されてれば必要ない
     this.children.push(obj);
     obj.parent = this;
-    this.object.add(obj.object);
+    this.object3D.add(obj.object3D);
   }
 
   remove(obj: ObjectA3) {
@@ -169,10 +169,10 @@ export class ObjectA3 {
     const idx = this.children.indexOf(obj);
     this.children.splice(idx,1);
     obj.parent = undefined;
-    this.object.remove(obj.object);
+    this.object3D.remove(obj.object3D);
   }
 
-  setBalloon(message: string) {
+  setSpeechBubble(message: string) {
     if (!this.balloon)
       this.balloon = new BalloonInfo(message);
     else
@@ -204,34 +204,34 @@ export class ObjectA3 {
       await this.clickListener(this);
   }
 
-  get trans(): Transform {
-    return this.transformer.trans.clone();
+  get transform(): Transform {
+    return this.transformer.transform.clone();
   }
 
-  get loc(): Vec3 { return this.trans.loc; }
-  setLocation(x: number, y: number, z: number): void;
-  setLocation(v: Vec3): void;
-  setLocation(xOrV: number | Vec3, y?: number, z?: number): void {
+  get position(): Vec3 { return this.transform.loc; }
+  setPosition(x: number, y: number, z: number): void;
+  setPosition(v: Vec3): void;
+  setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.setLocation(tmp.v0);
+    this.transformer.setPosition(tmp.v0);
   }
 
-  setLocationNow(x: number, y: number, z: number): void;
-  setLocationNow(v: Vec3): void;
-  setLocationNow(xOrV: number | Vec3, y?: number, z?: number): void {
+  snapPosition(x: number, y: number, z: number): void;
+  snapPosition(v: Vec3): void;
+  snapPosition(xOrV: number | Vec3, y?: number, z?: number): void {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.setLocationNow(tmp.v0);
+    this.transformer.snapPosition(tmp.v0);
   }
 
-  get quat(): Quat { return this.trans.quat; }
+  get quat(): Quat { return this.transform.quat; }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -243,18 +243,18 @@ export class ObjectA3 {
     this.transformer.setQuat(tmp.q0);
   }
 
-  setQuatNow(x: number, y: number, z: number, w: number): void;
-  setQuatNow(q: Quat): void;
-  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+  snapQuat(x: number, y: number, z: number, w: number): void;
+  snapQuat(q: Quat): void;
+  snapQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     if (typeof xOrQ === "number") {
       tmp.q0.set(xOrQ, y!, z!, w!);
     } else {
       tmp.q0.set(xOrQ);
     }
-    this.transformer.setQuatNow(tmp.q0);
+    this.transformer.snapQuat(tmp.q0);
   }
 
-  get scale(): Vec3 { return this.trans.scale; }
+  get scale(): Vec3 { return this.transform.scale; }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -266,15 +266,15 @@ export class ObjectA3 {
     this.transformer.setScale(tmp.v0);
   }
 
-  setScaleNow(x: number, y: number, z: number): void;
-  setScaleNow(v: Vec3): void;
-  setScaleNow(xOrV: number | Vec3, y?: number, z?: number): void {
+  snapScale(x: number, y: number, z: number): void;
+  snapScale(v: Vec3): void;
+  snapScale(xOrV: number | Vec3, y?: number, z?: number): void {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.setScaleNow(tmp.v0);
+    this.transformer.snapScale(tmp.v0);
   }
 
   /**
@@ -293,7 +293,7 @@ export class ObjectA3 {
       rot.set(xOrV);
     rot.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = vec3EulerToQuat(rot,order);
+    const quat = eulerToQuaternion(rot,order);
     this.setQuat(quat);
   }
 
@@ -321,7 +321,7 @@ export class ObjectA3 {
           break;
       }
     }
-    this.setQuatNow(quat);
+    this.snapQuat(quat);
   }
 
   lookAt(x: number, y: number, z: number): void;
@@ -332,12 +332,12 @@ export class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.loc);
+      target.set(xVO.position);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.loc,target,up);
+    const newQuat = getLookAtQuaternion(this.position,target,up);
     this.setQuat(newQuat);
   }
 
@@ -349,50 +349,50 @@ export class ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.loc);
+      target.set(xVO.position);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getQuatOfLookAt(this.loc,target,up);
-    this.setQuatNow(newQuat);
+    const newQuat = getLookAtQuaternion(this.position,target,up);
+    this.snapQuat(newQuat);
   }
 
   getUnitVecX(): Vec3 {
     const vecX = new Vec3(1,0,0);
-    return vecX.apply(this.object.quaternion);
+    return vecX.apply(this.object3D.quaternion);
   }
   getUnitVecY(): Vec3 {
     const vecY = new Vec3(0,1,0);
-    return vecY.apply(this.object.quaternion);
+    return vecY.apply(this.object3D.quaternion);
   }
   getUnitVecZ(): Vec3 {
     const vecZ = new Vec3(0,0,1);
-    return vecZ.apply(this.object.quaternion);
+    return vecZ.apply(this.object3D.quaternion);
   }
 
-  addLocation(v: Vec3): void;
-  addLocation(x: number, y: number, z: number): void;
-  addLocation(xOrV: number | Vec3, y?: number, z?: number) {
+  translate(v: Vec3): void;
+  translate(x: number, y: number, z: number): void;
+  translate(xOrV: number | Vec3, y?: number, z?: number) {
     const tmpV = new Vec3();
-    tmpV.set(this.loc);
+    tmpV.set(this.position);
     if (typeof xOrV === 'number')
       tmpV.add(xOrV,y!,z!);
     else
       tmpV.add(xOrV);
-    this.setLocation(tmpV);
+    this.setPosition(tmpV);
   }
 
   addLocationNow(v: Vec3): void;
   addLocationNow(x: number, y: number, z: number): void;
   addLocationNow(xOrV: number | Vec3, y?: number, z?: number) {
     const tmpV = new Vec3();
-    tmpV.set(this.loc);
+    tmpV.set(this.position);
     if (typeof xOrV === 'number')
       tmpV.add(xOrV,y!,z!);
     else
       tmpV.add(xOrV);
-    this.setLocationNow(tmpV);
+    this.snapPosition(tmpV);
   }
 
   mulQuat(q: Quat): void;
@@ -416,7 +416,7 @@ export class ObjectA3 {
       tmpQ.mul(xOrQ,y!,z!,w!);
     else
       tmpQ.mul(xOrQ);
-    this.setQuatNow(tmpQ);
+    this.snapQuat(tmpQ);
   }
 
   mulRotation(v: Vec3): void;
@@ -428,7 +428,7 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = vec3EulerToQuat(tmp.v0,order);
+    const quat = eulerToQuaternion(tmp.v0,order);
     tmp.q0.set(this.quat);
     tmp.q0.mul(quat);
     this.setQuat(tmp.q0);
@@ -443,15 +443,15 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = vec3EulerToQuat(tmp.v0,order);
+    const quat = eulerToQuaternion(tmp.v0,order);
     tmp.q0.set(this.quat);
     tmp.q0.mul(quat);
-    this.setQuatNow(tmp.q0);
+    this.snapQuat(tmp.q0);
   }
 
-  mulScale(v: Vec3): void;
-  mulScale(x: number, y: number, z: number): void;
-  mulScale(xOrV: number | Vec3, y?: number, z?: number) {
+  scaleBy(v: Vec3): void;
+  scaleBy(x: number, y: number, z: number): void;
+  scaleBy(xOrV: number | Vec3, y?: number, z?: number) {
     tmp.v0.set(this.scale);
     if (typeof xOrV === 'number')
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
@@ -468,13 +468,13 @@ export class ObjectA3 {
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else
       tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
-    this.setScaleNow(tmp.v0);
+    this.snapScale(tmp.v0);
   }
 
   moveForward(f: number) {
     tmp.v0.set(this.getUnitVecZ());
     tmp.v0.scale(f);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveForwardNow(f: number) {
@@ -486,7 +486,7 @@ export class ObjectA3 {
   moveBackward(b: number) {
     tmp.v0.set(this.getUnitVecZ());
     tmp.v0.scale(-b);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveBackwardNow(b: number) {
@@ -498,7 +498,7 @@ export class ObjectA3 {
   moveRight(r: number) {
     tmp.v0.set(this.getUnitVecX());
     tmp.v0.scale(-r);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveRightNow(r: number) {
@@ -510,7 +510,7 @@ export class ObjectA3 {
   moveLeft(l: number) {
     tmp.v0.set(this.getUnitVecX());
     tmp.v0.scale(l);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveLeftNow(l: number) {
@@ -522,7 +522,7 @@ export class ObjectA3 {
   moveUp(u: number) {
     tmp.v0.set(this.getUnitVecY());
     tmp.v0.scale(u);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveUpNow(u: number) {
@@ -534,7 +534,7 @@ export class ObjectA3 {
   moveDown(d: number) {
     tmp.v0.set(this.getUnitVecY());
     tmp.v0.scale(-d);
-    this.addLocation(tmp.v0);
+    this.translate(tmp.v0);
   }
 
   moveDownNow(d: number) {
@@ -591,32 +591,32 @@ export class ObjectA3 {
     this.mulRotationNow(0,0,-l);
   }
 
-  setLinvel(v: Vec3): void;
-  setLinvel(x: number, y: number, z: number): void;
-  setLinvel(xOrV: number | Vec3, y?: number, z?: number) {
+  setLinearVelocity(v: Vec3): void;
+  setLinearVelocity(x: number, y: number, z: number): void;
+  setLinearVelocity(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.setLinvel(tmp.v0);
+    this.transformer.setLinearVelocity(tmp.v0);
   }
-  getLinvel(v: Vec3 | undefined): Vec3 {
-    return this.transformer.getLinvel(v);
+  getLinearVelocity(v: Vec3 | undefined): Vec3 {
+    return this.transformer.getLinearVelocity(v);
   }
 
-  setAngvel(v: Vec3): void;
-  setAngvel(x: number, y: number, z: number): void;
-  setAngvel(xOrV: number | Vec3, y?: number, z?: number) {
+  setAngularVelocity(v: Vec3): void;
+  setAngularVelocity(x: number, y: number, z: number): void;
+  setAngularVelocity(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.setAngvel(tmp.v0);
+    this.transformer.setAngularVelocity(tmp.v0);
   }
-  getAngvel(v: Vec3 | undefined): Vec3 {
-    return this.transformer.getAngvel(v);
+  getAngularVelocity(v: Vec3 | undefined): Vec3 {
+    return this.transformer.getAngularVelocity(v);
   }
 
   resetForce(): void {
@@ -782,7 +782,7 @@ export interface Transformer {
    * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
    * ならない。
    */
-  trans: Transform;
+  transform: Transform;
 
   /**
    * このTransformerの動作に必要な初期化処理を実装する
@@ -830,7 +830,7 @@ export interface Transformer {
    * メソッドに書く。
    * @param loc 指定場所
    */
-  setLocation(loc: Vec3): void;
+  setPosition(loc: Vec3): void;
 
   /**
    * 指定の場所に直ちに移動せよとの外部からの要求を受け付ける
@@ -838,7 +838,7 @@ export interface Transformer {
    * メソッドに書く。
    * @param loc 指定場所
    */
-  setLocationNow(loc: Vec3): void;
+  snapPosition(loc: Vec3): void;
 
   /**
    * 指定の角度に回転せよとの外部からの要求を受け付ける
@@ -854,7 +854,7 @@ export interface Transformer {
    * メソッドに書く。
    * @param quat 指定の回転
    */
-  setQuatNow(quat: Quat): void;
+  snapQuat(quat: Quat): void;
 
   /**
    * 指定の大きさ(拡大・縮小率)に変形せよとの外部からの要求を
@@ -870,14 +870,14 @@ export interface Transformer {
    * update()メソッドに書く。
    * @param scale 指定の大きさ
    */
-  setScaleNow(scale: Vec3): void;
+  snapScale(scale: Vec3): void;
 
   /**
    * 速度を設定する。物理系のTransformerのみ対応すれば
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param vel 速度。
    */
-  setLinvel(vel: Vec3): void;
+  setLinearVelocity(vel: Vec3): void;
 
   /**
    * 速度を得る。物理系のTransformerのみ対応すれば
@@ -886,7 +886,7 @@ export interface Transformer {
    * @param v 値を受け取るためのVec3、またはundefined。
    * @return 速度。
    */
-  getLinvel(v: Vec3 | undefined): Vec3;
+  getLinearVelocity(v: Vec3 | undefined): Vec3;
 
   /**
    * 角速度を設定する。単位はラジアン/秒。
@@ -894,7 +894,7 @@ export interface Transformer {
    * 良い物で、それ以外の場合はメソッドの実装は空で良い。
    * @param angvel 角速度
    */
-  setAngvel(angvel: Vec3): void;
+  setAngularVelocity(angvel: Vec3): void;
 
   /**
    * 角速度を得る。物理系のTransformerのみ対応すれば
@@ -903,7 +903,7 @@ export interface Transformer {
    * @param v 値を受け取るためのVec3、またはundefined。
    * @return 角速度。
    */
-  getAngvel(v: Vec3 | undefined): Vec3;
+  getAngularVelocity(v: Vec3 | undefined): Vec3;
 
   /**
    * addForceで加えられた力をリセットする。
