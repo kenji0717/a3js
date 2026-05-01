@@ -35,9 +35,9 @@
 | 変更前 | 変更後 |
 |--------|--------|
 | `setLocation(...)` | `setPosition(...)` |
-| `setLocationNow(...)` | `snapPosition(...)` |
-| `setQuatNow(...)` | `snapQuat(...)` |
-| `setScaleNow(...)` | `snapScale(...)` |
+| `setLocationNow(...)` | `setPositionNow(...)` |
+| `setQuatNow(...)` | `setQuatNow(...)` |
+| `setScaleNow(...)` | `setScaleNow(...)` |
 
 ※ `setQuat(...)` はそのまま変更しない。
 
@@ -162,3 +162,15 @@ defaultCharacterTrans2Options → 変更しない？
 
 
 １．のTransformModeの文字列地については提案してもらった通りの変更をしてください。２．はファイル名もクラス名同様に変更をお願いします。３．については後で検討しようと思っていたいので、今は変更しないでください。４．についてはピックアップしてもらった３つについて他の変更に合わせて理ネームしてください。この回答に従って作業に入ってください。
+
+-----
+
+リネーム完了。ただ、その後、Now系のメソッド名をsnapで表現
+するのはやめることにしたので、さらに以下のりネームを実行。
+
+| 変更前 | 変更後 |
+|--------|--------|
+| `setPositionNow(...)` | `setPositionNow(...)` |
+| `setQuatNow(...)` | `setQuatNow(...)` |
+| `setScaleNow(...)` | `setScaleNow(...)` |
+

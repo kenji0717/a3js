@@ -36,10 +36,10 @@ const stk_kart = {
 
 await a3.initPhysics();
 const view = new a3.Window(600,300);
-view.scene.rapierDebug(true);
+view.scene.setPhysicsDebugMode(true);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
-ground.setLocationNow(0,0,0);
+ground.setPositionNow(0,0,0);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/stk_tux.a3').ready;
 const cc = new a3.CarControl(stk_kart);
@@ -53,8 +53,8 @@ let t=0;
 while (true) {
   t += await view.waitForRender();
   if (Math.floor(t/5)%2===0) {
-    cc.accelerator(8);
+    cc.accelerate(8);
   } else {
-    cc.accelerator(-8);
+    cc.accelerate(-8);
   }
 }

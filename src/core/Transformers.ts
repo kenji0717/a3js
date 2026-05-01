@@ -36,19 +36,19 @@ export class DefaultTransformer implements Transformer {
   setPosition(loc: Vec3) {
     this.transform.loc.set(loc);
   }
-  snapPosition(loc: Vec3) {
+  setPositionNow(loc: Vec3) {
     this.transform.loc.set(loc);
   }
   setQuat(quat: Quat) {
     this.transform.quat.set(quat);
   }
-  snapQuat(quat: Quat) {
+  setQuatNow(quat: Quat) {
     this.transform.quat.set(quat);
   }
   setScale(scale: Vec3) {
     this.transform.scale.set(scale);
   }
-  snapScale(scale: Vec3) {
+  setScaleNow(scale: Vec3) {
     this.transform.scale.set(scale);
   }
   setLinearVelocity(_vel: Vec3): void {}
@@ -93,11 +93,11 @@ export class StaticTransformer implements Transformer {
   isGrounded(): boolean { return this.transform.loc.y <= 0; }
 
   setPosition(_loc: Vec3) {}
-  snapPosition(_loc: Vec3) {}
+  setPositionNow(_loc: Vec3) {}
   setQuat(_quat: Quat) {}
-  snapQuat(_quat: Quat) {}
+  setQuatNow(_quat: Quat) {}
   setScale(_scale: Vec3) {}
-  snapScale(_scale: Vec3) {}
+  setScaleNow(_scale: Vec3) {}
   setLinearVelocity(_vel: Vec3): void {}
   getLinearVelocity(v: Vec3) { return v?v:new Vec3(); }
   setAngularVelocity(_angvel: Vec3): void {}
@@ -144,7 +144,7 @@ export class SmoothTransformer implements Transformer {
     this.currentTime = 0;
   }
 
-  snapPosition(newLoc: Vec3) {
+  setPositionNow(newLoc: Vec3) {
     this.setPosition(newLoc);
     this.currentTime = 1;
   }
@@ -155,7 +155,7 @@ export class SmoothTransformer implements Transformer {
     this.currentTime = 0;
   }
 
-  snapQuat(newQuat: Quat) {
+  setQuatNow(newQuat: Quat) {
     this.setQuat(newQuat);
     this.currentTime = 1;
   }
@@ -166,7 +166,7 @@ export class SmoothTransformer implements Transformer {
     this.currentTime = 0;
   }
 
-  snapScale(newScale: Vec3) {
+  setScaleNow(newScale: Vec3) {
     this.setScale(newScale);
     this.currentTime = 1;
   }
@@ -255,7 +255,7 @@ export class BillboardTransformer extends DefaultTransformer {
   }
 
   setQuat(_quat: Quat) {}
-  snapQuat(_quat: Quat) {}
+  setQuatNow(_quat: Quat) {}
 
   update(_dt: number): void {
     tmpObjLoc.set(this.transform.loc);
@@ -285,7 +285,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
   }
 
   setQuat(_newQuat: Quat) { /* do nothing. */ }
-  snapQuat(_newQuat: Quat) { /* do nothing. */ }
+  setQuatNow(_newQuat: Quat) { /* do nothing. */ }
 
   update(dt: number) {
     super.update(dt);

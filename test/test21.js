@@ -8,5 +8,5 @@ document.body.appendChild(view);
 //view.alert("ただメッセージを出すだけのalert()");
 await view.alert("ボタンを押すとスタートします",a3.initSound);
 
-const obj = new a3.Test();
+const obj = new a3.SampleObject();
 view.scene.add(obj);

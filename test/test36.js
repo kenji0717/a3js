@@ -7,7 +7,7 @@ await a3.initPhysics();
 const view = new a3.Window(600,300);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 //ground.setScale(10,10,10);
-ground.setLocation(0,-10,0);
+ground.setPosition(0,-10,0);
 ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
 view.scene.add(ground);
 
@@ -48,8 +48,8 @@ while (true) {
   if (keyW) a+=30.0;
   if (keyS) a-=30.0;
   if (keySpace) b = 1000.0;
-  cc.handle(h);
-  cc.accelerator(a);
+  cc.steer(h);
+  cc.accelerate(a);
   cc.brake(b);
   if (keyEnter)
     cc.reset(new a3.Vec3(100,0.8,100),new a3.Quat());

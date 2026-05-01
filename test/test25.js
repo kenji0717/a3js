@@ -1,4 +1,4 @@
-// HTMLのテスト。HTMLの要素を3D空間に入れられる。
+// Html3Dのテスト。HTMLの要素を3D空間に入れられる。
 // 最初KaTeXも対応させたかったけど、WebComponentの
 // Shadow DOMの中に入れることにしたのであきらめた。
 // KaTeX使いたい人そんなにいないだろうから。
@@ -15,13 +15,13 @@ template.innerHTML = `
 `;
 
 const view = new a3.Window(600,300);
-const html = new a3.HTML(template.content.firstElementChild);
+const html = new a3.Html3D(template.content.firstElementChild);
 view.scene.add(html);
 
 let t = 0;
 while (t<=6.28) {
   t += await view.waitForRender();
-  html.setLocation(Math.cos(t),Math.sin(t),0);
+  html.setPosition(Math.cos(t),Math.sin(t),0);
 }
 
 view.scene.remove(html);

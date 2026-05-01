@@ -101,7 +101,7 @@ export class KinematicCharacterTransformer implements Transformer {
     this.tmpV1.add(this.capsuleCenter);
     this.nextLocation.set(this.tmpV1);
   }
-  snapPosition(v: Vec3): void {
+  setPositionNow(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
@@ -117,7 +117,7 @@ export class KinematicCharacterTransformer implements Transformer {
       this.collider.setRotation(q);
     this.transform.quat.set(q);
   }
-  snapQuat(q: Quat): void {
+  setQuatNow(q: Quat): void {
     if (this.collider)
       this.collider.setRotation(q);
     this.transform.quat.set(q);
@@ -126,7 +126,7 @@ export class KinematicCharacterTransformer implements Transformer {
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  snapScale(_: Vec3): void {
+  setScaleNow(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 

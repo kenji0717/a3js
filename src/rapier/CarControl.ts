@@ -282,11 +282,11 @@ export class CarTransformer implements Transformer {
   }
 
   setPosition(_v: Vec3): void {}
-  snapPosition(_v: Vec3): void {}
+  setPositionNow(_v: Vec3): void {}
   setQuat(_q: Quat): void {}
-  snapQuat(_q: Quat): void {}
+  setQuatNow(_q: Quat): void {}
   setScale(_s: Vec3): void {}
-  snapScale(_s: Vec3): void {}
+  setScaleNow(_s: Vec3): void {}
 
   setLinearVelocity(_vel: Vec3): void {}
   getLinearVelocity(v: Vec3 | undefined) {

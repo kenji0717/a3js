@@ -3,10 +3,10 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
-view.camera.setLocation(0,0,5);
+view.camera.setPosition(0,0,5);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
 console.log(obj.getActionNames());
-obj.setLocation(0,-2,0);
+obj.setPosition(0,-2,0);
 const action1 = obj.removeAction('Running');
 obj.setState('Walking');
 view.scene.add(obj);

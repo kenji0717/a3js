@@ -11,25 +11,25 @@ const view = new a3.GameCanvas({touchDevice:true});
 document.body.appendChild(view);
 
 const leftBox = new a3.Box('red');
-leftBox.setLocation(-3,0,0);
+leftBox.setPosition(-3,0,0);
 view.scene.add(leftBox);
 const rightBox = new a3.Box('blue');
-rightBox.setLocation(3,0,0);
+rightBox.setPosition(3,0,0);
 view.scene.add(rightBox);
 
 const leftSphere = new a3.Sphere('green');
-leftSphere.setLocation(-1,0,0);
+leftSphere.setPosition(-1,0,0);
 view.scene.add(leftSphere);
 const rightSphere = new a3.Sphere('yellow');
-rightSphere.setLocation(1,0,0);
+rightSphere.setPosition(1,0,0);
 view.scene.add(rightSphere);
 
 while (true) {
   await view.waitForRender();
     let {x,y} = view.leftJoystick;
-    leftBox.setLocation(-3+x,y,0);
+    leftBox.setPosition(-3+x,y,0);
     ({x,y} = view.rightJoystick);
-    rightBox.setLocation(+3+x,y,0);
+    rightBox.setPosition(+3+x,y,0);
     if (view.leftButton)
       leftSphere.setScale(0.5,0.5,0.5);
     else

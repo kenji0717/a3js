@@ -61,7 +61,7 @@ class JointTest extends a3.ActionObject {
   }
 }
 
-class JointTestTransformer extends a3.FixedTransformer {
+class JointTestTransformer extends a3.StaticTransformer {
   motion;
   constructor(objectA3) {
     super();
@@ -194,14 +194,14 @@ class JointTestMotion {
 
 await a3.initPhysics();
 const view = new a3.Window(600,300);
-view.scene.rapierDebug(true);
+view.scene.setPhysicsDebugMode(true);
 const ground = new a3.Box(10,1,10);
 ground.initSimplePhysics({rigidBody: 'fixed'});
-ground.setLocationNow(0,-2,0);
+ground.setPositionNow(0,-2,0);
 view.scene.add(ground);
 const obj = new JointTest();
 view.scene.add(obj);
-view.camera.setLocationNow(0,3,5);
+view.camera.setPositionNow(0,3,5);
 view.camera.lookAtNow(0,-1,0);
 
 let t=0;

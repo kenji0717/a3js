@@ -31,12 +31,12 @@
 
 | 現在 | 提案 | 採用 |
 |------|------|------|
-| `setLocation(...)` / `setLocationNow(...)` | `setPosition(...)` / `teleport(...)` or `setPositionImmediate(...)` |setPosition(...), snapPosition(...)|
-| `setQuat(...)` / `setQuatNow(...)` | `setQuaternion(...)` / `setQuaternionImmediate(...)` |setQuat(...), snapQuat(...)|
+| `setLocation(...)` / `setLocationNow(...)` | `setPosition(...)` / `teleport(...)` or `setPositionImmediate(...)` |setPosition(...), setPositionNow(...)|
+| `setQuat(...)` / `setQuatNow(...)` | `setQuaternion(...)` / `setQuaternionImmediate(...)` |setQuat(...), setQuatNow(...)|
 
 `setLocation` より `setPosition` の方が Three.js の世界観とも一致します。
 
-MEMO: setScaleNow(...)はsnapScale(...)に書き換える。
+MEMO: setScaleNow(...)はsetScaleNow(...)に書き換える。
 
 ### その他メソッド名
 

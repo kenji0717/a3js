@@ -108,7 +108,7 @@ export class DynamicCharacterTransformer implements Transformer {
     this.tmpV1.add(this.capsuleCenter);
     this.nextLocation.set(this.tmpV1);
   }
-  snapPosition(v: Vec3): void {
+  setPositionNow(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
@@ -124,7 +124,7 @@ export class DynamicCharacterTransformer implements Transformer {
       this.collider.setRotation(q);
     this.transform.quat.set(q);
   }
-  snapQuat(q: Quat): void {
+  setQuatNow(q: Quat): void {
     if (this.collider)
       this.collider.setRotation(q);
     this.transform.quat.set(q);
@@ -133,7 +133,7 @@ export class DynamicCharacterTransformer implements Transformer {
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  snapScale(_: Vec3): void {
+  setScaleNow(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 
@@ -206,7 +206,7 @@ export class DynamicCharacterTransformer implements Transformer {
       const pos = this.body.translation();
       const ray = new RAPIER.Ray(pos,{x:0,y:-1,z:0});
       // GAHA 手抜きな所がある。手抜き箇所はmemo.mdの
-      // ### CharacterTransformer2の手抜き箇所 にメモ。
+      // ### DynamicCharacterTransformerの手抜き箇所 にメモ。
       const maxToi = 1.1*(this.completeOptions.height+this.completeOptions.radius);
       const hit = this.physicsWorld.world.castRay(ray,maxToi,true,
         undefined, undefined,this.collider);

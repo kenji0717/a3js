@@ -17,6 +17,7 @@ export { SampleObject, defaultSampleObjectOptions } from './core/SampleObject';
 export type { SampleObjectOptions } from './core/SampleObject';
 export { Text3D , initFont } from './core/Text3D';
 export { GLTF, recreateGLTFLoader } from './core/GLTF';
+export type { GLTFOptions } from './core/GLTF';
 export { Acerola3D } from './core/Acerola3D';
 export { Sound, initSound } from './three/Sound';
 export type { SoundOptions, PositionalOptions, SoundType, SoundOptionsInput } from './three/Sound';

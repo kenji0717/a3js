@@ -10,4 +10,4 @@ await view.alert(`音声初期化、フルスクリーン、ゲームスター�
   view.requestFullscreen();
 });
 
-view.scene.add(new a3.Test());
+view.scene.add(new a3.SampleObject());

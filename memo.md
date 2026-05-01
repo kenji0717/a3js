@@ -1,4 +1,11 @@
 
+Claudeに意見をもらってクラス名やメソッド名などを大幅に変更した。
+互換性ないのでメジャーバージョンアップするべきところだけど、まだ
+ネーミングには問題あるし、Vec3などを使い捨てない方向性のメソッド
+追加したいし、テスト中だし・・・ということで0.0.Xを続ける。
+
+-----
+
 サウンドのループをどうするか迷い中。
 setState()、setEmote()を使うことにしたので、
 Acerola3Dのアクションのloop情報は意味を失ったけど、
@@ -48,9 +55,9 @@ RapierのDynamicRayCastVehicleControllerが改善されたら、余計な
 
 -----
 
-### CharactorTransformer2の手抜き箇所
+### DynamicCharactorTransformerの手抜き箇所
 
-CharactorTransformer2.tsのisGroundedの処理において、
+DynamicCharactorTransformer.tsのisGroundedの処理において、
 Rayを下に飛して地面の判定をしているのだけど、
 castRayの6番目の引数は除外対象で自分自身のColliderを設定。
 これ重要！第3引数のtrueは中空でないと仮定するもの。
@@ -61,9 +68,6 @@ hitの中に入っているnormalを調べて、地面が急角度だったら
 接地してないことにするという追加の処理を入れるように言われた
 けど、面倒だからやってない。あと、たぶん真横から見ると浮いて
 見えるかもしれない。微調整も必要だと思う。
-
-それと、CharacterTransformer2、AvatarController2という
-ネーミングをなんとかした方が良い。
 
 -----
 
@@ -151,31 +155,12 @@ skeleton.bones[???].position.copy(...);
 
 ### ObjectA3に追加したいメソッドメモ
 
-* 場所回転の更新
-    + addLocation
-    + mulQuat
-    + mulRotation デグリー
-    + mulScale
-* 一人称移動
-    + moveForward
-    + moveBack
-    + moveRight
-    + moveLeft
-    + moveUp
-    + moveDown
-* 一人称回転
-    + turnUp デグリー
-    + turnDown デグリー
-    + turnRight デグリー
-    + turnLeft デグリー
-    + rollRight デグリー
-    + rollLeft デグリー
 * ラベル表示
     + setLabel
     + setLabelOffset スクリーン座標で
 * 吹き出し表示
-    + setBalloon
-    + setBalloonOffset
+    + setSpeechBubble
+    + setSpeechBubbleOffset
 * 強調表示系
     + setSelected
     + (setSelected3D)

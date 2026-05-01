@@ -59,9 +59,9 @@ export abstract class Camera extends ObjectA3 {
    * コントローラによって挙動が異なる。
    * @param v 座標
    */
-  snapPosition(v: Vec3): void;
-  snapPosition(x: number, y: number, z: number): void;
-  snapPosition(xOrV: number | Vec3, y?: number, z?: number): void {
+  setPositionNow(v: Vec3): void;
+  setPositionNow(x: number, y: number, z: number): void;
+  setPositionNow(xOrV: number | Vec3, y?: number, z?: number): void {
     const v = new Vec3();
     if (typeof xOrV === 'number') {
       super.setPosition(xOrV,y!,z!);
@@ -73,7 +73,7 @@ export abstract class Camera extends ObjectA3 {
     if (this.controller)
       this.controller.setCameraLocationNow(v);
     else
-      super.snapPosition(v);
+      super.setPositionNow(v);
   }
 
   /**
@@ -103,9 +103,9 @@ export abstract class Camera extends ObjectA3 {
    * コントローラによって挙動が異なる。
    * @param q 回転
    */
-  snapQuat(q: Quat): void;
-  snapQuat(x: number, y: number, z: number, w: number): void;
-  snapQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+  setQuatNow(q: Quat): void;
+  setQuatNow(x: number, y: number, z: number, w: number): void;
+  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     const q = new Quat();
     if (typeof xOrQ === "number") {
       q.set(xOrQ, y!, z!, w!);
@@ -115,7 +115,7 @@ export abstract class Camera extends ObjectA3 {
     if (this.controller)
       this.controller.setCameraQuatNow(q);
     else
-      this.transformer.snapQuat(q);
+      this.transformer.setQuatNow(q);
   }
 
 
@@ -162,6 +162,6 @@ export abstract class Camera extends ObjectA3 {
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
     const newQuat = getLookAtQuaternion(this.position,target,up);
     newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
-    this.snapQuat(newQuat);
+    this.setQuatNow(newQuat);
   }
 }

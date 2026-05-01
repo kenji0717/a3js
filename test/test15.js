@@ -7,7 +7,7 @@ view.scene.add(obj1);
 
 const obj2 = new a3.Box(0.3,2,0.3);
 obj1.add(obj2);
-obj2.setLocation(0,1,0);
+obj2.setPosition(0,1,0);
 obj2.setRotation(0,0,90);
 
 

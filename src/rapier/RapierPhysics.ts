@@ -234,7 +234,7 @@ export class RapierTransformer implements Transformer {
   setPosition(_: Vec3): void {
     // これはできない物とする
   }
-  snapPosition(v: Vec3): void {
+  setPositionNow(v: Vec3): void {
     if (this.body)
       this.body.setTranslation(v,true); // true? false?
     else
@@ -245,7 +245,7 @@ export class RapierTransformer implements Transformer {
   setQuat(_: Quat): void {
     // これはできない物とする
   }
-  snapQuat(q: Quat): void {
+  setQuatNow(q: Quat): void {
     if (this.body)
       this.body.setRotation(q,true); // true? false?
     else
@@ -256,7 +256,7 @@ export class RapierTransformer implements Transformer {
   setScale(_: Vec3): void {
     // これはできない物とする
   }
-  snapScale(_: Vec3): void {
+  setScaleNow(_: Vec3): void {
     // 簡単ではないのでとりあえず保留
   }
 

@@ -220,15 +220,15 @@ export class ObjectA3 {
     this.transformer.setPosition(tmp.v0);
   }
 
-  snapPosition(x: number, y: number, z: number): void;
-  snapPosition(v: Vec3): void;
-  snapPosition(xOrV: number | Vec3, y?: number, z?: number): void {
+  setPositionNow(x: number, y: number, z: number): void;
+  setPositionNow(v: Vec3): void;
+  setPositionNow(xOrV: number | Vec3, y?: number, z?: number): void {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.snapPosition(tmp.v0);
+    this.transformer.setPositionNow(tmp.v0);
   }
 
   get quat(): Quat { return this.transform.quat; }
@@ -243,15 +243,15 @@ export class ObjectA3 {
     this.transformer.setQuat(tmp.q0);
   }
 
-  snapQuat(x: number, y: number, z: number, w: number): void;
-  snapQuat(q: Quat): void;
-  snapQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
+  setQuatNow(x: number, y: number, z: number, w: number): void;
+  setQuatNow(q: Quat): void;
+  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
     if (typeof xOrQ === "number") {
       tmp.q0.set(xOrQ, y!, z!, w!);
     } else {
       tmp.q0.set(xOrQ);
     }
-    this.transformer.snapQuat(tmp.q0);
+    this.transformer.setQuatNow(tmp.q0);
   }
 
   get scale(): Vec3 { return this.transform.scale; }
@@ -266,15 +266,15 @@ export class ObjectA3 {
     this.transformer.setScale(tmp.v0);
   }
 
-  snapScale(x: number, y: number, z: number): void;
-  snapScale(v: Vec3): void;
-  snapScale(xOrV: number | Vec3, y?: number, z?: number): void {
+  setScaleNow(x: number, y: number, z: number): void;
+  setScaleNow(v: Vec3): void;
+  setScaleNow(xOrV: number | Vec3, y?: number, z?: number): void {
     if (typeof xOrV === "number") {
       tmp.v0.set(xOrV, y!, z!);
     } else {
       tmp.v0.set(xOrV);
     }
-    this.transformer.snapScale(tmp.v0);
+    this.transformer.setScaleNow(tmp.v0);
   }
 
   /**
@@ -321,7 +321,7 @@ export class ObjectA3 {
           break;
       }
     }
-    this.snapQuat(quat);
+    this.setQuatNow(quat);
   }
 
   lookAt(x: number, y: number, z: number): void;
@@ -355,7 +355,7 @@ export class ObjectA3 {
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
     const newQuat = getLookAtQuaternion(this.position,target,up);
-    this.snapQuat(newQuat);
+    this.setQuatNow(newQuat);
   }
 
   getUnitVecX(): Vec3 {
@@ -392,7 +392,7 @@ export class ObjectA3 {
       tmpV.add(xOrV,y!,z!);
     else
       tmpV.add(xOrV);
-    this.snapPosition(tmpV);
+    this.setPositionNow(tmpV);
   }
 
   mulQuat(q: Quat): void;
@@ -416,7 +416,7 @@ export class ObjectA3 {
       tmpQ.mul(xOrQ,y!,z!,w!);
     else
       tmpQ.mul(xOrQ);
-    this.snapQuat(tmpQ);
+    this.setQuatNow(tmpQ);
   }
 
   mulRotation(v: Vec3): void;
@@ -446,7 +446,7 @@ export class ObjectA3 {
     const quat = eulerToQuaternion(tmp.v0,order);
     tmp.q0.set(this.quat);
     tmp.q0.mul(quat);
-    this.snapQuat(tmp.q0);
+    this.setQuatNow(tmp.q0);
   }
 
   scaleBy(v: Vec3): void;
@@ -468,7 +468,7 @@ export class ObjectA3 {
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else
       tmp.v0.set(tmp.v0.x*xOrV.x, tmp.v0.y*xOrV.y, tmp.v0.z*xOrV.z);
-    this.snapScale(tmp.v0);
+    this.setScaleNow(tmp.v0);
   }
 
   moveForward(f: number) {
@@ -763,15 +763,16 @@ class BalloonInfo {
  * 移動などに関する処理に影響を与える。ObjectA3に登録することが
  * できるTransformerは必ず一つである。
  * 
- * このインタフェースにはsetLocation()やsetQuat()などの外部の
+  * このインタフェースにはsetPosition()やsetQuat()などの外部の
  * プログラムから位置や回転を指定す要求を受け付けるメソッドが
  * あるが、これらは必ずしも要求に応答しなければならないという
- * わけではない。例えばInterpolationTransformerでは、移動が
+ * わけではない。例えばSmoothTransformerでは、移動が
  * 目視できるように1秒ほど時間をかけて移動するし、物理系の
  * Transformerの場合は、基本的に要求を無視して物理法則通りに
- * 移動させるというのが正解の場合もある。ただし、setLocationNow()や
+ * 移動させるというのが正解の場合もある。ただし、setPositionNow()や
  * setQuatNow()のようにメソッドの最後にNowが付いている物については
  * 可能なかぎり要求に即座に答えなければならない。
+ * 
  * 
  * このTransformerを実装することでInterpolateTransformer、
  * BillboardTransformer、CharacterTransformerなどが作られる。
@@ -838,7 +839,7 @@ export interface Transformer {
    * メソッドに書く。
    * @param loc 指定場所
    */
-  snapPosition(loc: Vec3): void;
+  setPositionNow(loc: Vec3): void;
 
   /**
    * 指定の角度に回転せよとの外部からの要求を受け付ける
@@ -854,7 +855,7 @@ export interface Transformer {
    * メソッドに書く。
    * @param quat 指定の回転
    */
-  snapQuat(quat: Quat): void;
+  setQuatNow(quat: Quat): void;
 
   /**
    * 指定の大きさ(拡大・縮小率)に変形せよとの外部からの要求を
@@ -870,7 +871,7 @@ export interface Transformer {
    * update()メソッドに書く。
    * @param scale 指定の大きさ
    */
-  snapScale(scale: Vec3): void;
+  setScaleNow(scale: Vec3): void;
 
   /**
    * 速度を設定する。物理系のTransformerのみ対応すれば
