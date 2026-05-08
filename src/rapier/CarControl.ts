@@ -389,7 +389,7 @@ export class CarMotion implements Motion {
     // 座標や回転は補正しないといけない。
     const rootLoc = new Vec3(this.cm.trans.chassisBody.translation());
     const rootQuat = new Quat(this.cm.trans.chassisBody.rotation());
-    const rootQuatInv = rootQuat.clone().conjugate();
+    const rootQuatInv = new Quat(-rootQuat.x, -rootQuat.y, -rootQuat.z, rootQuat.w);
     // シャーシ
     const chassisLoc = new Vec3(this.cm.trans.chassisBody.translation());
     chassisLoc.add(this.cm.opt.chassisOffset);
@@ -402,20 +402,16 @@ export class CarMotion implements Motion {
     const flQuat = new Quat();
     {
 
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelFrontAxle);
-      const connection = new Vec3(
-        -this.cm.opt.wheelFrontAxleLength/2.0,
-        this.cm.opt.wheelFrontYPosition,
-        this.cm.opt.wheelFrontZPosition);
+      const axle = this.cm.opt.wheelFrontAxle;
       const suspension = this.cm.trans.controller.wheelSuspensionLength(0) || 0;
       const steering = this.cm.trans.controller.wheelSteering(0) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(0) || 0;
-      flLoc.set(connection);
+      flLoc.set(-this.cm.opt.wheelFrontAxleLength/2.0, this.cm.opt.wheelFrontYPosition, this.cm.opt.wheelFrontZPosition);
       flLoc.sub(0,suspension,0);
       flQuat.set(0,Math.sin(steering/2),0,Math.cos(steering/2));
-      tmpQ.set(wheelAxleCs.x*Math.sin(rotationRad/2),
-               wheelAxleCs.y*Math.sin(rotationRad/2),
-               wheelAxleCs.z*Math.sin(rotationRad/2),
+      tmpQ.set(axle.x*Math.sin(rotationRad/2),
+               axle.y*Math.sin(rotationRad/2),
+               axle.z*Math.sin(rotationRad/2),
                Math.cos(rotationRad/2));
       flQuat.mul(tmpQ);
     }
@@ -423,20 +419,16 @@ export class CarMotion implements Motion {
     const frLoc = new Vec3();
     const frQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelFrontAxle);
-      const connection = new Vec3(
-        this.cm.opt.wheelFrontAxleLength/2.0,
-        this.cm.opt.wheelFrontYPosition,
-        this.cm.opt.wheelFrontZPosition);
+      const axle = this.cm.opt.wheelFrontAxle;
       const suspension = this.cm.trans.controller.wheelSuspensionLength(1) || 0;
       const steering = this.cm.trans.controller.wheelSteering(1) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(1) || 0;
-      frLoc.set(connection);
+      frLoc.set(this.cm.opt.wheelFrontAxleLength/2.0, this.cm.opt.wheelFrontYPosition, this.cm.opt.wheelFrontZPosition);
       frLoc.sub(0,suspension,0);
       frQuat.set(0,Math.sin(steering/2),0,Math.cos(steering/2));
-      tmpQ.set(wheelAxleCs.x*Math.sin(rotationRad/2),
-               wheelAxleCs.y*Math.sin(rotationRad/2),
-               wheelAxleCs.z*Math.sin(rotationRad/2),
+      tmpQ.set(axle.x*Math.sin(rotationRad/2),
+               axle.y*Math.sin(rotationRad/2),
+               axle.z*Math.sin(rotationRad/2),
                Math.cos(rotationRad/2));
       frQuat.mul(tmpQ);
     }
@@ -444,20 +436,16 @@ export class CarMotion implements Motion {
     const rlLoc = new Vec3();
     const rlQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelRearAxle);
-      const connection = new Vec3(
-        -this.cm.opt.wheelRearAxleLength/2.0,
-        this.cm.opt.wheelRearYPosition,
-        this.cm.opt.wheelRearZPosition);
+      const axle = this.cm.opt.wheelRearAxle;
       const suspension = this.cm.trans.controller.wheelSuspensionLength(2) || 0;
       const steering = this.cm.trans.controller.wheelSteering(2) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(2) || 0;
-      rlLoc.set(connection);
+      rlLoc.set(-this.cm.opt.wheelRearAxleLength/2.0, this.cm.opt.wheelRearYPosition, this.cm.opt.wheelRearZPosition);
       rlLoc.sub(0,suspension,0);
       rlQuat.set(0,Math.sin(steering/2),0,Math.cos(steering/2));
-      tmpQ.set(wheelAxleCs.x*Math.sin(rotationRad/2),
-               wheelAxleCs.y*Math.sin(rotationRad/2),
-               wheelAxleCs.z*Math.sin(rotationRad/2),
+      tmpQ.set(axle.x*Math.sin(rotationRad/2),
+               axle.y*Math.sin(rotationRad/2),
+               axle.z*Math.sin(rotationRad/2),
                Math.cos(rotationRad/2));
       rlQuat.mul(tmpQ);
     }
@@ -465,20 +453,16 @@ export class CarMotion implements Motion {
     const rrLoc = new Vec3();
     const rrQuat = new Quat();
     {
-      const wheelAxleCs = new Vec3(this.cm.opt.wheelRearAxle);
-      const connection = new Vec3(
-        this.cm.opt.wheelRearAxleLength/2.0,
-        this.cm.opt.wheelRearYPosition,
-        this.cm.opt.wheelRearZPosition);
+      const axle = this.cm.opt.wheelRearAxle;
       const suspension = this.cm.trans.controller.wheelSuspensionLength(3) || 0;
       const steering = this.cm.trans.controller.wheelSteering(3) || 0;
       const rotationRad = this.cm.trans.controller.wheelRotation(3) || 0;
-      rrLoc.set(connection);
+      rrLoc.set(this.cm.opt.wheelRearAxleLength/2.0, this.cm.opt.wheelRearYPosition, this.cm.opt.wheelRearZPosition);
       rrLoc.sub(0,suspension,0);
       rrQuat.set(0,Math.sin(steering/2),0,Math.cos(steering/2));
-      tmpQ.set(wheelAxleCs.x*Math.sin(rotationRad/2),
-               wheelAxleCs.y*Math.sin(rotationRad/2),
-               wheelAxleCs.z*Math.sin(rotationRad/2),
+      tmpQ.set(axle.x*Math.sin(rotationRad/2),
+               axle.y*Math.sin(rotationRad/2),
+               axle.z*Math.sin(rotationRad/2),
                Math.cos(rotationRad/2));
       rrQuat.mul(tmpQ);
     }

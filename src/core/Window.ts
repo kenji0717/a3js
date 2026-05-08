@@ -390,7 +390,8 @@ export class Window extends HTMLElement implements View {
     );
     ndc.unproject(this.camera3js);
     const dir = ndc.sub(this.camera3js.position).normalize();
-    return new Vec3(this.camera3js.position.clone().add(dir.multiplyScalar(depth)));
+    const p = this.camera3js.position;
+    return new Vec3(p.x + dir.x * depth, p.y + dir.y * depth, p.z + dir.z * depth);
   }
 
   cameraToScreen(loc: Vec3): { x: number, y: number } {

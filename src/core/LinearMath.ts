@@ -22,13 +22,9 @@ type Arg1Quat = number | Quat | MutableQuat;
  * 3次元ベクトル
  */
 export class Vec3 {
-  private _x: number;
-  private _y: number;
-  private _z: number;
-
-  get x() { return this._x; }
-  get y() { return this._y; }
-  get z() { return this._z; }
+  x = 0;
+  y = 0;
+  z = 0;
 
   constructor();
   constructor(v: Vec3);
@@ -36,15 +32,15 @@ export class Vec3 {
   constructor(x: number,y: number,z: number)
   constructor(xOrV?: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
-      this._x = xOrV;
-      this._y = y!;
-      this._z = z!;
+      this.x = xOrV;
+      this.y = y!;
+      this.z = z!;
     } else if (typeof xOrV === "undefined") {
-      this._x = this._y = this._z = 0;
+      this.x = this.y = this.z = 0;
     } else {
-      this._x = xOrV.x;
-      this._y = xOrV.y;
-      this._z = xOrV.z;
+      this.x = xOrV.x;
+      this.y = xOrV.y;
+      this.z = xOrV.z;
     }
   }
 
@@ -53,18 +49,18 @@ export class Vec3 {
   }
 
   write(q: MutableVec3) {
-    q.x = this._x;
-    q.y = this._y;
-    q.z = this._z;
+    q.x = this.x;
+    q.y = this.y;
+    q.z = this.z;
   }
 
   normalize() {
-    const l0 = this._x*this._x + this._y*this._y + this._z*this._z;
+    const l0 = this.x*this.x + this.y*this.y + this.z*this.z;
     const l1 = Math.sqrt(l0);
     if (l1 !== 0) {
-      this._x /= l1;
-      this._y /= l1;
-      this._z /= l1;
+      this.x /= l1;
+      this.y /= l1;
+      this.z /= l1;
     } else {
       console.warn(`Vec3.normalize.`);
     }
@@ -72,14 +68,14 @@ export class Vec3 {
   }
 
   negate() {
-    this._x *= -1;
-    this._y *= -1;
-    this._z *= -1;
+    this.x *= -1;
+    this.y *= -1;
+    this.z *= -1;
     return this;
   }
 
   length() {
-    return Math.sqrt(this._x*this._x + this._y*this._y + this._z*this._z);
+    return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
   }
 
   set(v: Vec3): Vec3;
@@ -87,13 +83,13 @@ export class Vec3 {
   set(x: number, y: number, z: number): Vec3;
   set(xOrVV: Arg1Vec3, y?: number, z?: number): Vec3 {
     if (typeof xOrVV === "number") {
-      this._x = xOrVV;
-      this._y = y!;
-      this._z = z!;
+      this.x = xOrVV;
+      this.y = y!;
+      this.z = z!;
     } else {
-      this._x = xOrVV.x;
-      this._y = xOrVV.y;
-      this._z = xOrVV.z;
+      this.x = xOrVV.x;
+      this.y = xOrVV.y;
+      this.z = xOrVV.z;
     }
     return this;
   }
@@ -103,13 +99,13 @@ export class Vec3 {
   add(x: number, y: number, z: number): Vec3;
   add(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
-      this._x += xOrV;
-      this._y += y!;
-      this._z += z!;
+      this.x += xOrV;
+      this.y += y!;
+      this.z += z!;
     } else {
-      this._x += xOrV.x;
-      this._y += xOrV.y;
-      this._z += xOrV.z;
+      this.x += xOrV.x;
+      this.y += xOrV.y;
+      this.z += xOrV.z;
     }
     return this;
   }
@@ -119,29 +115,29 @@ export class Vec3 {
   sub(x: number, y: number, z: number): Vec3;
   sub(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
-      this._x -= xOrV;
-      this._y -= y!;
-      this._z -= z!;
+      this.x -= xOrV;
+      this.y -= y!;
+      this.z -= z!;
     } else {
-      this._x -= xOrV.x;
-      this._y -= xOrV.y;
-      this._z -= xOrV.z;
+      this.x -= xOrV.x;
+      this.y -= xOrV.y;
+      this.z -= xOrV.z;
     }
     return this;
   }
 
   scale(s: number) {
-    this._x *= s;
-    this._y *= s;
-    this._z *= s;
+    this.x *= s;
+    this.y *= s;
+    this.z *= s;
     return this;
   }
 
   // 自分自身ん引数に与えるとダメな実装
   cross(v1: Vec3, v2: Vec3) {
-    this._x = v1.y*v2.z - v1.z*v2.y;
-    this._y = v1.z*v2.x - v1.x*v2.z;
-    this._z = v1.x*v2.y - v1.y*v2.x;
+    this.x = v1.y*v2.z - v1.z*v2.y;
+    this.y = v1.z*v2.x - v1.x*v2.z;
+    this.z = v1.x*v2.y - v1.y*v2.x;
     return this;
   }
 
@@ -149,29 +145,27 @@ export class Vec3 {
   apply(q: MutableQuat): Vec3;
   apply(x: number, y: number, z: number, w: number): Vec3;
   apply(xOrQ: Arg1Quat, argY?: number, argZ?: number, argW?: number): Vec3 {
-    const q = new Quat();
-    if (typeof xOrQ === "number")
-      q.set(xOrQ,argY!,argZ!,argW!);
-    else
-      q.set(xOrQ);
-
-    const v = new Quat(this._x,this._y,this._z,0);
-    const q_inv = new Quat(q).conjugate();
-
-    q.mul(v).mul(q_inv);
-
-    this._x = q.x;
-    this._y = q.y;
-    this._z = q.z;
-
+    let qx: number, qy: number, qz: number, qw: number;
+    if (typeof xOrQ === "number") {
+      qx = xOrQ; qy = argY!; qz = argZ!; qw = argW!;
+    } else {
+      qx = xOrQ.x; qy = xOrQ.y; qz = xOrQ.z; qw = xOrQ.w;
+    }
+    // t = 2 * cross(q.xyz, v)
+    const tx = 2 * (qy * this.z - qz * this.y);
+    const ty = 2 * (qz * this.x - qx * this.z);
+    const tz = 2 * (qx * this.y - qy * this.x);
+    this.x += qw * tx + qy * tz - qz * ty;
+    this.y += qw * ty + qz * tx - qx * tz;
+    this.z += qw * tz + qx * ty - qy * tx;
     return this;
   }
 
   // 線形補間
   lerp(v1: Vec3, v2: Vec3, t: number) {
-    this._x = (1-t)*v1.x + t*v2.x;
-    this._y = (1-t)*v1.y + t*v2.y;
-    this._z = (1-t)*v1.z + t*v2.z;
+    this.x = (1-t)*v1.x + t*v2.x;
+    this.y = (1-t)*v1.y + t*v2.y;
+    this.z = (1-t)*v1.z + t*v2.z;
   }
 }
 
@@ -188,15 +182,10 @@ export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
  * 四元数
  */
 export class Quat {
-  private _x: number;
-  private _y: number;
-  private _z: number;
-  private _w: number;
-
-  get x() { return this._x; }
-  get y() { return this._y; }
-  get z() { return this._z; }
-  get w() { return this._w; }
+  x = 0;
+  y = 0;
+  z = 0;
+  w = 1;
 
   constructor();
   constructor(q: Quat);
@@ -204,18 +193,18 @@ export class Quat {
   constructor(x: number, y: number, z: number, w: number);
   constructor(xOrQQ?: Arg1Quat, y?: number, z?: number, w?: number) {
     if (typeof xOrQQ === "number") {
-      this._x = xOrQQ;
-      this._y = y!;
-      this._z = z!;
-      this._w = w!;
+      this.x = xOrQQ;
+      this.y = y!;
+      this.z = z!;
+      this.w = w!;
     } else if (typeof xOrQQ === "undefined") {
-      this._x = this._y = this._z = 0;
-      this._w = 1;
+      this.x = this.y = this.z = 0;
+      this.w = 1;
     } else {
-      this._x = xOrQQ.x;
-      this._y = xOrQQ.y;
-      this._z = xOrQQ.z;
-      this._w = xOrQQ.w;
+      this.x = xOrQQ.x;
+      this.y = xOrQQ.y;
+      this.z = xOrQQ.z;
+      this.w = xOrQQ.w;
     }
   }
 
@@ -224,20 +213,20 @@ export class Quat {
   }
 
   write(q: MutableQuat) {
-    q.x = this._x;
-    q.y = this._y;
-    q.z = this._z;
-    q.w = this._w;
+    q.x = this.x;
+    q.y = this.y;
+    q.z = this.z;
+    q.w = this.w;
   }
 
   normalize() {
-    const l0 = this._x*this._x + this._y*this._y + this._z*this._z + this._w*this._w;
+    const l0 = this.x*this.x + this.y*this.y + this.z*this.z + this.w*this.w;
     const l1 = Math.sqrt(l0);
     if (l1 !== 0) {
-      this._x /= l1;
-      this._y /= l1;
-      this._z /= l1;
-      this._w /= l1;
+      this.x /= l1;
+      this.y /= l1;
+      this.z /= l1;
+      this.w /= l1;
     } else {
       console.warn(`Quat.normalize.`);
     }
@@ -245,9 +234,9 @@ export class Quat {
   }
 
   conjugate() {
-    this._x *= -1;
-    this._y *= -1;
-    this._z *= -1;
+    this.x *= -1;
+    this.y *= -1;
+    this.z *= -1;
     // wはそのまま
     return this;
   }
@@ -257,15 +246,15 @@ export class Quat {
   set(x: number, y: number, z: number, w: number): Quat;
   set(xOrQ: Arg1Quat, y?: number, z?: number, w?: number): Quat {
     if (typeof xOrQ === "number") {
-      this._x = xOrQ;
-      this._y = y!;
-      this._z = z!;
-      this._w = w!;
+      this.x = xOrQ;
+      this.y = y!;
+      this.z = z!;
+      this.w = w!;
     } else {
-      this._x = xOrQ.x;
-      this._y = xOrQ.y;
-      this._z = xOrQ.z;
-      this._w = xOrQ.w;
+      this.x = xOrQ.x;
+      this.y = xOrQ.y;
+      this.z = xOrQ.z;
+      this.w = xOrQ.w;
     }
     return this;
   }
@@ -274,28 +263,27 @@ export class Quat {
   mul(q: MutableQuat): Quat;
   mul(x: number, y: number, z: number, w: number): Quat;
   mul(xOrQ: Arg1Quat, y?: number, z?: number, w?: number): Quat {
-    const q1 = new Quat(this);
-    const q2 = new Quat();
-    if (typeof xOrQ === "number")
-      q2.set(xOrQ, y!, z!, w!);
-    else
-      q2.set(xOrQ);
-
-    this._x = q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y;
-    this._y = q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x;
-    this._z = q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w;
-    this._w = q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z;
-
+    const ax = this.x, ay = this.y, az = this.z, aw = this.w;
+    let bx: number, by: number, bz: number, bw: number;
+    if (typeof xOrQ === "number") {
+      bx = xOrQ; by = y!; bz = z!; bw = w!;
+    } else {
+      bx = xOrQ.x; by = xOrQ.y; bz = xOrQ.z; bw = xOrQ.w;
+    }
+    this.x = aw*bx + ax*bw + ay*bz - az*by;
+    this.y = aw*by - ax*bz + ay*bw + az*bx;
+    this.z = aw*bz + ax*by - ay*bx + az*bw;
+    this.w = aw*bw - ax*bx - ay*by - az*bz;
     return this;
   }
 
   // 線形補間
   // 引数のq1が自分自身という場合でも使える
   lerp(q1: Quat, q2: Quat, t: number) {
-    this._x = (1-t)*q1.x + t*q2.x;
-    this._y = (1-t)*q1.y + t*q2.y;
-    this._z = (1-t)*q1.z + t*q2.z;
-    this._w = (1-t)*q1.w + t*q2.w;
+    this.x = (1-t)*q1.x + t*q2.x;
+    this.y = (1-t)*q1.y + t*q2.y;
+    this.z = (1-t)*q1.z + t*q2.z;
+    this.w = (1-t)*q1.w + t*q2.w;
   }
 
   // 球面線形補間
@@ -316,36 +304,36 @@ export class Quat {
       q3.set(-q3.x,-q3.y,-q3.z,-q3.w);
     }
     if (cosR > 0.9995) {
-      this._x = (1-t)*q1.x + t*q3.x;
-      this._y = (1-t)*q1.y + t*q3.y;
-      this._z = (1-t)*q1.z + t*q3.z;
-      this._w = (1-t)*q1.w + t*q3.w;
+      this.x = (1-t)*q1.x + t*q3.x;
+      this.y = (1-t)*q1.y + t*q3.y;
+      this.z = (1-t)*q1.z + t*q3.z;
+      this.w = (1-t)*q1.w + t*q3.w;
       const s = Math.sqrt(
-        this._x * this._x
-        + this._y * this._y
-        + this._z * this._z
-        + this._w * this._w
+        this.x * this.x
+        + this.y * this.y
+        + this.z * this.z
+        + this.w * this.w
       );
       if (s<0.0001) { // かなりダメな時
         console.warn("Quat.slerp(); ???!");
-        this._x = q1.x;
-        this._y = q1.y;
-        this._z = q1.z;
-        this._w = q1.w;
+        this.x = q1.x;
+        this.y = q1.y;
+        this.z = q1.z;
+        this.w = q1.w;
       } else {
-        this._x *= 1/s;
-        this._y *= 1/s;
-        this._z *= 1/s;
-        this._w *= 1/s;
+        this.x *= 1/s;
+        this.y *= 1/s;
+        this.z *= 1/s;
+        this.w *= 1/s;
       }
     } else {
       const tt = Math.acos(cosR);
       const w1 = Math.sin((1-t)*tt) / Math.sin(tt);
       const w2 = Math.sin(t*tt) / Math.sin(tt);
-      this._x = w1*q1.x + w2*q3.x;
-      this._y = w1*q1.y + w2*q3.y;
-      this._z = w1*q1.z + w2*q3.z;
-      this._w = w1*q1.w + w2*q3.w;
+      this.x = w1*q1.x + w2*q3.x;
+      this.y = w1*q1.y + w2*q3.y;
+      this.z = w1*q1.z + w2*q3.z;
+      this.w = w1*q1.w + w2*q3.w;
     }
   }
 }
