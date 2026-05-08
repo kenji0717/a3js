@@ -537,10 +537,9 @@ export class Transform {
       this.quat.set(tOrO.quat);
       this.scale.set(tOrO.scale);
     } else {
-      const t = tOrO.transform;
-      this.loc.set(t.loc);
-      this.quat.set(t.quat);
-      this.scale.set(t.scale);
+      this.loc.set(tOrO.position);
+      this.quat.set(tOrO.quat);
+      this.scale.set(tOrO.scale);
     }
     return this;
   }

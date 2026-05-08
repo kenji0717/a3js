@@ -51,11 +51,11 @@ export class KinematicCharacterTransformer implements Transformer {
       const o = new THREE.Object3D();
       o.add(objectA3.object3D);
       { // transformerから持ってこないと
-        objectA3.transformer.transform.loc.write(tmpV);
+        objectA3.position.write(tmpV);
         o.position.set(tmpV.x,tmpV.y,tmpV.z);
-        objectA3.transformer.transform.quat.write(tmpQ);
+        objectA3.quat.write(tmpQ);
         o.quaternion.set(tmpQ.x,tmpQ.y,tmpQ.z,tmpQ.w);
-        objectA3.transformer.transform.scale.write(tmpV);
+        objectA3.scale.write(tmpV);
         o.scale.set(tmpV.x,tmpV.y,tmpV.z);
       }
       const box = new THREE.Box3().setFromObject(o);

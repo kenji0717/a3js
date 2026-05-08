@@ -61,7 +61,7 @@ export class ObjectA3 {
   object3D: THREE.Object3D;
   scene?: Scene;
   private balloon?: BalloonInfo;
-  transformer: Transformer;
+  private transformer: Transformer;
   parent?: ObjectA3;
   children: ObjectA3[] = [];
   clickListener?: (o: ObjectA3)=>void;
@@ -204,11 +204,7 @@ export class ObjectA3 {
       await this.clickListener(this);
   }
 
-  get transform(): Transform {
-    return this.transformer.transform.clone();
-  }
-
-  get position(): Vec3 { return this.transform.loc; }
+  get position(): Vec3 { return this.transformer.transform.loc.clone(); }
   setPosition(x: number, y: number, z: number): void;
   setPosition(v: Vec3): void;
   setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -231,7 +227,7 @@ export class ObjectA3 {
     this.transformer.setPositionNow(tmp.v0);
   }
 
-  get quat(): Quat { return this.transform.quat; }
+  get quat(): Quat { return this.transformer.transform.quat.clone(); }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -254,7 +250,7 @@ export class ObjectA3 {
     this.transformer.setQuatNow(tmp.q0);
   }
 
-  get scale(): Vec3 { return this.transform.scale; }
+  get scale(): Vec3 { return this.transformer.transform.scale.clone(); }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -286,137 +282,116 @@ export class ObjectA3 {
   setRotation(x: number, y: number, z: number): void;
   setRotation(v: Vec3): void;
   setRotation(xOrV: number | Vec3, y?: number, z?: number): void {
-    const rot = new Vec3();
     if (typeof xOrV === "number")
-      rot.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     else
-      rot.set(xOrV);
-    rot.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
+      tmp.v0.set(xOrV);
+    tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = eulerToQuaternion(rot,order);
-    this.setQuat(quat);
+    eulerToQuaternion(tmp.v0, order, tmp.q1);
+    this.setQuat(tmp.q1);
   }
 
   setRotationNow(x: number, y: number, z: number): void;
   setRotationNow(v: Vec3): void;
   setRotationNow(xOrV: number | Vec3, y?: number, z?: number): void {
-    const rot = new Vec3();
     if (typeof xOrV === "number")
-      rot.set(xOrV, y!, z!);
+      tmp.v0.set(xOrV, y!, z!);
     else
-      rot.set(xOrV);
+      tmp.v0.set(xOrV);
+    tmp.v0.scale(Math.PI/360);
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = new Quat(0,0,0,1);
-    for (let i=0;i<3;i++) {
-      const c = order.charAt(i);
-      switch(c) {
-        case 'X':
-          quat.mul(new Quat(Math.sin(rot.x),0,0,Math.cos(rot.x)))
-          break;
-        case 'Y':
-          quat.mul(new Quat(0,Math.sin(rot.y),0,Math.cos(rot.y)))
-          break;
-        case 'Z':
-          quat.mul(new Quat(0,0,Math.sin(rot.z),Math.cos(rot.z)))
-          break;
-      }
-    }
-    this.setQuatNow(quat);
+    eulerToQuaternion(tmp.v0, order, tmp.q0);
+    this.setQuatNow(tmp.q0);
   }
 
   lookAt(x: number, y: number, z: number): void;
   lookAt(v: Vec3): void;
   lookAt(o: ObjectA3): void;
   lookAt(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
-    const target = new Vec3();
     if (typeof xVO === "number") {
-      target.set(xVO,y!,z!);
+      tmp.v1.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.position);
+      tmp.v1.set(xVO.transformer.transform.loc);
     } else {
-      target.set(xVO);
+      tmp.v1.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.position,target,up);
-    this.setQuat(newQuat);
+    getLookAtQuaternion(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
+    this.setQuat(tmp.q1);
   }
 
   lookAtNow(x: number, y: number, z: number): void;
   lookAtNow(v: Vec3): void;
   lookAtNow(o: ObjectA3): void;
   lookAtNow(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
-    const target = new Vec3();
     if (typeof xVO === "number") {
-      target.set(xVO,y!,z!);
+      tmp.v1.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.position);
+      tmp.v1.set(xVO.transformer.transform.loc);
     } else {
-      target.set(xVO);
+      tmp.v1.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.position,target,up);
-    this.setQuatNow(newQuat);
+    getLookAtQuaternion(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
+    this.setQuatNow(tmp.q1);
   }
 
-  getUnitVecX(): Vec3 {
-    const vecX = new Vec3(1,0,0);
-    return vecX.apply(this.object3D.quaternion);
+  getUnitVecX(out?: Vec3): Vec3 {
+    if (out) { out.set(1,0,0); return out.apply(this.object3D.quaternion); }
+    return new Vec3(1,0,0).apply(this.object3D.quaternion);
   }
-  getUnitVecY(): Vec3 {
-    const vecY = new Vec3(0,1,0);
-    return vecY.apply(this.object3D.quaternion);
+  getUnitVecY(out?: Vec3): Vec3 {
+    if (out) { out.set(0,1,0); return out.apply(this.object3D.quaternion); }
+    return new Vec3(0,1,0).apply(this.object3D.quaternion);
   }
-  getUnitVecZ(): Vec3 {
-    const vecZ = new Vec3(0,0,1);
-    return vecZ.apply(this.object3D.quaternion);
+  getUnitVecZ(out?: Vec3): Vec3 {
+    if (out) { out.set(0,0,1); return out.apply(this.object3D.quaternion); }
+    return new Vec3(0,0,1).apply(this.object3D.quaternion);
   }
 
   translate(v: Vec3): void;
   translate(x: number, y: number, z: number): void;
   translate(xOrV: number | Vec3, y?: number, z?: number) {
-    const tmpV = new Vec3();
-    tmpV.set(this.position);
+    tmp.v1.set(this.transformer.transform.loc);
     if (typeof xOrV === 'number')
-      tmpV.add(xOrV,y!,z!);
+      tmp.v1.add(xOrV,y!,z!);
     else
-      tmpV.add(xOrV);
-    this.setPosition(tmpV);
+      tmp.v1.add(xOrV);
+    this.setPosition(tmp.v1);
   }
 
   addLocationNow(v: Vec3): void;
   addLocationNow(x: number, y: number, z: number): void;
   addLocationNow(xOrV: number | Vec3, y?: number, z?: number) {
-    const tmpV = new Vec3();
-    tmpV.set(this.position);
+    tmp.v1.set(this.transformer.transform.loc);
     if (typeof xOrV === 'number')
-      tmpV.add(xOrV,y!,z!);
+      tmp.v1.add(xOrV,y!,z!);
     else
-      tmpV.add(xOrV);
-    this.setPositionNow(tmpV);
+      tmp.v1.add(xOrV);
+    this.setPositionNow(tmp.v1);
   }
 
   mulQuat(q: Quat): void;
   mulQuat(x: number, y: number, z: number, w: number): void;
   mulQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
-    const tmpQ = new Quat();
-    tmpQ.set(this.quat);
+    tmp.q1.set(this.transformer.transform.quat);
     if (typeof xOrQ === 'number')
-      tmpQ.mul(xOrQ,y!,z!,w!);
+      tmp.q1.mul(xOrQ,y!,z!,w!);
     else
-      tmpQ.mul(xOrQ);
-    this.setQuat(tmpQ);
+      tmp.q1.mul(xOrQ);
+    this.setQuat(tmp.q1);
   }
 
   mulQuatNow(q: Quat): void;
   mulQuatNow(x: number, y: number, z: number, w: number): void;
   mulQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
-    const tmpQ = new Quat();
-    tmpQ.set(this.quat);
+    tmp.q1.set(this.transformer.transform.quat);
     if (typeof xOrQ === 'number')
-      tmpQ.mul(xOrQ,y!,z!,w!);
+      tmp.q1.mul(xOrQ,y!,z!,w!);
     else
-      tmpQ.mul(xOrQ);
-    this.setQuatNow(tmpQ);
+      tmp.q1.mul(xOrQ);
+    this.setQuatNow(tmp.q1);
   }
 
   mulRotation(v: Vec3): void;
@@ -472,73 +447,73 @@ export class ObjectA3 {
   }
 
   moveForward(f: number) {
-    tmp.v0.set(this.getUnitVecZ());
+    this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(f);
     this.translate(tmp.v0);
   }
 
   moveForwardNow(f: number) {
-    tmp.v0.set(this.getUnitVecZ());
+    this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(f);
     this.addLocationNow(tmp.v0);
   }
 
   moveBackward(b: number) {
-    tmp.v0.set(this.getUnitVecZ());
+    this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(-b);
     this.translate(tmp.v0);
   }
 
   moveBackwardNow(b: number) {
-    tmp.v0.set(this.getUnitVecZ());
+    this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(-b);
     this.addLocationNow(tmp.v0);
   }
 
   moveRight(r: number) {
-    tmp.v0.set(this.getUnitVecX());
+    this.getUnitVecX(tmp.v0);
     tmp.v0.scale(-r);
     this.translate(tmp.v0);
   }
 
   moveRightNow(r: number) {
-    tmp.v0.set(this.getUnitVecX());
+    this.getUnitVecX(tmp.v0);
     tmp.v0.scale(-r);
     this.addLocationNow(tmp.v0);
   }
 
   moveLeft(l: number) {
-    tmp.v0.set(this.getUnitVecX());
+    this.getUnitVecX(tmp.v0);
     tmp.v0.scale(l);
     this.translate(tmp.v0);
   }
 
   moveLeftNow(l: number) {
-    tmp.v0.set(this.getUnitVecX());
+    this.getUnitVecX(tmp.v0);
     tmp.v0.scale(l);
     this.addLocationNow(tmp.v0);
   }
 
   moveUp(u: number) {
-    tmp.v0.set(this.getUnitVecY());
+    this.getUnitVecY(tmp.v0);
     tmp.v0.scale(u);
     this.translate(tmp.v0);
   }
 
   moveUpNow(u: number) {
-    tmp.v0.set(this.getUnitVecY());
+    this.getUnitVecY(tmp.v0);
     tmp.v0.scale(u);
     this.addLocationNow(tmp.v0);
   }
 
   moveDown(d: number) {
-    tmp.v0.set(this.getUnitVecY());
+    this.getUnitVecY(tmp.v0);
     tmp.v0.scale(-d);
     this.translate(tmp.v0);
   }
 
   moveDownNow(d: number) {
-    tmp.v0.set(this.getUnitVecY());
+    this.getUnitVecY(tmp.v0);
     tmp.v0.scale(-d);
     this.addLocationNow(tmp.v0);
   }
@@ -715,6 +690,14 @@ export class ObjectA3 {
     this.transformer.applyTorqueImpulse(tmp.v0);
   }
 
+  addOneselfToPhysics(world: PhysicsWorld): void {
+    this.transformer.addOneselfToPhysics(world);
+  }
+
+  removeOneselfFromPhysics(world: PhysicsWorld): void {
+    this.transformer.removeOneselfFromPhysics(world);
+  }
+
   /**
    * TransformerがCharacterTransformerなどの場合だけ
    * 他のオブジェクトを考慮して現在接地していうかどうかを
@@ -763,7 +746,7 @@ class BalloonInfo {
  * 移動などに関する処理に影響を与える。ObjectA3に登録することが
  * できるTransformerは必ず一つである。
  * 
-  * このインタフェースにはsetPosition()やsetQuat()などの外部の
+ * このインタフェースにはsetPosition()やsetQuat()などの外部の
  * プログラムから位置や回転を指定す要求を受け付けるメソッドが
  * あるが、これらは必ずしも要求に応答しなければならないという
  * わけではない。例えばSmoothTransformerでは、移動が
@@ -775,7 +758,7 @@ class BalloonInfo {
  * 
  * 
  * このTransformerを実装することでInterpolateTransformer、
- * BillboardTransformer、CharacterTransformerなどが作られる。
+ * BillboardTransformer、DynamicCharacterTransformerなどが作られる。
  */
 export interface Transformer {
   /**

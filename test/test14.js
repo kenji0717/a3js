@@ -1,5 +1,5 @@
 // ObjectA3.lookAtのテスト
-// ControllerBaseのテストも兼ねる
+// BaseControllerのテストも兼ねる
 import * as a3 from 'a3js';
 
 const r = (n)=>Math.floor(n*Math.random());//0<=r<nの乱数

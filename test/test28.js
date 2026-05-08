@@ -1,4 +1,4 @@
-// a3.CharacterTransformerとAvatarControllerのテスト
+// KinematicCharacterTransformer, AvatarPositionController, FollowTransformerのテスト
 import * as a3 from 'a3js';
 
 await a3.initPhysics();

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
-import type { Controller } from './Controller';
-import { Vec3, Quat, getLookAtQuaternion } from './LinearMath';
+import type { View } from './View';
+import { Vec3, getLookAtQuaternion } from './LinearMath';
 
 /**
   * a3jsのカメラのベーストなるアブストラクトクラス。
@@ -10,7 +10,11 @@ import { Vec3, Quat, getLookAtQuaternion } from './LinearMath';
   * ものとする。
   */
 export abstract class Camera extends ObjectA3 {
-  controller?: Controller;
+  view?: View;
+
+  setView(view: View) {
+    this.view = view;
+  }
 
   /**
    * 耳の役割を持つTHREE.AudioListenerをカメラに
@@ -25,99 +29,6 @@ export abstract class Camera extends ObjectA3 {
   abstract calcNDC(loc: Vec3): {x: number, y: number}; 
 
   abstract setHeadLightEnable(b: boolean): void;
-
-  setController(controller: Controller) {
-    this.controller = controller;
-  }
-
-  /**
-   * カメラの位置指定は最終的にはカメラに設定されている
-   * コントローラ(Controller)が決めるので、設定されている
-   * コントローラによって挙動が異なる。
-   * @param v 座標
-   */
-  setPosition(v: Vec3): void;
-  setPosition(x: number, y: number, z: number): void;
-  setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
-    const v = new Vec3();
-    if (typeof xOrV === 'number') {
-      super.setPosition(xOrV,y!,z!);
-      v.set(xOrV,y!,z!);
-    } else {
-      super.setPosition(xOrV);
-      v.set(xOrV);
-    }
-    if (this.controller)
-      this.controller.setCameraLocation(v);
-    else
-      super.setPosition(v);
-  }
-
-  /**
-   * カメラの位置指定は最終的にはカメラに設定されている
-   * コントローラ(Controller)が決めるので、設定されている
-   * コントローラによって挙動が異なる。
-   * @param v 座標
-   */
-  setPositionNow(v: Vec3): void;
-  setPositionNow(x: number, y: number, z: number): void;
-  setPositionNow(xOrV: number | Vec3, y?: number, z?: number): void {
-    const v = new Vec3();
-    if (typeof xOrV === 'number') {
-      super.setPosition(xOrV,y!,z!);
-      v.set(xOrV,y!,z!);
-    } else {
-      super.setPosition(xOrV);
-      v.set(xOrV);
-    }
-    if (this.controller)
-      this.controller.setCameraLocationNow(v);
-    else
-      super.setPositionNow(v);
-  }
-
-  /**
-   * カメラの回転指定は最終的にはカメラに設定されている
-   * コントローラ(Controller)が決めるので、設定されている
-   * コントローラによって挙動が異なる。
-   * @param q 回転
-   */
-  setQuat(q: Quat): void;
-  setQuat(x: number, y: number, z: number, w: number): void;
-  setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
-    const q = new Quat();
-    if (typeof xOrQ === "number") {
-      q.set(xOrQ, y!, z!, w!);
-    } else {
-      q.set(xOrQ);
-    }
-    if (this.controller)
-      this.controller.setCameraQuat(q);
-    else
-      this.transformer.setQuat(q);
-  }
-
-  /**
-   * カメラの回転指定は最終的にはカメラに設定されている
-   * コントローラ(Controller)が決めるので、設定されている
-   * コントローラによって挙動が異なる。
-   * @param q 回転
-   */
-  setQuatNow(q: Quat): void;
-  setQuatNow(x: number, y: number, z: number, w: number): void;
-  setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
-    const q = new Quat();
-    if (typeof xOrQ === "number") {
-      q.set(xOrQ, y!, z!, w!);
-    } else {
-      q.set(xOrQ);
-    }
-    if (this.controller)
-      this.controller.setCameraQuatNow(q);
-    else
-      this.transformer.setQuatNow(q);
-  }
-
 
   /**
    * カメラのlookAtは通常のObjectA3のlookAtと異なり、
@@ -138,7 +49,7 @@ export abstract class Camera extends ObjectA3 {
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
     const newQuat = getLookAtQuaternion(this.position,target,up);
-    newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
+    newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuat(newQuat);
   }
 
@@ -161,7 +72,7 @@ export abstract class Camera extends ObjectA3 {
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
     const newQuat = getLookAtQuaternion(this.position,target,up);
-    newQuat.mul(new Quat(up.x,up.y,up.z,0)); // up軸まわりで180度回転！
+    newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuatNow(newQuat);
   }
 }

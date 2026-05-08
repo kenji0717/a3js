@@ -11,27 +11,14 @@ import { tmp } from '../utils/math';
  * a3.Viewの方で発生した色々なイベントを受け取ることが
  * 可能でそれに応答して様々な処理を行わせるための基盤。
  *
- * update()メソッド内のプログラムでは様々な処理を書いて
- * 良いのだが、カメラの位置、回転、拡大縮小をする
- * 時には注意が必要。例えばカメラの位置を変更する
- * 場合はthis.view.camera.object.position.set()や
- * this.view.camera.setPosition()ではなく、
- * this.view.camera.transformer.setPosition()を
- *
  * このControllerインタフェースのupdate()以外の
- * メソッドでは基本的に外部に影響を及ぼす処理は
- * 書かないようにしておき、update()の中で外部に
- * 影響を及ぼすプログラムを書くようにして下さい。
- * 特に、位置、回転、拡大縮小をセットするメソッド
- * (例: setCameraLoc)があるが、これはCameraの
- * インタンスのメソッド(例:camera.setPosition())
- * から呼び出される。このメソッド内ではtransformer
- * 同様に、直接カメラに操作を加えてはならず、
- * 一旦このController内の情報として要求を
- * 保存しておき、update()メソッドが呼ばれた時に、
- * this.view.camera.transformer.setPosition()など
- * で反映させる必要がある。(GAHA: もう少しわかり
- * やすい仕様に改善したいけど・・・)
+ * メソッドでは基本的に外部(this.view.cameraとか
+ * this.view.sceneとか)に影響を及ぼす処理は
+ * 書かないようにしてください。つまり、キーイベントや
+ * マウスイベントをキャッチした時は、その情報を
+ * メンバ変数などに保存しておき、update()が呼ばれたら
+ * 保存しておいた情報をもとにして外部に影響を及ぼす
+ * プログラムを書くようにして下さい。
  */
 export interface Controller {
   view?: View;
@@ -53,36 +40,18 @@ export interface Controller {
   touchEnd(event: TouchEvent): void;
   touchMove(event: TouchEvent): void;
   touchCancel(event: TouchEvent): void;
-
-  setCameraLocation(loc: Vec3): void;
-  setCameraLocationNow(loc: Vec3): void;
-  setCameraQuat(quat: Quat): void;
-  setCameraQuatNow(quat: Quat): void;
-  setCameraScale(scale: Vec3): void;
-  setCameraScaleNow(scale: Vec3): void;
 }
 
 /**
   * ほとんど何もしないController。不要なメソッドを
   * 実装しなくて良いように、これを継承して実用的な
-  * Controllerを作ると良い。ここでやっている処理は、
-  * カメラの方から呼び出されるsetCameraLocation()など
-  * に対して自然に応答するだけの処理。
+  * Controllerを作ると良い。
   */
 export class BaseController implements Controller {
   view?: View;
-  transform: Transform;
 
-  constructor() {
-    this.transform = new Transform();
-  }
   setView(view: View) { this.view = view; }
-  update(_dt: number): void {
-    if (!this.view) return;
-    this.view.camera.transformer.setPosition(this.transform.loc);
-    this.view.camera.transformer.setQuat(this.transform.quat);
-    this.view.camera.transformer.setScale(this.transform.scale);
-  }
+  update(_dt: number): void {}
   activate(): void {}
   deactivate(): void {}
   keyDown(_event: KeyboardEvent): void {}
@@ -99,26 +68,21 @@ export class BaseController implements Controller {
   touchEnd(_event: TouchEvent): void {}
   touchMove(_event: TouchEvent): void {}
   touchCancel(_event: TouchEvent): void {}
-  setCameraLocation(loc: Vec3): void {this.transform.loc.set(loc);}
-  setCameraLocationNow(loc: Vec3): void {this.transform.loc.set(loc);}
-  setCameraQuat(quat: Quat): void {this.transform.quat.set(quat);}
-  setCameraQuatNow(quat: Quat): void {this.transform.quat.set(quat);}
-  setCameraScale(scale: Vec3): void {this.transform.scale.set(scale);}
-  setCameraScaleNow(scale: Vec3): void {this.transform.scale.set(scale);}
 }
 
 /**
   * Three.jsのOrbitControlsと同様の処理をしてくれるコントローラ。
-  * Ctrl || Shift || Metaキーを押してマウスドラッグすると、
-  * 平行移動も可能。
+  * Ctrlキーを押してマウスドラッグすると、平行移動も可能。
   */
 export class OrbitController extends BaseController {
   lastMousePosition: {x:number,y:number};
+  dx: number = 0;
+  dy: number = 0;
   isLeftDown: boolean = false;
   isRightDown: boolean = false;
+  ctrlKey: boolean = false;
+  deltaY: number = 0; // マウスホイールの値
   target: Vec3;
-  cameraLoc: Vec3 = new Vec3(0,0,3);
-  cameraQuat: Quat = new Quat(0,0,0,1);
 
   constructor(target: Vec3);
   constructor(tx: number, ty: number, tz: number);
@@ -134,8 +98,54 @@ export class OrbitController extends BaseController {
 
   update(_dt: number): void {
     if (!this.view) return;
-    this.view.camera.transformer.setPosition(this.cameraLoc);
-    this.view.camera.transformer.setQuat(this.cameraQuat);
+    const cameraLoc = this.view.camera.position;
+    const cameraQuat = this.view.camera.quat;
+
+    if (this.isLeftDown && !this.ctrlKey) {
+      const epsilon = 0.01;
+      const sinX = Math.sin(-this.dx*epsilon); const cosX = Math.cos(-this.dx*epsilon);
+      const sinY = Math.sin(-this.dy*epsilon); const cosY = Math.cos(-this.dy*epsilon);
+      const vecX = new Vec3(1,0,0).apply(cameraQuat);
+      const vecY = new Vec3(0,1,0).apply(cameraQuat);
+      const quatX = new Quat(vecX.x*sinY,vecX.y*sinY,vecX.z*sinY,cosY);
+      const quatY = new Quat(vecY.x*sinX,vecY.y*sinX,vecY.z*sinX,cosX);
+      const newCameraLoc = new Vec3(cameraLoc);
+      newCameraLoc.sub(this.target);
+      newCameraLoc.apply(quatX);
+      newCameraLoc.apply(quatY);
+      newCameraLoc.add(this.target);
+      cameraLoc.set(newCameraLoc);
+      const newCameraQuat = getLookAtQuaternion(cameraLoc,this.target,new Vec3(0,1,0));
+      newCameraQuat.mul(new Quat(0,1,0,0)); // カメラは-Zが前なのでY軸まわりに180度回転！
+      cameraQuat.set(newCameraQuat);
+    } else if (this.isLeftDown) {
+      tmp.v0.set(this.target);
+      tmp.v0.sub(cameraLoc);
+      const dist = tmp.v0.length();
+      const epsilon = 0.005*dist;
+      const left = new Vec3(1,0,0).apply(cameraQuat).scale(-this.dx*epsilon);
+      const up = new Vec3(0,1,0).apply(cameraQuat).scale(this.dy*epsilon);
+      cameraLoc.add(left);
+      cameraLoc.add(up);
+      this.target.add(left);
+      this.target.add(up);
+    }
+
+    if (this.deltaY !== 0) {
+      const f = new Vec3(this.target).sub(cameraLoc)
+      if (this.deltaY > 0)
+        f.scale(0.05);
+      else if (this.deltaY < 0)
+        f.scale(-0.05);
+      cameraLoc.add(f);
+    }
+
+    this.view.camera.setPosition(cameraLoc);
+    this.view.camera.setQuat(cameraQuat);
+
+    this.dx = 0;
+    this.dy = 0;
+    this.deltaY = 0;
   }
 
   mouseDown(e: MouseEvent): void {
@@ -150,44 +160,11 @@ export class OrbitController extends BaseController {
     }
   }
   mouseMove(e: MouseEvent): void {
-    if (!this.view) return;
-    if (this.isLeftDown && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-      const epsilon = 0.01;
-      const dx = epsilon*(e.clientX - this.lastMousePosition.x);
-      const dy = epsilon*(e.clientY - this.lastMousePosition.y);
-      const sinX = Math.sin(-dx); const cosX = Math.cos(-dx);
-      const sinY = Math.sin(-dy); const cosY = Math.cos(-dy);
-      const vecX = new Vec3(1,0,0).apply(this.cameraQuat);
-      const vecY = new Vec3(0,1,0).apply(this.cameraQuat);
-      const quatX = new Quat(vecX.x*sinY,vecX.y*sinY,vecX.z*sinY,cosY);
-      const quatY = new Quat(vecY.x*sinX,vecY.y*sinX,vecY.z*sinX,cosX);
-      const newCameraLoc = new Vec3(this.cameraLoc);
-      newCameraLoc.sub(this.target);
-      newCameraLoc.apply(quatX);
-      newCameraLoc.apply(quatY);
-      newCameraLoc.add(this.target);
-      this.cameraLoc.set(newCameraLoc);
-      const newCameraQuat = getLookAtQuaternion(this.cameraLoc,this.target,new Vec3(0,1,0));
-      newCameraQuat.mul(new Quat(0,1,0,0)); // カメラは-Zが前なのでY軸まわりに180度回転！
-      this.cameraQuat.set(newCameraQuat);
-      this.lastMousePosition.x = e.clientX;
-      this.lastMousePosition.y = e.clientY;
-    } else if (this.isLeftDown) {
-      tmp.v0.set(this.target);
-      tmp.v0.sub(this.cameraLoc);
-      const dist = tmp.v0.length();
-      const epsilon = 0.005*dist;
-      const dx = epsilon*(e.clientX - this.lastMousePosition.x);
-      const dy = epsilon*(e.clientY - this.lastMousePosition.y);
-      const left = new Vec3(1,0,0).apply(this.cameraQuat).scale(-dx);
-      const up = new Vec3(0,1,0).apply(this.cameraQuat).scale(dy);
-      this.cameraLoc.add(left);
-      this.cameraLoc.add(up);
-      this.target.add(left);
-      this.target.add(up);
-      this.lastMousePosition.x = e.clientX;
-      this.lastMousePosition.y = e.clientY;
-    }
+    this.dx += e.clientX - this.lastMousePosition.x;
+    this.dy += e.clientY - this.lastMousePosition.y;
+    this.ctrlKey = e.ctrlKey;
+    this.lastMousePosition.x = e.clientX;
+    this.lastMousePosition.y = e.clientY;
   }
   mouseUp(e: MouseEvent): void {
     if (e.button === 0) {
@@ -197,13 +174,7 @@ export class OrbitController extends BaseController {
     }
   }
   mouseWheel(e: WheelEvent): void {
-    const f = new Vec3(this.target).sub(this.cameraLoc)
-    if (e.deltaY > 0)
-      f.scale(0.05);
-    else if (e.deltaY < 0)
-      f.scale(-0.05);
-
-    this.cameraLoc.add(f);
+    this.deltaY = e.deltaY;
   }
 /*
   touchStart(e: TouchEvent): void {
@@ -213,27 +184,6 @@ console.log(`GAHA: touchStart()`,event);
     this.view.camera.setPosition(loc);
   }
 */
-  setCameraLocation(loc: Vec3): void {
-    this.cameraLoc.set(loc);
-  }
-  setCameraLocationNow(loc: Vec3): void {
-    this.cameraLoc.set(loc);
-  }
-  setCameraQuat(quat: Quat): void {
-    quat.normalize(); //念のため
-    this.cameraQuat.normalize(); //念のため
-    const qt = new Quat(this.cameraQuat);
-    qt.conjugate();
-    const t = new Vec3(this.target);
-    t.sub(this.cameraLoc);
-    t.apply(qt);
-    t.add(this.cameraLoc);
-    this.target.set(t);
-    this.cameraQuat.set(quat);
-  }
-  setCameraQuatNow(quat: Quat): void {
-    this.setCameraQuat(quat);
-  }
 }
 
 export interface AvatarPositionControllerOptions {
@@ -333,14 +283,9 @@ export class AvatarPositionController extends BaseController {
       tmp.v0.set(0, -this.options.angSpeed, 0);
       this._avatarNextQuat.mul(eulerToQuaternion(tmp.v0, 'ZXY', tmp.q0));
     }
-    avatar.transformer.setPosition(this._avatarNextLoc);
-    avatar.transformer.setQuat(this._avatarNextQuat);
+    avatar.setPosition(this._avatarNextLoc);
+    avatar.setQuat(this._avatarNextQuat);
   }
-
-  //setCameraLocation(loc: Vec3): void {}
-  //setCameraLocationNow(loc: Vec3): void {}
-  //setCameraQuat(quat: Quat): void {}
-  //setCameraQuatNow(quat: Quat): void {}
 }
 
 export interface AvatarVelocityControllerOptions {
@@ -437,12 +382,7 @@ export class AvatarVelocityController extends BaseController {
 
     if (this._keyLeft) this._avatarNextAngVel.add(0, this.options.angSpeed, 0);
     if (this._keyRight) this._avatarNextAngVel.add(0, -this.options.angSpeed, 0);
-    avatar.transformer.setLinearVelocity(this._avatarNextVel);
-    avatar.transformer.setAngularVelocity(this._avatarNextAngVel);
+    avatar.setLinearVelocity(this._avatarNextVel);
+    avatar.setAngularVelocity(this._avatarNextAngVel);
   }
-
-  //setCameraLocation(loc: Vec3): void {}
-  //setCameraLocationNow(loc: Vec3): void {}
-  //setCameraQuat(quat: Quat): void {}
-  //setCameraQuatNow(quat: Quat): void {}
 }

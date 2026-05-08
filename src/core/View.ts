@@ -50,15 +50,15 @@ export class BaseView implements View {
   controller: Controller;
 
   constructor(camera: Camera) {
-    this.scene = new Scene();
+    camera.setView(this);
     this.camera = camera;
     this.camera.setAudioListener(Sound.listener);
-    this.scene.scene.add(this.camera.object3D);
     this.camera.setPosition(0, 0, 3);
+    this.scene = new Scene();
+    this.scene.scene.add(this.camera.object3D);
     this.controller = new OrbitController(0,0,0);
     this.controller.setView(this);
     this.controller.activate();
-    this.camera.setController(this.controller);
   }
 
   replaceScene(newScene: Scene): Scene {
@@ -80,7 +80,6 @@ export class BaseView implements View {
     this.controller = controller;
     this.controller.setView(this);
     this.controller.activate();
-    this.camera.setController(controller);
   }
 
   /**

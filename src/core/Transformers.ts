@@ -263,7 +263,7 @@ export class BillboardTransformer extends DefaultTransformer {
 
   update(_dt: number): void {
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    tmpTargetLoc.set(this.target.position);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
@@ -294,7 +294,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
   update(dt: number) {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    tmpTargetLoc.set(this.target.position);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
@@ -346,7 +346,7 @@ export class FollowTransformer extends StaticTransformer {
   update(dt: number) {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.transformer.transform.loc);
+    tmpTargetLoc.set(this.target.position);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     tmpQuat.mul(0, 1, 0, 0);
     tmpTransform.quat.set(tmpQuat);
