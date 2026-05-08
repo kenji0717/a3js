@@ -263,7 +263,7 @@ export class BillboardTransformer extends DefaultTransformer {
 
   update(_dt: number): void {
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.position);
+    this.target.getPosition(tmpTargetLoc);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
@@ -294,7 +294,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
   update(dt: number) {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.position);
+    this.target.getPosition(tmpTargetLoc);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
@@ -346,14 +346,14 @@ export class FollowTransformer extends StaticTransformer {
   update(dt: number) {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
-    tmpTargetLoc.set(this.target.position);
+    this.target.getPosition(tmpTargetLoc);
     getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     tmpQuat.mul(0, 1, 0, 0);
     tmpTransform.quat.set(tmpQuat);
 
     tmpObjLoc.set(this.lookFrom);
-    tmpObjLoc.apply(this.target.quat);
-    tmpObjLoc.add(this.target.position);
+    tmpObjLoc.apply(this.target.getQuat());
+    tmpObjLoc.add(this.target.getPosition());
     tmpTransform.loc.set(tmpObjLoc);
 
     this.transform.loc.lerp(this.transform.loc, tmpTransform.loc, (1-this.options.smoothness));

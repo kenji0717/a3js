@@ -43,12 +43,12 @@ export abstract class Camera extends ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.position);
+      xVO.getPosition(target);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.position,target,up);
+    const newQuat = getLookAtQuaternion(this.getPosition(),target,up);
     newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuat(newQuat);
   }
@@ -66,12 +66,12 @@ export abstract class Camera extends ObjectA3 {
     if (typeof xVO === "number") {
       target.set(xVO,y!,z!);
     } else if (xVO instanceof ObjectA3) {
-      target.set(xVO.position);
+      xVO.getPosition(target);
     } else {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.position,target,up);
+    const newQuat = getLookAtQuaternion(this.getPosition(),target,up);
     newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuatNow(newQuat);
   }

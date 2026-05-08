@@ -204,7 +204,10 @@ export class ObjectA3 {
       await this.clickListener(this);
   }
 
-  get position(): Vec3 { return this.transformer.transform.loc.clone(); }
+  getPosition(out?: Vec3): Vec3 {
+    if (out) { out.set(this.transformer.transform.loc); return out; }
+    return this.transformer.transform.loc.clone();
+  }
   setPosition(x: number, y: number, z: number): void;
   setPosition(v: Vec3): void;
   setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -227,7 +230,10 @@ export class ObjectA3 {
     this.transformer.setPositionNow(tmp.v0);
   }
 
-  get quat(): Quat { return this.transformer.transform.quat.clone(); }
+  getQuat(out?: Quat): Quat {
+    if (out) { out.set(this.transformer.transform.quat); return out; }
+    return this.transformer.transform.quat.clone();
+  }
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -250,7 +256,10 @@ export class ObjectA3 {
     this.transformer.setQuatNow(tmp.q0);
   }
 
-  get scale(): Vec3 { return this.transformer.transform.scale.clone(); }
+  getScale(out?: Vec3): Vec3 {
+    if (out) { out.set(this.transformer.transform.scale); return out; }
+    return this.transformer.transform.scale.clone();
+  }
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -404,7 +413,7 @@ export class ObjectA3 {
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
     eulerToQuaternion(tmp.v0, order, tmp.q1);
-    tmp.q0.set(this.quat);
+    this.getQuat(tmp.q0);
     tmp.q0.mul(tmp.q1);
     this.setQuat(tmp.q0);
   }
@@ -419,7 +428,7 @@ export class ObjectA3 {
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
     eulerToQuaternion(tmp.v0, order, tmp.q1);
-    tmp.q0.set(this.quat);
+    this.getQuat(tmp.q0);
     tmp.q0.mul(tmp.q1);
     this.setQuatNow(tmp.q0);
   }
@@ -427,7 +436,7 @@ export class ObjectA3 {
   scaleBy(v: Vec3): void;
   scaleBy(x: number, y: number, z: number): void;
   scaleBy(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.scale);
+    this.getScale(tmp.v0);
     if (typeof xOrV === 'number')
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else
@@ -438,7 +447,7 @@ export class ObjectA3 {
   mulScaleNow(v: Vec3): void;
   mulScaleNow(x: number, y: number, z: number): void;
   mulScaleNow(xOrV: number | Vec3, y?: number, z?: number) {
-    tmp.v0.set(this.scale);
+    this.getScale(tmp.v0);
     if (typeof xOrV === 'number')
       tmp.v0.set(tmp.v0.x*xOrV, tmp.v0.y*y!, tmp.v0.z*z!);
     else

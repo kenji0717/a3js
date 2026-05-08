@@ -98,8 +98,8 @@ export class OrbitController extends BaseController {
 
   update(_dt: number): void {
     if (!this.view) return;
-    const cameraLoc = this.view.camera.position;
-    const cameraQuat = this.view.camera.quat;
+    const cameraLoc = this.view.camera.getPosition();
+    const cameraQuat = this.view.camera.getQuat();
 
     if (this.isLeftDown && !this.ctrlKey) {
       const epsilon = 0.01;

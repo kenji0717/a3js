@@ -30,6 +30,7 @@ export class KinematicCharacterTransformer implements Transformer {
   nextLocation: Vec3;
   tmpV1: Vec3;
   tmpV2: Vec3;
+  tmpQ1: Quat;
 
   constructor(options: Partial<KinematicCharacterTransformerOptions> = {}) {
     this.completeOptions = {
@@ -41,6 +42,7 @@ export class KinematicCharacterTransformer implements Transformer {
     this.nextLocation = new Vec3();
     this.tmpV1 = new Vec3();
     this.tmpV2 = new Vec3();
+    this.tmpQ1 = new Quat();
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
@@ -51,11 +53,11 @@ export class KinematicCharacterTransformer implements Transformer {
       const o = new THREE.Object3D();
       o.add(objectA3.object3D);
       { // transformerから持ってこないと
-        objectA3.position.write(tmpV);
+        objectA3.getPosition(this.tmpV1); this.tmpV1.write(tmpV);
         o.position.set(tmpV.x,tmpV.y,tmpV.z);
-        objectA3.quat.write(tmpQ);
+        objectA3.getQuat(this.tmpQ1); this.tmpQ1.write(tmpQ);
         o.quaternion.set(tmpQ.x,tmpQ.y,tmpQ.z,tmpQ.w);
-        objectA3.scale.write(tmpV);
+        objectA3.getScale(this.tmpV2); this.tmpV2.write(tmpV);
         o.scale.set(tmpV.x,tmpV.y,tmpV.z);
       }
       const box = new THREE.Box3().setFromObject(o);
