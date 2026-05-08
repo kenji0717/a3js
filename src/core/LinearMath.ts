@@ -404,7 +404,7 @@ export function getLookAtQuaternion(me: Vec3,target: Vec3,up: Vec3) {
  * オイラー角(ラジアン)を四元数に変換する関数、2番目の引数は
  * 軸の回転順番を指定するRotationOrder。
  */
-export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "XYZ" ): Quat {
+export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "ZXY" ): Quat {
   const quat = new Quat(0,0,0,1);
   for (let i=0;i<3;i++) {
     const c = order.charAt(i);
@@ -458,7 +458,7 @@ const clamp = (v: number) => Math.max(-1, Math.min(1, v));
  * 四元数をオイラー角(ラジアン)に変換する関数、2番目の引数は
  * 軸の回転順番を指定するRotationOrder。
  */
-export function quatToVec3Euler(q: Quat, order: RotationOrder = "XYZ" ): Vec3 {
+export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY" ): Vec3 {
   const m = quatToMatrix(q);
   const v = new Vec3();
   let x=0,y=0,z=0;

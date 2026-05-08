@@ -187,8 +187,8 @@ export class SmoothTransformer implements Transformer {
   getAngularVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
-    const first = quatToVec3Euler(this.startTransform.quat,'XYZ');
-    const last = quatToVec3Euler(this.endTransform.quat,'XYZ');
+    const first = quatToVec3Euler(this.startTransform.quat,'ZXY');
+    const last = quatToVec3Euler(this.endTransform.quat,'ZXY');
     v.set(last.x-first.x, last.y-first.y, last.z-first.z);
     const t = this.currentTime<this.duration?this.currentTime:this.duration;
     v.scale((-6*t*t+6*t)/this.duration)

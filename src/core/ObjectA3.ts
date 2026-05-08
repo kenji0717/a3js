@@ -54,7 +54,7 @@ export let a3jsLoading = new THREE.Mesh(geo,mat);
  * 必要なメソッドを実装する。
  */
 export class ObjectA3 {
-  static defaultRotationOrder: RotationOrder = "XYZ";
+  static defaultRotationOrder: RotationOrder = "ZXY";
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
   rotationOrder?: RotationOrder;
   upVector?: Vec3;
