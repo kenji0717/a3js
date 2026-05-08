@@ -187,9 +187,9 @@ export class SmoothTransformer implements Transformer {
   getAngularVelocity(v: Vec3 | undefined) {
     if (!v)
       v = new Vec3();
-    const first = quatToVec3Euler(this.startTransform.quat,'ZXY');
-    const last = quatToVec3Euler(this.endTransform.quat,'ZXY');
-    v.set(last.x-first.x, last.y-first.y, last.z-first.z);
+    quatToVec3Euler(this.startTransform.quat, 'ZXY', tmpVec1);
+    quatToVec3Euler(this.endTransform.quat, 'ZXY', tmpVec2);
+    v.set(tmpVec2.x-tmpVec1.x, tmpVec2.y-tmpVec1.y, tmpVec2.z-tmpVec1.z);
     const t = this.currentTime<this.duration?this.currentTime:this.duration;
     v.scale((-6*t*t+6*t)/this.duration)
     return v;
@@ -222,6 +222,10 @@ export class SmoothTransformer implements Transformer {
 
 const tmpObjLoc: Vec3 = new Vec3();
 const tmpTargetLoc: Vec3 = new Vec3();
+const tmpQuat: Quat = new Quat();
+const tmpTransform: Transform = new Transform();
+const tmpVec1: Vec3 = new Vec3();
+const tmpVec2: Vec3 = new Vec3();
 /**
  * targetで指定した物の方を正面として向き続けるための
  * Transformer。特にtargetをカメラにするような使い方を
@@ -260,8 +264,8 @@ export class BillboardTransformer extends DefaultTransformer {
   update(_dt: number): void {
     tmpObjLoc.set(this.transform.loc);
     tmpTargetLoc.set(this.target.transformer.transform.loc);
-    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
-    this.transform.quat.set(quat);
+    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    this.transform.quat.set(tmpQuat);
   }
 }
 
@@ -291,8 +295,8 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
     tmpTargetLoc.set(this.target.transformer.transform.loc);
-    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
-    this.transform.quat.set(quat);
+    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    this.transform.quat.set(tmpQuat);
   }
 }
 
@@ -341,19 +345,18 @@ export class FollowTransformer extends StaticTransformer {
 
   update(dt: number) {
     super.update(dt);
-    const goalTrans = new Transform();
     tmpObjLoc.set(this.transform.loc);
     tmpTargetLoc.set(this.target.transformer.transform.loc);
-    const quat = getLookAtQuaternion(tmpObjLoc,tmpTargetLoc,this.up);
-    quat.mul(new Quat(0,1,0,0));
-    goalTrans.quat.set(quat);
+    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    tmpQuat.mul(0, 1, 0, 0);
+    tmpTransform.quat.set(tmpQuat);
 
     tmpObjLoc.set(this.lookFrom);
     tmpObjLoc.apply(this.target.quat);
     tmpObjLoc.add(this.target.position);
-    goalTrans.loc.set(tmpObjLoc);
+    tmpTransform.loc.set(tmpObjLoc);
 
-    this.transform.loc.lerp(this.transform.loc,goalTrans.loc,(1-this.options.smoothness));
-    this.transform.quat.slerp(this.transform.quat,goalTrans.quat,(1-this.options.smoothness));
+    this.transform.loc.lerp(this.transform.loc, tmpTransform.loc, (1-this.options.smoothness));
+    this.transform.quat.slerp(this.transform.quat, tmpTransform.quat, (1-this.options.smoothness));
   }
 }

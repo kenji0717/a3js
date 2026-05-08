@@ -325,8 +325,14 @@ export class AvatarPositionController extends BaseController {
       if (this._keySpace) this._velY = 0.5;
     }
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
-    if (this._keyLeft) this._avatarNextQuat.mul(eulerToQuaternion(new Vec3(0,this.options.angSpeed,0)));
-    if (this._keyRight) this._avatarNextQuat.mul(eulerToQuaternion(new Vec3(0,-this.options.angSpeed,0)));
+    if (this._keyLeft) {
+      tmp.v0.set(0, this.options.angSpeed, 0);
+      this._avatarNextQuat.mul(eulerToQuaternion(tmp.v0, 'ZXY', tmp.q0));
+    }
+    if (this._keyRight) {
+      tmp.v0.set(0, -this.options.angSpeed, 0);
+      this._avatarNextQuat.mul(eulerToQuaternion(tmp.v0, 'ZXY', tmp.q0));
+    }
     avatar.transformer.setPosition(this._avatarNextLoc);
     avatar.transformer.setQuat(this._avatarNextQuat);
   }
@@ -429,8 +435,8 @@ export class AvatarVelocityController extends BaseController {
     }
     this._avatarNextVel.add(0,this._velY,0);
 
-    if (this._keyLeft) this._avatarNextAngVel.add(new Vec3(0,this.options.angSpeed,0));
-    if (this._keyRight) this._avatarNextAngVel.add(new Vec3(0,-this.options.angSpeed,0));
+    if (this._keyLeft) this._avatarNextAngVel.add(0, this.options.angSpeed, 0);
+    if (this._keyRight) this._avatarNextAngVel.add(0, -this.options.angSpeed, 0);
     avatar.transformer.setLinearVelocity(this._avatarNextVel);
     avatar.transformer.setAngularVelocity(this._avatarNextAngVel);
   }

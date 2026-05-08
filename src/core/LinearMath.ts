@@ -351,7 +351,7 @@ const q3 = new Quat(); // 計算のテンポラリで使う
  * a3.ObjectA3.lookAt()をオーバーライドすることで反対方向を向く
  * ようにしている。
  */
-export function getLookAtQuaternion(me: Vec3,target: Vec3,up: Vec3) {
+export function getLookAtQuaternion(me: Vec3, target: Vec3, up: Vec3, out?: Quat): Quat {
   up.normalize();
   const forward = me.clone().sub(target).normalize();
   const right = new Vec3().cross(forward,up).normalize();
@@ -361,42 +361,24 @@ export function getLookAtQuaternion(me: Vec3,target: Vec3,up: Vec3) {
   const m10 = right.y; const m11 = trueUp.y; const m12 = -forward.y;
   const m20 = right.z; const m21 = trueUp.z; const m22 = -forward.z;
 
+  let qx: number, qy: number, qz: number, qw: number;
   const trace = m00 + m11 + m22;
   if (trace > 0) {
     const s = Math.sqrt(trace+1.0)*2.0;
-    return new Quat(
-      (m21-m12)/s,
-      (m02-m20)/s,
-      (m10-m01)/s,
-      0.25*s
-    );
+    qx = (m21-m12)/s; qy = (m02-m20)/s; qz = (m10-m01)/s; qw = 0.25*s;
+  } else if ((m00>m11) && (m00>m22)) {
+    const s = Math.sqrt(1.0+m00-m11-m22) * 2.0;
+    qx = 0.25*s; qy = (m01+m10)/s; qz = (m02+m20)/s; qw = (m21-m12)/s;
+  } else if (m11>m22) {
+    const s = Math.sqrt(1.0+m11-m00-m22) * 2.0;
+    qx = (m01+m10)/s; qy = 0.25*s; qz = (m12+m21)/s; qw = (m02-m20)/s;
   } else {
-    if ((m00>m11) && (m00>m22)) {
-      const s = Math.sqrt(1.0+m00-m11-m22) * 2.0;
-      return new Quat(
-        0.25*s,
-        (m01+m10)/s,
-        (m02+m20)/s,
-        (m21-m12)/s
-      );
-    } else if (m11>m22) {
-      const s = Math.sqrt(1.0+m11-m00-m22) * 2.0;
-      return new Quat(
-        (m01+m10)/s,
-        0.25*s,
-        (m12+m21)/s,
-        (m02-m20)/s
-      );
-    } else {
-      const s = Math.sqrt(1.0+m22-m00-m11) * 2.0;
-      return new Quat(
-        (m02+m20)/s,
-        (m12+m21)/s,
-        0.25*s,
-        (m10-m01)/s
-      );
-    }
+    const s = Math.sqrt(1.0+m22-m00-m11) * 2.0;
+    qx = (m02+m20)/s; qy = (m12+m21)/s; qz = 0.25*s; qw = (m10-m01)/s;
   }
+  const result = out ?? new Quat();
+  result.set(qx, qy, qz, qw);
+  return result;
 }
 
 
@@ -404,8 +386,8 @@ export function getLookAtQuaternion(me: Vec3,target: Vec3,up: Vec3) {
  * オイラー角(ラジアン)を四元数に変換する関数、2番目の引数は
  * 軸の回転順番を指定するRotationOrder。
  */
-export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "ZXY" ): Quat {
-  const quat = new Quat(0,0,0,1);
+export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "ZXY", out?: Quat): Quat {
+  const quat = out !== undefined ? out.set(0, 0, 0, 1) : new Quat(0, 0, 0, 1);
   for (let i=0;i<3;i++) {
     const c = order.charAt(i);
     switch(c) {
@@ -458,9 +440,9 @@ const clamp = (v: number) => Math.max(-1, Math.min(1, v));
  * 四元数をオイラー角(ラジアン)に変換する関数、2番目の引数は
  * 軸の回転順番を指定するRotationOrder。
  */
-export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY" ): Vec3 {
+export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY", out?: Vec3): Vec3 {
   const m = quatToMatrix(q);
-  const v = new Vec3();
+  const v = out ?? new Vec3();
   let x=0,y=0,z=0;
   // --- orderごとの分岐 ---
   switch (order) {

@@ -428,9 +428,9 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = eulerToQuaternion(tmp.v0,order);
+    eulerToQuaternion(tmp.v0, order, tmp.q1);
     tmp.q0.set(this.quat);
-    tmp.q0.mul(quat);
+    tmp.q0.mul(tmp.q1);
     this.setQuat(tmp.q0);
   }
 
@@ -443,9 +443,9 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    const quat = eulerToQuaternion(tmp.v0,order);
+    eulerToQuaternion(tmp.v0, order, tmp.q1);
     tmp.q0.set(this.quat);
-    tmp.q0.mul(quat);
+    tmp.q0.mul(tmp.q1);
     this.setQuatNow(tmp.q0);
   }
 

@@ -68,8 +68,7 @@ class SampleObjectMotion extends DefaultTransformer {
     super.update(dt);
     if (this.testMode) {
       this.rot.add(dt,dt,dt);
-      const q = eulerToQuaternion(this.rot);
-      this.transform.quat.set(q);
+      eulerToQuaternion(this.rot, 'ZXY', this.transform.quat);
     }
   }
 }
