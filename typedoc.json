@@ -1,6 +1,6 @@
 {
   "entryPoints": ["src/index.ts"],
-  "out": "docs-src/public/api",
+  "out": "docs/api",
   "name": "a3js API Documentation",
   "excludePrivate": true,
   "excludeInternal": true,

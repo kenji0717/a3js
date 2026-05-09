@@ -18,7 +18,9 @@
     "dev": "vite",
     "build": "vite build && tsc --emitDeclarationOnly",
     "preview": "vite preview",
-    "docs": "typedoc && vitepress build docs-src --outDir docs && rm -r docs-src/public/api"
+    "docs:api": "typedoc",
+    "docs:site": "test -d docs/api && cp -r docs/api docs-src/public/api && vitepress build docs-src --outDir docs && rm -fr docs-src/public/api",
+    "docs": "npm run docs:api && npm run docs:site"
   },
   "devDependencies": {
     "@types/three": "^0.182.0",

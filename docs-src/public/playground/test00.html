@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>a3js Playground</title>
+    <script type="importmap">
+     {
+       "imports": {
+         "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+         "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+         "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+         "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+         "meshoptimizer": "https://unpkg.com/meshoptimizer@1.0.1/meshopt_decoder.module.js",
+         "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.38/+esm"
+       }
+     }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@latest/+esm" -->
+  </head>
+  <body>
+    <script type="module">
+     import * as a3 from 'a3js';
+     const w = new a3.Window(600,300);
+     const o = new a3.SampleObject();
+     w.scene.add(o);
+    </script>
+  </body>
+</html>

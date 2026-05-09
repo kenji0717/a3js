@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>a3js Playground</title>
+    <link rel="stylesheet" href="playground.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="left-panel"></div>
+      <div class="resizer"></div>
+      <div class="right-panel">
+        <iframe id="PreviewFrame"
+                class="PreviewFrame"
+                title="sketch preview"
+                srcdoc='<!DOCTYPE html><html lang="ja"></html>'
+                src="iframe_dummy.html"
+                allow="accelerometer; autoplay; camera; encrypted-media; geolocation; gyroscope; hid; microphone; magneto
+meter; midi; payment; usb; serial; xr-spatial-tracking"
+                scrolling="auto"
+                allowfullscreen=""
+                frameborder="0">
+        </iframe>
+      </div>
+    </div>
+    <script type="importmap">
+      {
+        "imports": {
+          "codemirror/": "https://deno.land/x/codemirror_esm@v6.0.1/esm/"
+        }
+      }
+    </script>
+    <script type="module" src="playground.js"></script>
+  </body>
+</html>
