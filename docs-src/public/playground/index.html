@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,16 +8,30 @@
   </head>
   <body>
     <div class="container">
-      <div class="left-panel"></div>
-      <div class="resizer"></div>
+      <div class="left-panel">
+        <div id="buttons_div">
+          <button id="save_btn">保存</button>
+          <button id="open_btn">開く</button>
+          <button id="play_btn">実行</button>
+          <button id="stop_btn">停止</button>
+        </div>
+        <div id="editor_div"></div>
+        <div id="console_div">
+          <div id="console_header_div">
+            Console<button id="console_clear_btn">clear</button>
+          </div>
+          <pre id="console_pre"></pre>
+        </div>
+        <input type="file" id="file_upload" value="">
+      </div>
+      <div class="resizer">⠿</div>
       <div class="right-panel">
         <iframe id="PreviewFrame"
                 class="PreviewFrame"
                 title="sketch preview"
                 srcdoc='<!DOCTYPE html><html lang="ja"></html>'
                 src="iframe_dummy.html"
-                allow="accelerometer; autoplay; camera; encrypted-media; geolocation; gyroscope; hid; microphone; magneto
-meter; midi; payment; usb; serial; xr-spatial-tracking"
+                allow="accelerometer; autoplay; camera; encrypted-media; geolocation; gyroscope; hid; microphone; magnetometer; midi; payment; usb; serial; xr-spatial-tracking"
                 scrolling="auto"
                 allowfullscreen=""
                 frameborder="0">
