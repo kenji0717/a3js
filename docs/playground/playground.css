@@ -10,6 +10,8 @@ body {
   display: flex;
 }
 
+/* 以下、リサイズできる左右のパネルのためのスタイル */
+
 .container {
   display: flex;
   height: 100vh;
@@ -21,30 +23,81 @@ body {
   width: 50%;
   min-width: 100px;
   padding: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .right-panel {
-  background-color: lightcoral;
   flex-grow: 1;
-  padding: 10px;
 }
 
 .resizer {
-  width: 5px;
+  width: 2em;
   background-color: gray;
   cursor: ew-resize;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
 
-/* ############################# */
+/* リサイズできる左右のパネルのためのスタイル、以上 */
+
+/* ########################################################### */
+
+/* 以下、CodeMirror 6のためのスタイル */
+
+#editor_div {
+  flex-grow: 1;
+  min-height: 0; /* 子がはみださないように */
+}
 
 .cm-editor {
-  /* width: 800px; */
-  height: 400px;
+  height: 100%;
   border: solid;
 }
 
 /* 高さを有効にするにはscrollerにもoverflow: autoが必要 */
 .cm-editor .cm-scroller {
+  height: 100%;
   overflow: auto;
 }
+
+/* CodeMirror 6のためのスタイル、以上 */
+
+/* ########################################################### */
+
+/* 以下、a3js Playgroundの機能実装のスタイル */
+
+#buttons_div {
+  padding-bottom: 10px;
+}
+
+#console_div {
+  flex-shrink: 0;
+  margin-top: 10px;
+  height: 20vh;
+  border: solid;
+  display: flex;
+  flex-direction: column;
+}
+
+#console_header_div {
+}
+
+#console_pre {
+  overflow: scroll;
+  flex-grow: 1;
+}
+
+#file_upload {
+  display: none;
+}
+
+#PreviewFrame {
+  width: 100%;
+  height: 100vh;
+}
+
+/* a3js Playgroundの機能実装のスタイル、以上 */
