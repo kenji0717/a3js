@@ -87,6 +87,11 @@ export class Scene {
     }
   }
 
+  removeAll() {
+    const tmpObjects = [...this.objects];
+    tmpObjects.forEach((o)=>{this.remove(o);});
+  }
+
   setCollisionListener(func: (cs: Collision[]) => void) {
     this.collisionListener = func;
   }
