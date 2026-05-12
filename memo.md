@@ -1,4 +1,11 @@
 
+SmoothTransformer, BillboardTransformer, SmoothBillboardTransformerの
+コンストラクタにオプション引数を追加してオプションのデフォルトも追加すべし。
+追加したらObjectA3#setTransformModeにも対応すべし。そして
+TransformModeには'User'モードも必要だと思う。
+
+-----
+
 Claudeに意見をもらってクラス名やメソッド名などを大幅に変更した。
 互換性ないのでメジャーバージョンアップするべきところだけど、まだ
 ネーミングには問題あるし、Vec3などを使い捨てない方向性のメソッド
