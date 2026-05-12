@@ -10,6 +10,8 @@ import { RapierTransformer } from '../rapier/RapierPhysics';
 import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
+import { KinematicCharacterTransformer } from '../rapier/KinematicCharacterTransformer';
+import { DynamicCharacterTransformer } from '../rapier/DynamicCharacterTransformer';
 
 /**
  * スクリーン上における方向を表します。
@@ -35,7 +37,9 @@ export type TransformMode =
   | "Follow"
   | "Billboard"
   | "SmoothBillboard"
-  | "SimplePhysics";
+  | "SimplePhysics"
+  | "KinematicCharacter"
+  | "DynamicCharacter";
 
 const geo = new THREE.SphereGeometry();
 const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -131,11 +135,11 @@ export class ObjectA3 {
       if (!target) throw new Error('ObjectA3.setTransformMode(): SmoothBillboard mode needs target.');
       this.setTransformer(new SmoothBillboardTransformer(target));
     } else if (mode === "SimplePhysics") {
-      const opt = {
-        ...defaultPhysicsMotionOptions,
-        ...options
-      };
-      this.setTransformer(new RapierTransformer(opt));
+      this.setTransformer(new RapierTransformer(options));
+    } else if (mode === "KinematicCharacter") {
+      this.setTransformer(new KinematicCharacterTransformer(options));
+    } else if (mode === "DynamicCharacter") {
+      this.setTransformer(new DynamicCharacterTransformer(options));
     }
   }
 
