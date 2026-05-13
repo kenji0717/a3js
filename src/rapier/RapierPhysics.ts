@@ -208,6 +208,9 @@ export class RapierTransformer implements Transformer {
     this.colliders = [];
     this.bodyDesc = this.makeBodyDesc();
     this.configColliderDescs();
+    this.bodyDesc.setTranslation(trans.loc.x,trans.loc.y,trans.loc.z);
+    this.bodyDesc.setRotation(trans.quat);
+    //this.bodyDesc.setScale(???); // 保留
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
@@ -219,6 +222,9 @@ export class RapierTransformer implements Transformer {
       if (this.objectA3) // GAHA
         collisionMap.set(collider.handle,this.objectA3);
     });
+    this.body.setTranslation(this.transform.loc,true);
+    this.body.setRotation(this.transform.quat,true);
+    //this.body.setScale(???); // 保留
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
     if (this.body)
@@ -236,7 +242,7 @@ export class RapierTransformer implements Transformer {
   }
   setPositionNow(v: Vec3): void {
     if (this.body)
-      this.body.setTranslation(v,true); // true? false?
+      this.body.setTranslation(v,true);
     else
       this.bodyDesc?.setTranslation(v.x,v.y,v.z);
     this.transform.loc.set(v);
@@ -247,9 +253,9 @@ export class RapierTransformer implements Transformer {
   }
   setQuatNow(q: Quat): void {
     if (this.body)
-      this.body.setRotation(q,true); // true? false?
+      this.body.setRotation(q,true);
     else
-      this.bodyDesc?.setRotation(q); // true? false?
+      this.bodyDesc?.setRotation(q);
     this.transform.quat.set(q);
   }
 

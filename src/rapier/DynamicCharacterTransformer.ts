@@ -73,12 +73,7 @@ export class DynamicCharacterTransformer implements Transformer {
       trans.loc.y,
       trans.loc.z
     );
-    this.bodyDesc.setRotation({
-      x: trans.quat.x,
-      y: trans.quat.y,
-      z: trans.quat.z,
-      w: trans.quat.w
-    });
+    this.bodyDesc.setRotation(trans.quat);
     this.colliderDesc = RAPIER.ColliderDesc.capsule(
         this.completeOptions.height,
         this.completeOptions.radius);
@@ -89,6 +84,9 @@ export class DynamicCharacterTransformer implements Transformer {
     if (this.bodyDesc) {
       this.body = world.world.createRigidBody(this.bodyDesc);
       this.body.setEnabledRotations(false,false,false,true); // これで回転しない
+      this.body.setTranslation(this.transform.loc,true);
+      this.body.setRotation(this.transform.quat,true);
+      //this.body.setScale(???); // 保留
     }
     if (this.colliderDesc)
       this.collider = world.world.createCollider(this.colliderDesc,this.body);
@@ -114,21 +112,27 @@ export class DynamicCharacterTransformer implements Transformer {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
     v = this.tmpV1;
-    if (this.collider)
-      this.collider.setTranslation(v);
+    if (this.body)
+      this.body.setTranslation(v,true);
+    else
+      this.bodyDesc?.setTranslation(v.x,v.y,v.z);
     this.transform.loc.set(v);
     this.nextLocation.set(v);
   }
 
   setQuat(q: Quat): void {
     // Capluleだし、制限なしとする
-    if (this.collider)
-      this.collider.setRotation(q);
+    if (this.body)
+      this.body.setRotation(q,true);
+    else
+      this.bodyDesc?.setRotation(q);
     this.transform.quat.set(q);
   }
   setQuatNow(q: Quat): void {
-    if (this.collider)
-      this.collider.setRotation(q);
+    if (this.body)
+      this.body.setRotation(q,true);
+    else
+      this.bodyDesc?.setRotation(q);
     this.transform.quat.set(q);
   }
 
