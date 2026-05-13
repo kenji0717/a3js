@@ -1,4 +1,12 @@
 
+APIの心配ごと
+
+* setTransformMode()の引数が3つもあって良いのか？
+    + 関係するのはFollow, BillboardTransformer, SmoothBillboardTransformer
+      のコンストラクタ
+
+-----
+
 SmoothTransformer, BillboardTransformer, SmoothBillboardTransformerの
 コンストラクタにオプション引数を追加してオプションのデフォルトも追加すべし。
 追加したらObjectA3#setTransformModeにも対応すべし。そして
