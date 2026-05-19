@@ -380,9 +380,9 @@ export class ObjectA3 {
     this.setPosition(tmp.v1);
   }
 
-  addLocationNow(v: Vec3): void;
-  addLocationNow(x: number, y: number, z: number): void;
-  addLocationNow(xOrV: number | Vec3, y?: number, z?: number) {
+  translateNow(v: Vec3): void;
+  translateNow(x: number, y: number, z: number): void;
+  translateNow(xOrV: number | Vec3, y?: number, z?: number) {
     tmp.v1.set(this.transformer.transform.loc);
     if (typeof xOrV === 'number')
       tmp.v1.add(xOrV,y!,z!);
@@ -474,7 +474,7 @@ export class ObjectA3 {
   moveForwardNow(f: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(f);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   moveBackward(b: number) {
@@ -486,7 +486,7 @@ export class ObjectA3 {
   moveBackwardNow(b: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(-b);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   moveRight(r: number) {
@@ -498,7 +498,7 @@ export class ObjectA3 {
   moveRightNow(r: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(-r);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   moveLeft(l: number) {
@@ -510,7 +510,7 @@ export class ObjectA3 {
   moveLeftNow(l: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(l);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   moveUp(u: number) {
@@ -522,7 +522,7 @@ export class ObjectA3 {
   moveUpNow(u: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(u);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   moveDown(d: number) {
@@ -534,7 +534,7 @@ export class ObjectA3 {
   moveDownNow(d: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(-d);
-    this.addLocationNow(tmp.v0);
+    this.translateNow(tmp.v0);
   }
 
   turnUp(u: number) {
