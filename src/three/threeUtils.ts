@@ -3,7 +3,7 @@ import { readBlobFromUnzippedA3,
          readStringFromUnzippedA3 } from '../utils/math';
 import type { UnzippedA3 } from '../utils/math';
 //import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
-import { VRMLLoader2, vrmlLoaderBackgroundTexture, vrmlLoaderFog } from './VRMLLoader2.js';
+import { VRMLLoader2 } from './VRMLLoader2.js';
 //import { BVHLoader } from 'three/addons/loaders/BVHLoader.js';
 import { BVHLoader2 } from '../three/BVHLoader2.js';
 //import type { BVH } from 'three/addons/loaders/BVHLoader.js';
@@ -12,28 +12,28 @@ import type { BVH } from '../three/BVHLoader2.js';
 export let vrmlBackgroundTexture: THREE.Texture | undefined;
 export let vrmlFog: THREE.Fog | THREE.FogExp2 | undefined;
 
-let vrmlLoader: VRMLLoader2;
-export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: string): Promise<THREE.Object3D> {
-  if (!vrmlLoader)
-    vrmlLoader = new VRMLLoader2();
+export interface VrmlAndEnv {
+  object3D: THREE.Object3D;
+  bgTexture: THREE.Texture | undefined;
+  fog: THREE.Fog | THREE.FogExp2 | undefined;
+}
+
+export async function loadVrmlInUnzippedA3(unzippedA3: UnzippedA3, vrmlFile: string): Promise<VrmlAndEnv> {
+  const manager = new THREE.LoadingManager();
   // URLModifierでVRML内のテクスチャ参照をBlob URLに置換する
-  // 処理が必要なのだが、これをするとVRMLLoaderだけでなく、
-  // AudioLoaderとかThree.js全体に影響するっぽいので処理が終わ
-  // ったらすぐにダミーのURLModifierを設定すること。
-  vrmlLoader.manager.setURLModifier((url) => {
+  // 処理が必要。
+  manager.setURLModifier((url) => {
     if (url.startsWith('./'))
       url = url.substring(2);
     return URL.createObjectURL(readBlobFromUnzippedA3(unzippedA3,url));
   });
+  const vrmlLoader = new VRMLLoader2(manager);
 
-  vrmlBackgroundTexture = undefined;
-  vrmlFog = undefined;
-  const mesh = await vrmlLoader.loadAsync(vrmlFile);
-  vrmlBackgroundTexture = vrmlLoaderBackgroundTexture;
-  vrmlFog = vrmlLoaderFog;
+  const object3D = await vrmlLoader.loadAsync(vrmlFile);
+  const bgTexture = vrmlLoader.backgroundTexture;
+  const fog = vrmlLoader.fog;
 
-  vrmlLoader.manager.setURLModifier((url)=>{return url;})
-  return mesh;
+  return {object3D, bgTexture, fog};
 }
 
 let bvhLoader: BVHLoader2;

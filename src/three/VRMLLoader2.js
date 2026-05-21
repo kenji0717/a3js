@@ -46,22 +46,11 @@ import {
 import chevrotain from './libs/chevrotain.module.min.js';
 
 /**
- * VRMLのBackgroundノードでSkyboxが使われた時に、scene.backgroundと
- * scene.environmentに設定できるCubeTextureを受け渡すために使用される。
- * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
- * 処理中にBackgrounノードでSkyboxが使われた時に、ここに入れられる。
- */
-export let vrmlLoaderBackgroundTexture;
-
-/**
- * VRMLの中でFogノードが使われた時に、scene.fogに設定できる
- * THREE.Fog、もしくはTHREE.FogExp2を受け渡すために使用される。
- * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
- * 処理中にFogノードが使われた時に、ここに入れられる。
- */
-export let vrmlLoaderFog;
-
-/**
+ * Three.jsのVRMLLoaderをもとにして、これに不足しており
+ * Acerola3Dで必要となるVRML機能を実装した物。
+ * 非同期処理を使って並列ロードさせる場合は、このLoaderの
+ * インスタンスを複数作ってロードさせて下さい。
+ *
  * A loader for the VRML format.
  *
  * ```js
@@ -74,6 +63,21 @@ export let vrmlLoaderFog;
  * @three_import import { VRMLLoader2 } from 'three/addons/loaders/VRMLLoader2.js';
  */
 class VRMLLoader2 extends Loader {
+	/**
+	 * VRMLのBackgroundノードでSkyboxが使われた時に、scene.backgroundと
+	 * scene.environmentに設定できるCubeTextureを受け渡すために使用される。
+	 * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
+	 * 処理中にBackgrounノードでSkyboxが使われた時に、ここに入れられる。
+	 */
+	backgroundTexture;
+
+	/**
+	 * VRMLの中でFogノードが使われた時に、scene.fogに設定できる
+	 * THREE.Fog、もしくはTHREE.FogExp2を受け渡すために使用される。
+	 * VRMLLoader2#load()の処理の一番最初にundefinedに設定され、load()の
+	 * 処理中にFogノードが使われた時に、ここに入れられる。
+	 */
+	fog;
 
 	/**
 	 * Constructs a new VRML loader.
@@ -96,8 +100,8 @@ class VRMLLoader2 extends Loader {
 	 * @param {onErrorCallback} onError - Executed when errors occur.
 	 */
 	load( url, onLoad, onProgress, onError ) {
-		vrmlLoaderBackgroundTexture = undefined;
-		vrmlLoaderFog = undefined;
+		this.backgroundTexture = undefined;
+		this.fog = undefined;
 
 		const scope = this;
 
@@ -911,9 +915,10 @@ class VRMLLoader2 extends Loader {
 
 		// GAHA
 		// backUrl, bottomUrl, frontUrl, leftUrl, rightUrl, topUrlを実装するが、
-		// 結果は vrmlLoaderBackgroundTexture 変数に保存される。またbackUrlなどは
+		// 結果は loader.backgroundTexture 変数に保存される。またbackUrlなどは
 		// 複数の画像を設定できるが、一番最初の画像だけを処理し、二番目以降の
-		// 画像は無視される。
+	    // 画像は無視される。
+        const my_this = this;
 		function buildBackgroundNode( node ) {
 
 			const group = new Group();
@@ -982,8 +987,8 @@ class VRMLLoader2 extends Loader {
 
 			if ( backUrl && bottomUrl && frontUrl && leftUrl && rightUrl && topUrl ) {
 				// skybox
-				const loader = new CubeTextureLoader();
-				vrmlLoaderBackgroundTexture = loader.load([
+				const loader = new CubeTextureLoader(my_this.manager);
+				my_this.backgroundTexture = loader.load([
 					rightUrl[0],
 					leftUrl[0],
 					topUrl[0],
@@ -1005,7 +1010,7 @@ class VRMLLoader2 extends Loader {
 						a.push([groundColor[i],groundColor[i+1],groundColor[i+2]]);
 					groundColor = a;
 				}
-				vrmlLoaderBackgroundTexture = new SkyGroundCubeTexture(
+				this.backgroundTexture = new SkyGroundCubeTexture(
 					{skyColor,
 					skyAngle,
 					groundColor,
@@ -1921,8 +1926,8 @@ class VRMLLoader2 extends Loader {
 		// GAHA
 		// 「霧」。拡大・縮小された時にはもっとちゃんと
 		// 処理すべきことがあるけど、実装できていない。
-		// 実際の霧ノードはvrmlLoaderFog変数経由で
-		// 受け渡されるので、この関数で返すのは空の
+		// 実際の霧ノードはloader.fogプロパティ
+		// 経由で受け渡されるので、この関数で返すのは空の
 		// THREE.Object3D。
 		function buildFogNode( node ) {
 			const color = new Color( 1, 1, 1 );
@@ -1966,14 +1971,14 @@ class VRMLLoader2 extends Loader {
 			}
 
 			if ( fogType === 'LINEAR' ) {
-				vrmlLoaderFog = new Fog(color,0,visibilityRange);
+				my_this.fog = new Fog(color,0,visibilityRange);
 			} else if ( fogType === 'EXPONENTIAL' ) {
 				let density = 0.02; // デフォルト値
 				// 予想だけど、visibilityRange離れると霧の濃さが
 				// 99%になるdensityの計算。
 				if (visibilityRange!==0)
 				  density = 2.146/visibilityRange;
-				vrmlLoaderFog = new FogExp2(color,density);
+				my_this.fog = new FogExp2(color,density);
 			} else {
 				console.warn( 'ThreeMFLoader.VRMLLoader2: Unknown fogType:', fogType );
 			}

@@ -4,8 +4,7 @@ import { Scene } from './Scene';
 import type { Figure, Motion } from './ActionObject';
 import { Vec3 } from './LinearMath';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
-import { loadVrmlInUnzippedA3, vrmlBackgroundTexture,
-         vrmlFog, loadBvhInUnzippedA3,
+import { loadVrmlInUnzippedA3, loadBvhInUnzippedA3,
          cloneBVH } from '../three/threeUtils';
 import { ClipMotion } from '../three/ClipMotion.js';
 import type { BVH } from '../three/BVHLoader2.js';
@@ -209,12 +208,13 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           if (partName && wrl) {
             const vrmlKey = unzippedA3.zipUrl + '!' + wrl;
             if (!vrmls[vrmlKey]) {
-              vrmls[vrmlKey] = await loadVrmlInUnzippedA3(unzippedA3,wrl);
-              if (vrmlBackgroundTexture) {
-                backgroundTexture = vrmlBackgroundTexture;
+              const res = await loadVrmlInUnzippedA3(unzippedA3,wrl);
+              vrmls[vrmlKey] = res.object3D;
+              if (res.bgTexture) {
+                backgroundTexture = res.bgTexture;
               }
-              if (vrmlFog) {
-                fog = vrmlFog;
+              if (res.fog) {
+                fog = res.fog;
               }
             }
             const s = p.getAttribute('scale');
