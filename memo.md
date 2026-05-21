@@ -7,6 +7,18 @@ APIの心配ごと
 
 -----
 
+やばい！math.tsのreadBlobFromUnzippedA3()あたりが非同期対応
+できてない。
+a3.Text3Dは手抜きすぎる。色、マテリアルを指定できるようにするべし。
+
+-----
+
+setTransformMode('Smooth');
+してみたらsetPosition()とかtranslate()が変かも
+(game01.html)
+
+-----
+
 SmoothTransformer, BillboardTransformer, SmoothBillboardTransformerの
 コンストラクタにオプション引数を追加してオプションのデフォルトも追加すべし。
 追加したらObjectA3#setTransformModeにも対応すべし。そして
