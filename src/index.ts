@@ -9,7 +9,7 @@ export type { Dir, Transformer, TransformMode } from './core/ObjectA3';
 export { ActionObject, Action } from './core/ActionObject';
 export type { Figure, Motion, Pose, Morph } from './core/ActionObject';
 export { DefaultTransformer, StaticTransformer, SmoothTransformer, SmoothBillboardTransformer, BillboardTransformer, FollowTransformer, defaultFollowTransformerOptions } from './core/Transformers';
-export type { FollowTransformerOptions } from './core/Transformers';
+export type { BillboardTransformerInputOptions, FollowTransformerOptions, FollowTransformerInputOptions, SmoothBillboardTransformerInputOptions } from './core/Transformers';
 export { ClipMotion } from './three/ClipMotion';
 export { BaseController, OrbitController, AvatarPositionController, AvatarVelocityController } from './core/Controller';
 export type { Controller, AvatarPositionControllerOptions, AvatarVelocityControllerOptions } from './core/Controller';

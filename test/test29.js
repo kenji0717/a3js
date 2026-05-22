@@ -7,7 +7,7 @@ view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
 obj.setState('Idle');
 view.scene.add(obj);
-view.camera.setTransformer(new a3.FollowTransformer(obj));
+view.camera.setTransformer(new a3.FollowTransformer({target:obj}));
 
 document.addEventListener('keydown',(e)=>{
   if (e.code === 'KeyW') obj.moveForward(0.3);

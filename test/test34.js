@@ -47,7 +47,7 @@ obj.setTransformer(cc.trans);
 obj.getAction('default').motion = cc.motion;
 obj.setState('default');
 view.scene.add(obj);
-view.camera.setTransformer(new a3.FollowTransformer(obj));
+view.camera.setTransformer(new a3.FollowTransformer({target:obj}));
 
 let t=0;
 while (true) {

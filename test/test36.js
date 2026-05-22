@@ -19,7 +19,7 @@ obj.setState('default');
 view.scene.add(obj);
 cc.reset(new a3.Vec3(100,1.5,100));
 
-view.camera.setTransformer(new a3.FollowTransformer(obj));
+view.camera.setTransformer(new a3.FollowTransformer({target:obj}));
 
 let keyW = false, keyA = false, keyS = false, keyD = false;
 let keySpace, keyEnter; keySpace=keyEnter=false;

@@ -3,9 +3,6 @@ import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 import type { Transformer } from "./ObjectA3";
 
-
-
-
 /**
  * 最も簡単なTransformerの実装クラス。座標、回転、拡大率の
  * 指定を即座に反映する。その他の機能は無い。ただ、メソッドは
@@ -226,6 +223,22 @@ const tmpQuat: Quat = new Quat();
 const tmpTransform: Transform = new Transform();
 const tmpVec1: Vec3 = new Vec3();
 const tmpVec2: Vec3 = new Vec3();
+
+
+export interface BillboardTransformerOptions {
+  target?: ObjectA3;
+  up: Vec3;
+}
+
+export interface BillboardTransformerInputOptions {
+  target: ObjectA3;
+  up?: Vec3;
+}
+
+export const defaultBillboardTransformerOptions: BillboardTransformerOptions = {
+  up: new Vec3(0,1,0)
+}
+
 /**
  * targetで指定した物の方を正面として向き続けるための
  * Transformer。特にtargetをカメラにするような使い方を
@@ -237,10 +250,14 @@ export class BillboardTransformer extends DefaultTransformer {
   up: Vec3;
   target: ObjectA3;
 
-  constructor(target: ObjectA3) {
+  constructor(options: BillboardTransformerInputOptions) {
     super();
-    this.up = new Vec3(0,1,0);
-    this.target = target;
+    const completeOpt = {
+      ...defaultBillboardTransformerOptions,
+      ...options
+    };
+    this.target = completeOpt.target;
+    this.up = completeOpt.up;
   }
 
   setTarget(target: ObjectA3) {
@@ -269,14 +286,32 @@ export class BillboardTransformer extends DefaultTransformer {
   }
 }
 
+export interface SmoothBillboardTransformerOptions {
+  target?: ObjectA3;
+  up: Vec3;
+}
+
+export interface SmoothBillboardTransformerInputOptions {
+  target: ObjectA3;
+  up?: Vec3;
+}
+
+export const defaultSmoothBillboardTransformerOptions: SmoothBillboardTransformerOptions = {
+  up: new Vec3(0,1,0)
+};
+
 export class SmoothBillboardTransformer extends SmoothTransformer {
   up: Vec3;
   target: ObjectA3;
 
-  constructor(target: ObjectA3) {
+  constructor(options: SmoothBillboardTransformerInputOptions) {
     super();
-    this.up = new Vec3(0,1,0);
-    this.target = target;
+    const completeOpt = {
+      ...defaultSmoothBillboardTransformerOptions,
+      ...options
+    };
+    this.target = completeOpt.target;
+    this.up = completeOpt.up;
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
@@ -301,9 +336,17 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
 }
 
 export interface FollowTransformerOptions {
+  target?: ObjectA3;
   lookFrom: {x:number, y:number, z:number};
   /** smoothness in [0,1) */
   smoothness: number;
+}
+
+export interface FollowTransformerInputOptions {
+  target: ObjectA3;
+  lookFrom?: {x:number, y:number, z:number};
+  /** smoothness in [0,1) */
+  smoothness?: number;
 }
 
 export const defaultFollowTransformerOptions: FollowTransformerOptions = {
@@ -319,24 +362,25 @@ export const defaultFollowTransformerOptions: FollowTransformerOptions = {
  * そのかわりsetPosition()などでは動かせなくなる。
  */
 export class FollowTransformer extends StaticTransformer {
-  options: FollowTransformerOptions;
   target: ObjectA3;
   lookFrom: Vec3;
   up: Vec3;
+  smoothness: number;
 
-  constructor(target: ObjectA3, options: Partial<FollowTransformerOptions>={}) {
+  constructor(options: FollowTransformerInputOptions) {
     super();
-    this.options = {
+    const completeOpt = {
       ...defaultFollowTransformerOptions,
       ...options
     };
-    this.target = target;
-    this.lookFrom = new Vec3(this.options.lookFrom);
-    if (target.upVector) {
-      this.up = target.upVector;
+    this.target = completeOpt.target;
+    this.lookFrom = new Vec3(completeOpt.lookFrom);
+    if (this.target.upVector) {
+      this.up = this.target.upVector;
     } else {
       this.up = ObjectA3.defaultUpVector;
     }
+    this.smoothness = completeOpt.smoothness;
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
@@ -356,7 +400,7 @@ export class FollowTransformer extends StaticTransformer {
     tmpObjLoc.add(this.target.getPosition());
     tmpTransform.loc.set(tmpObjLoc);
 
-    this.transform.loc.lerp(this.transform.loc, tmpTransform.loc, (1-this.options.smoothness));
-    this.transform.quat.slerp(this.transform.quat, tmpTransform.quat, (1-this.options.smoothness));
+    this.transform.loc.lerp(this.transform.loc, tmpTransform.loc, (1-this.smoothness));
+    this.transform.quat.slerp(this.transform.quat, tmpTransform.quat, (1-this.smoothness));
   }
 }

@@ -120,20 +120,17 @@ export class ObjectA3 {
     return this.transformer;
   }
 
-  setTransformMode(mode: TransformMode, target?: ObjectA3, options?: any) {
+  setTransformMode(mode: TransformMode, options?: any) {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
     else if (mode === "Smooth")
       this.setTransformer(new SmoothTransformer());
     else if (mode === "Follow") {
-      if (!target) throw new Error('ObjectA3.setTransformMode(): Follow mode needs target.');
-      this.setTransformer(new FollowTransformer(target,options));
+      this.setTransformer(new FollowTransformer(options));
     } else if (mode === "Billboard") {
-      if (!target) throw new Error('ObjectA3.setTransformMode(): Billboard mode needs target.');
-      this.setTransformer(new BillboardTransformer(target));
+      this.setTransformer(new BillboardTransformer(options));
     } else if (mode === "SmoothBillboard") {
-      if (!target) throw new Error('ObjectA3.setTransformMode(): SmoothBillboard mode needs target.');
-      this.setTransformer(new SmoothBillboardTransformer(target));
+      this.setTransformer(new SmoothBillboardTransformer(options));
     } else if (mode === "SimplePhysics") {
       this.setTransformer(new RapierTransformer(options));
     } else if (mode === "KinematicCharacter") {

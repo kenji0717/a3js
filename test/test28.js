@@ -16,7 +16,7 @@ obj.setState('Idle');
 obj.setPosition(0,5,3);
 view.scene.add(obj);
 view.setController(new a3.AvatarPositionController(obj));
-view.camera.setTransformer(new a3.FollowTransformer(obj));
+view.camera.setTransformer(new a3.FollowTransformer({target:obj}));
 
 
 const obj1 = new a3.Box();
