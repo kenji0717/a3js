@@ -124,13 +124,23 @@ export class Vec3 {
 
   /**
    * このベクトルの値を設定します。
-   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param v コピー元のベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  set(v: Vec3): Vec3;
+  /**
+   * このベクトルの値を設定します。
+   * @param v コピー元のベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  set(v: MutableVec3): Vec3;
+  /**
+   * このベクトルの値を設定します。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @returns `this`（メソッドチェーン用）
    */
-  set(v: Vec3): Vec3;
-  set(v: MutableVec3): Vec3;
   set(x: number, y: number, z: number): Vec3;
   set(xOrVV: Arg1Vec3, y?: number, z?: number): Vec3 {
     if (typeof xOrVV === "number") {
@@ -147,13 +157,23 @@ export class Vec3 {
 
   /**
    * 別のベクトルをこのベクトルに加算します（`this += v`）。
-   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param v 加算するベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  add(v: Vec3): Vec3;
+  /**
+   * 別のベクトルをこのベクトルに加算します（`this += v`）。
+   * @param v 加算するベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  add(v: MutableVec3): Vec3;
+  /**
+   * 別のベクトルをこのベクトルに加算します（`this += v`）。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @returns `this`（メソッドチェーン用）
    */
-  add(v: Vec3): Vec3;
-  add(v: MutableVec3): Vec3;
   add(x: number, y: number, z: number): Vec3;
   add(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -170,13 +190,23 @@ export class Vec3 {
   
   /**
    * 別のベクトルをこのベクトルから減算します（`this -= v`）。
-   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param v 減算するベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  sub(v: Vec3): Vec3;
+  /**
+   * 別のベクトルをこのベクトルから減算します（`this -= v`）。
+   * @param v 減算するベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
+  sub(v: MutableVec3): Vec3;
+  /**
+   * 別のベクトルをこのベクトルから減算します（`this -= v`）。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @returns `this`（メソッドチェーン用）
    */
-  sub(v: Vec3): Vec3;
-  sub(v: MutableVec3): Vec3;
   sub(x: number, y: number, z: number): Vec3;
   sub(xOrV: Arg1Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -368,14 +398,24 @@ export class Quat {
 
   /**
    * このクォータニオンの値を設定します。
-   * @param x x 成分（または `Quat` / `MutableQuat`）
+   * @param q コピー元のクォータニオン
+   * @returns `this`（メソッドチェーン用）
+   */
+  set(q: Quat): Quat;
+  /**
+   * このクォータニオンの値を設定します。
+   * @param q コピー元のクォータニオン
+   * @returns `this`（メソッドチェーン用）
+   */
+  set(q: MutableQuat): Quat;
+  /**
+   * このクォータニオンの値を設定します。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @param w w 成分
    * @returns `this`（メソッドチェーン用）
    */
-  set(q: Quat): Quat;
-  set(q: MutableQuat): Quat;
   set(x: number, y: number, z: number, w: number): Quat;
   set(xOrQ: Arg1Quat, y?: number, z?: number, w?: number): Quat {
     if (typeof xOrQ === "number") {

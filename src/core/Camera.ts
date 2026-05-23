@@ -46,18 +46,36 @@ export abstract class Camera extends ObjectA3 {
   abstract setHeadLightEnable(b: boolean): void;
 
   /**
-   * カメラが指定した位置・オブジェクトの方を向くように回転します。
+   * カメラが指定した位置の方を向くように回転します。
    *
    * @remarks
    * 通常の `ObjectA3.lookAt()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
    * 内部で 180° 補正されています。
    *
-   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param v 向く先の位置
+   */
+  lookAt(v: Vec3): void;
+  /**
+   * カメラが指定したオブジェクトの方を向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAt()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param o 向く先のオブジェクト
+   */
+  lookAt(o: ObjectA3): void;
+  /**
+   * カメラが指定した座標の方を向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAt()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param x 向く先の x 座標
    * @param y 向く先の y 座標
    * @param z 向く先の z 座標
    */
-  lookAt(v: Vec3): void;
-  lookAt(o: ObjectA3): void;
   lookAt(x: number, y: number, z: number): void;
   lookAt(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();
@@ -75,18 +93,36 @@ export abstract class Camera extends ObjectA3 {
   }
 
   /**
-   * カメラが指定した位置・オブジェクトの方を即座に向くように回転します。
+   * カメラが指定した位置の方を即座に向くように回転します。
    *
    * @remarks
    * 通常の `ObjectA3.lookAtNow()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
    * 内部で 180° 補正されています。
    *
-   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param v 向く先の位置
+   */
+  lookAtNow(v: Vec3): void;
+  /**
+   * カメラが指定したオブジェクトの方を即座に向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAtNow()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param o 向く先のオブジェクト
+   */
+  lookAtNow(o: ObjectA3): void;
+  /**
+   * カメラが指定した座標の方を即座に向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAtNow()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param x 向く先の x 座標
    * @param y 向く先の y 座標
    * @param z 向く先の z 座標
    */
-  lookAtNow(v: Vec3): void;
-  lookAtNow(o: ObjectA3): void;
   lookAtNow(x: number, y: number, z: number): void;
   lookAtNow(xVO: number | Vec3 | ObjectA3, y?: number, z?: number) {
     const target = new Vec3();

@@ -588,11 +588,21 @@ export class ObjectA3 {
    * @remarks
    * 物理演算系のモードでは機能しません。
    *
-   * @param x x 方向の移動量（または `Vec3`）
+   * @param v 移動の方向を表すベクトル（`Vec3`）
+   */
+  translate(v: Vec3): void;
+  /**
+   * このオブジェクトの位置を、指定した量だけ移動します（ワールド座標）。
+   * 現在位置に加算されます。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 方向の移動量
    * @param y y 方向の移動量
    * @param z z 方向の移動量
    */
-  translate(v: Vec3): void;
   translate(x: number, y: number, z: number): void;
   translate(xOrV: number | Vec3, y?: number, z?: number) {
     tmp.v1.set(this.transformer.transform.loc);
@@ -608,11 +618,18 @@ export class ObjectA3 {
    * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
    * 物理演算系のモードでも強制的に反映されます。
    *
-   * @param x x 方向の移動量（または `Vec3`）
+   * @param v 移動量を表すベクトル
+   */
+  translateNow(v: Vec3): void;
+  /**
+   * このオブジェクトの位置を、指定した量だけ即座に移動します（ワールド座標）。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 方向の移動量
    * @param y y 方向の移動量
    * @param z z 方向の移動量
    */
-  translateNow(v: Vec3): void;
   translateNow(x: number, y: number, z: number): void;
   translateNow(xOrV: number | Vec3, y?: number, z?: number) {
     tmp.v1.set(this.transformer.transform.loc);
@@ -630,12 +647,21 @@ export class ObjectA3 {
    * @remarks
    * 物理演算系のモードでは機能しません。
    *
-   * @param x x 成分（または `Quat`）
+   * @param q 掛け合わせるクォータニオン
+   */
+  mulQuat(q: Quat): void;
+  /**
+   * このオブジェクトの回転に、指定したクォータニオンを右から掛け合わせます。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @param w w 成分
    */
-  mulQuat(q: Quat): void;
   mulQuat(x: number, y: number, z: number, w: number): void;
   mulQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
     tmp.q1.set(this.transformer.transform.quat);
@@ -651,12 +677,19 @@ export class ObjectA3 {
    * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
    * 物理演算系のモードでも強制的に反映されます。
    *
-   * @param x x 成分（または `Quat`）
+   * @param q 掛け合わせるクォータニオン
+   */
+  mulQuatNow(q: Quat): void;
+  /**
+   * このオブジェクトの回転に、指定したクォータニオンを即座に右から掛け合わせます。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    * @param w w 成分
    */
-  mulQuatNow(q: Quat): void;
   mulQuatNow(x: number, y: number, z: number, w: number): void;
   mulQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
     tmp.q1.set(this.transformer.transform.quat);
@@ -675,11 +708,21 @@ export class ObjectA3 {
    * @remarks
    * 物理演算系のモードでは機能しません。
    *
-   * @param x x 軸の追加回転量（度）（または `Vec3`）
+   * @param v 各軸の追加回転量（度）を表すベクトル
+   */
+  mulRotation(v: Vec3): void;
+  /**
+   * このオブジェクトの現在の回転に、オイラー角（度数法）で回転を追加します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 軸の追加回転量（度）
    * @param y y 軸の追加回転量（度）
    * @param z z 軸の追加回転量（度）
    */
-  mulRotation(v: Vec3): void;
   mulRotation(x: number, y: number, z: number): void;
   mulRotation(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === 'number')
@@ -700,11 +743,19 @@ export class ObjectA3 {
    * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
    * 物理演算系のモードでも強制的に反映されます。
    *
-   * @param x x 軸の追加回転量（度）（または `Vec3`）
+   * @param v 各軸の追加回転量（度）を表すベクトル
+   */
+  mulRotationNow(v: Vec3): void;
+  /**
+   * このオブジェクトの現在の回転に、オイラー角（度数法）で回転を即座に追加します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 軸の追加回転量（度）
    * @param y y 軸の追加回転量（度）
    * @param z z 軸の追加回転量（度）
    */
-  mulRotationNow(v: Vec3): void;
   mulRotationNow(x: number, y: number, z: number): void;
   mulRotationNow(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === 'number')
@@ -726,11 +777,20 @@ export class ObjectA3 {
    * @remarks
    * 物理演算系のモードでは機能しません（`mulScaleNow()` も同様）。
    *
-   * @param x x 軸の乗数（または `Vec3`）
+   * @param v 各軸の乗数を表すベクトル
+   */
+  scaleBy(v: Vec3): void;
+  /**
+   * このオブジェクトの現在の拡大率に、指定した値を乗算します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません（`mulScaleNow()` も同様）。
+   *
+   * @param x x 軸の乗数
    * @param y y 軸の乗数
    * @param z z 軸の乗数
    */
-  scaleBy(v: Vec3): void;
   scaleBy(x: number, y: number, z: number): void;
   scaleBy(xOrV: number | Vec3, y?: number, z?: number) {
     this.getScale(tmp.v0);
@@ -750,11 +810,22 @@ export class ObjectA3 {
    * 物理演算系のモードでは、このメソッドは機能しません。
    * 物理モードでの拡大率の変更はサポートされていません。
    *
-   * @param x x 軸の乗数（または `Vec3`）
+   * @param v 各軸の乗数を表すベクトル
+   */
+  mulScaleNow(v: Vec3): void;
+  /**
+   * このオブジェクトの現在の拡大率に、指定した値を即座に乗算します。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   *
+   * @remarks
+   * `"SimplePhysics"`・`"KinematicCharacter"`・`"DynamicCharacter"` など
+   * 物理演算系のモードでは、このメソッドは機能しません。
+   * 物理モードでの拡大率の変更はサポートされていません。
+   *
+   * @param x x 軸の乗数
    * @param y y 軸の乗数
    * @param z z 軸の乗数
    */
-  mulScaleNow(v: Vec3): void;
   mulScaleNow(x: number, y: number, z: number): void;
   mulScaleNow(xOrV: number | Vec3, y?: number, z?: number) {
     this.getScale(tmp.v0);
@@ -996,11 +1067,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトの線速度を設定します。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 設定する線速度
+   */
+  setLinearVelocity(v: Vec3): void;
+  /**
+   * このオブジェクトの線速度を設定します。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  setLinearVelocity(v: Vec3): void;
   setLinearVelocity(x: number, y: number, z: number): void;
   setLinearVelocity(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -1023,11 +1099,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトの角速度を設定します（単位：ラジアン/秒）。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 設定する角速度
+   */
+  setAngularVelocity(v: Vec3): void;
+  /**
+   * このオブジェクトの角速度を設定します（単位：ラジアン/秒）。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  setAngularVelocity(v: Vec3): void;
   setAngularVelocity(x: number, y: number, z: number): void;
   setAngularVelocity(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -1057,11 +1138,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトに力を加えます。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 加える力
+   */
+  addForce(v: Vec3): void;
+  /**
+   * このオブジェクトに力を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  addForce(v: Vec3): void;
   addForce(x: number, y: number, z: number): void;
   addForce(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -1111,11 +1197,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトにトルク（回転力）を加えます。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 加えるトルク
+   */
+  addTorque(v: Vec3): void;
+  /**
+   * このオブジェクトにトルク（回転力）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  addTorque(v: Vec3): void;
   addTorque(x: number, y: number, z: number): void;
   addTorque(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -1129,11 +1220,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトにインパルス（瞬間的な力）を加えます。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 加えるインパルス
+   */
+  applyImpulse(v: Vec3): void;
+  /**
+   * このオブジェクトにインパルス（瞬間的な力）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  applyImpulse(v: Vec3): void;
   applyImpulse(x: number, y: number, z: number): void;
   applyImpulse(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
@@ -1176,11 +1272,16 @@ export class ObjectA3 {
   /**
    * このオブジェクトにトルクインパルス（瞬間的なトルク）を加えます。
    * 物理演算系のモードでのみ有効です。
-   * @param x x 成分（または `Vec3`）
+   * @param v 加えるトルクインパルス
+   */
+  applyTorqueImpulse(v: Vec3): void;
+  /**
+   * このオブジェクトにトルクインパルス（瞬間的なトルク）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分
    * @param y y 成分
    * @param z z 成分
    */
-  applyTorqueImpulse(v: Vec3): void;
   applyTorqueImpulse(x: number, y: number, z: number): void;
   applyTorqueImpulse(xOrV: number | Vec3, y?: number, z?: number) {
     if (typeof xOrV === "number") {
