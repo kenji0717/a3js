@@ -14,9 +14,8 @@ import { KinematicCharacterTransformer } from '../rapier/KinematicCharacterTrans
 import { DynamicCharacterTransformer } from '../rapier/DynamicCharacterTransformer';
 
 /**
- * スクリーン上における方向を表します。
- * オブジェクトに吹き出しを出す場合の方向で使いますが、
- * それ以外でも使うかも。
+ * スクリーン上の方向を表す型です。
+ * 吹き出しを出す方向の指定などに使用します。
  */
 export type Dir =
   | "TOP"
@@ -25,11 +24,17 @@ export type Dir =
   | "BOTTOM";
 
 /**
- * ObjectA3の位置、回転、拡大・縮小率をコントロール
- * するモードの選択。setTransformMode()メソッドの
- * 引数として使用する。ここで示される選択肢以外の
- * モードもあるが、それらはsetTransfromer()メソッド
- * を用いて指定することになる。
+ * `ObjectA3` の位置・回転・拡大率の制御モードを表す型です。
+ * `setTransformMode()` の引数として使用します。
+ *
+ * - `"Default"` — 即座に位置・回転・拡大率を反映します。
+ * - `"Smooth"` — 約1秒かけてなめらかに補間します。
+ * - `"Follow"` — 別のオブジェクトを追従します。
+ * - `"Billboard"` — 常にターゲットの方向を向きます。
+ * - `"SmoothBillboard"` — なめらかにターゲット方向を向きます。
+ * - `"SimplePhysics"` — Rapier3D の剛体物理演算を使います。
+ * - `"KinematicCharacter"` — カプセルコライダーによるキネマティックキャラクター制御を使います。
+ * - `"DynamicCharacter"` — カプセルコライダーによる動的キャラクター制御を使います。
  */
 export type TransformMode =
   | "Default"
@@ -44,31 +49,55 @@ export type TransformMode =
 const geo = new THREE.SphereGeometry();
 const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 /**
- * 以下、loadingの状態であることを表すTHREE.Mesh。
- * 書き換え可能。
+ * オブジェクトの読み込み中に表示される仮のメッシュです（赤い球体）。
+ * 必要に応じて差し替えることができます。
  */
 export let a3jsLoading = new THREE.Mesh(geo,mat);
 
 
 /**
- * シーンの中に配置される全てのオブジェクトのベース
- * となるアブストラクトクラス。シーンの中の表示対象
- * はもちろん、カメラやライトなどもこのクラスのサブ
- * クラスにしないといけない。特に、このアブストラクト
- * クラスでは、3D空間内での移動や、物理演算に関する
- * 必要なメソッドを実装する。
+ * シーン内に配置される全てのオブジェクトの基底クラスです。
+ *
+ * 3D モデル・カメラ・ライト・サウンドなど、シーンに追加できる全てのオブジェクトは
+ * このクラスを継承しています。
+ * 位置・回転・拡大率の操作機能を提供します。
+ * 物理演算・衝突検知などの機能は、物理モードを設定したオブジェクトでのみ有効です。
+ *
+ * @example
+ * ```ts
+ * // サブクラスを作って独自オブジェクトを定義する例
+ * class MyObject extends ObjectA3 {
+ *   initObject() {
+ *     const geo = new THREE.BoxGeometry();
+ *     const mat = new THREE.MeshStandardMaterial({ color: 0x0088ff });
+ *     return new THREE.Mesh(geo, mat);
+ *   }
+ * }
+ * const obj = new MyObject();
+ * scene.add(obj);
+ * obj.setPosition(1, 0, 0);
+ * ```
  */
 export class ObjectA3 {
+  /** 全 `ObjectA3` に共通して使われるデフォルトの回転順番。初期値は `"ZXY"`。 */
   static defaultRotationOrder: RotationOrder = "ZXY";
+  /** 全 `ObjectA3` に共通して使われるデフォルトの上方向ベクトル。初期値は `(0, 1, 0)`。 */
   static defaultUpVector: Vec3 = new Vec3(0,1,0);
+  /** このオブジェクト固有の回転順番。`undefined` のとき `ObjectA3.defaultRotationOrder` が使われます。 */
   rotationOrder?: RotationOrder;
+  /** このオブジェクト固有の上方向ベクトル。`undefined` のとき `ObjectA3.defaultUpVector` が使われます。 */
   upVector?: Vec3;
+  /** Three.js の内部オブジェクト（`THREE.Object3D`）です。通常は直接操作しません。 */
   object3D: THREE.Object3D;
+  /** このオブジェクトが追加されている `Scene`。追加前は `undefined`。 */
   scene?: Scene;
   private balloon?: BalloonInfo;
   private transformer: Transformer;
+  /** 親オブジェクト。`ObjectA3.add()` で追加された場合に設定されます。 */
   parent?: ObjectA3;
+  /** 子オブジェクトの配列。`ObjectA3.add()` で追加されたオブジェクトが格納されます。 */
   children: ObjectA3[] = [];
+  /** `setClickListener()` で登録されたクリックリスナー関数。 */
   clickListener?: (o: ObjectA3)=>void;
 
   constructor(data?: any) {
@@ -82,29 +111,32 @@ export class ObjectA3 {
     });
   }
 
-  // 非同期でないと無理な場合などはとりあえず
-  // 以下のように読み込み中を表すa3jsLoadingのcloneを
-  // 返しておいて、後でa3jsLoadingを削除して
-  // this.objectにaddすればOK。
+  /**
+   * このオブジェクトの Three.js メッシュなどを生成して返すメソッドです。
+   * サブクラスでオーバーライドして、独自の形状を返してください。
+   * 非同期処理が必要な場合はとりあえず `a3jsLoading.clone()` を返しておき、
+   * 読み込み完了後に差し替えてください。
+   * @param _data コンストラクタから渡されたデータ
+   * @returns Three.js の `Object3D`（メッシュ・グループ等）
+   */
   initObject(_data?: any): THREE.Object3D {
     return a3jsLoading.clone();
   };
 
   /**
-   * このObjectA3のコンストラクタから呼び出され、デフォルトで
-   * 使用されるTransformerの配列を返す。
-   * このメソッドをオーバーライドすることでデフォルトの
-   * Transformerを変更することが可能。
+   * コンストラクタから呼び出され、デフォルトで使用される `Transformer` を返すメソッドです。
+   * サブクラスでオーバーライドすることでデフォルトの動作モードを変更できます。
    * @param _data コンストラクタから渡された情報
-   * @returns このObjectA3で使用されるTransformerの配列
+   * @returns このオブジェクトで使用する `Transformer`
    */
   initTransformer(_data?: any): Transformer {
     return new DefaultTransformer();
   }
 
   /**
-   * ObjectA3生成後に使用されるTransformerを変更する。
-   * @param transformer 新しいTransformer
+   * このオブジェクトに使用する `Transformer` を変更します。
+   * 現在の位置・回転・拡大率を引き継いで新しい `Transformer` に切り替えます。
+   * @param transformer 新しい `Transformer`
    */
   setTransformer(transformer: Transformer): void {
     tmp.t0.set(this.transformer.transform);
@@ -113,13 +145,33 @@ export class ObjectA3 {
   }
 
   /**
-   * ObjectA3に現在設定されているTransformerを返す。
-   * @return 現在のTransformer
+   * このオブジェクトに現在設定されている `Transformer` を返します。
+   * @returns 現在の `Transformer`
    */
   getTransformer(): Transformer {
     return this.transformer;
   }
 
+  /**
+   * このオブジェクトの制御モード（`TransformMode`）を設定します。
+   * モードに応じた `Transformer` が自動的に適用されます。
+   *
+   * | モード | 使用される Transformer |
+   * |---|---|
+   * | `"Default"` | `DefaultTransformer` |
+   * | `"Smooth"` | `SmoothTransformer` |
+   * | `"Follow"` | `FollowTransformer` |
+   * | `"Billboard"` | `BillboardTransformer` |
+   * | `"SmoothBillboard"` | `SmoothBillboardTransformer` |
+   * | `"SimplePhysics"` | `RapierTransformer` |
+   * | `"KinematicCharacter"` | `KinematicCharacterTransformer` |
+   * | `"DynamicCharacter"` | `DynamicCharacterTransformer` |
+   *
+   * `options` の詳細は各 Transformer クラスのオプション型を参照してください。
+   *
+   * @param mode 設定するモード
+   * @param options モードによっては追加のオプションが必要です
+   */
   setTransformMode(mode: TransformMode, options?: any) {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
@@ -140,7 +192,10 @@ export class ObjectA3 {
     }
   }
 
-  // setTransformModeでも同じことできるけど。。。
+  /**
+   * `"SimplePhysics"` モードを設定します。`setTransformMode("SimplePhysics", options)` と同等です。
+   * @param options 物理挙動のオプション（`PhysicsMotionOptions`）
+   */
   initSimplePhysics(options: PhysicsMotionOptions) {
     const opt = {
       ...defaultPhysicsMotionOptions,
@@ -161,6 +216,11 @@ export class ObjectA3 {
     });
   }
 
+  /**
+   * このオブジェクトに子オブジェクトを追加します。
+   * 追加したオブジェクトはこのオブジェクトの座標系に従って動きます。
+   * @param obj 追加する子オブジェクト
+   */
   add(obj: ObjectA3) {
     if (obj.scene) {console.warn('ObjectA3.add(obj) is ignored.');return;}
     if (obj.parent) {console.warn('ObjectA3.add(obj) is ignored.');return;}
@@ -170,6 +230,10 @@ export class ObjectA3 {
     this.object3D.add(obj.object3D);
   }
 
+  /**
+   * このオブジェクトから子オブジェクトを取り除きます。
+   * @param obj 取り除く子オブジェクト
+   */
   remove(obj: ObjectA3) {
     if (obj.parent !== this) {console.warn('ObjectA3.remove(obj) is ignored.');return;}
     // if (!this.children.includes(obj)) return; // ちゃんと管理されてれば必要ない
@@ -179,6 +243,11 @@ export class ObjectA3 {
     this.object3D.remove(obj.object3D);
   }
 
+  /**
+   * このオブジェクトに吹き出しを表示します。
+   * @param message 吹き出しに表示するメッセージ
+   * @remarks 現在未実装です。
+   */
   setSpeechBubble(message: string) {
     if (!this.balloon)
       this.balloon = new BalloonInfo(message);
@@ -187,20 +256,22 @@ export class ObjectA3 {
   }
 
   /**
-   * リスナーは1個しか登録されません。2つ
-   * 登録しようとすると、最初のリスナーは
-   * 捨てられます。
+   * このオブジェクトがクリックされたときに呼ばれる関数を登録します。
+   * 登録できるリスナーは1つだけです。2回目の呼び出しで上書きされます。
+   * @param func クリック時に呼ばれる関数。引数にクリックされた `ObjectA3` が渡されます。
    */
   setClickListener(func: (o: ObjectA3)=>void) {
     this.clickListener = func;
   }
 
   /**
-   * 物理エンジンにより衝突が検知されたら呼び出される。
-   * @param obj 衝突相手
-   * @param started 衝突開始の時true、衝突終了の時false
-   * @param myPartNo ぶつかったパーツのColliderの番号
-   * @param yourPartNo 相手のぶつかったパーツのClliderの番号
+   * 物理エンジンにより衝突が検知されたときに呼び出されるコールバックメソッドです。
+   * 衝突イベントを受け取るには、サブクラスでオーバーライドしてください。
+   * また、`PhysicsMotionOptions.collisionDetection` を `true` に設定する必要があります。
+   * @param obj 衝突相手の `ObjectA3`
+   * @param started 衝突開始のとき `true`、衝突終了のとき `false`
+   * @param myPartNo このオブジェクトの、ぶつかったパーツのコライダー番号
+   * @param yourPartNo 相手オブジェクトの、ぶつかったパーツのコライダー番号
    */
   handleCollision(obj: ObjectA3, started: boolean, myPartNo: number, yourPartNo: number) {
     obj; started; myPartNo; yourPartNo;
@@ -211,10 +282,29 @@ export class ObjectA3 {
       await this.clickListener(this);
   }
 
+  /**
+   * このオブジェクトの現在の位置を返します。
+   * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns 現在の位置
+   */
   getPosition(out?: Vec3): Vec3 {
     if (out) { out.set(this.transformer.transform.loc); return out; }
     return this.transformer.transform.loc.clone();
   }
+  /**
+   * このオブジェクトの目標位置を設定します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * すぐに移動させたい場合は `setPositionNow()` を使ってください。
+   *
+   * @remarks
+   * `"SimplePhysics"`・`"KinematicCharacter"`・`"DynamicCharacter"` など
+   * 物理演算系のモードでは、このメソッドは機能しません。
+   * 物理モードで位置を強制変更するには `setPositionNow()` を使ってください。
+   *
+   * @param x x 座標（または `Vec3`）
+   * @param y y 座標
+   * @param z z 座標
+   */
   setPosition(x: number, y: number, z: number): void;
   setPosition(v: Vec3): void;
   setPosition(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -226,6 +316,14 @@ export class ObjectA3 {
     this.transformer.setPosition(tmp.v0);
   }
 
+  /**
+   * このオブジェクトの位置を即座に設定します。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに移動します。
+   * 物理演算系のモードでも位置を強制的に変更します。
+   * @param x x 座標（または `Vec3`）
+   * @param y y 座標
+   * @param z z 座標
+   */
   setPositionNow(x: number, y: number, z: number): void;
   setPositionNow(v: Vec3): void;
   setPositionNow(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -237,10 +335,28 @@ export class ObjectA3 {
     this.transformer.setPositionNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトの現在の回転をクォータニオンで返します。
+   * @param out 値を書き込む `Quat`（省略時は新しい `Quat` を返します）
+   * @returns 現在の回転（クォータニオン）
+   */
   getQuat(out?: Quat): Quat {
     if (out) { out.set(this.transformer.transform.quat); return out; }
     return this.transformer.transform.quat.clone();
   }
+  /**
+   * このオブジェクトの目標回転をクォータニオンで設定します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * すぐに反映させたい場合は `setQuatNow()` を使ってください。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。物理モードで回転を強制変更するには `setQuatNow()` を使ってください。
+   *
+   * @param x x 成分（または `Quat`）
+   * @param y y 成分
+   * @param z z 成分
+   * @param w w 成分
+   */
   setQuat(x: number, y: number, z: number, w: number): void;
   setQuat(q: Quat): void;
   setQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -252,6 +368,14 @@ export class ObjectA3 {
     this.transformer.setQuat(tmp.q0);
   }
 
+  /**
+   * このオブジェクトの回転をクォータニオンで即座に設定します。
+   * 物理演算系のモードでも強制的に反映されます。
+   * @param x x 成分（または `Quat`）
+   * @param y y 成分
+   * @param z z 成分
+   * @param w w 成分
+   */
   setQuatNow(x: number, y: number, z: number, w: number): void;
   setQuatNow(q: Quat): void;
   setQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number): void {
@@ -263,10 +387,29 @@ export class ObjectA3 {
     this.transformer.setQuatNow(tmp.q0);
   }
 
+  /**
+   * このオブジェクトの現在の拡大率を返します。
+   * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns 現在の拡大率（x, y, z 各軸）
+   */
   getScale(out?: Vec3): Vec3 {
     if (out) { out.set(this.transformer.transform.scale); return out; }
     return this.transformer.transform.scale.clone();
   }
+  /**
+   * このオブジェクトの目標拡大率を設定します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * すぐに反映させたい場合は `setScaleNow()` を使ってください。
+   *
+   * @remarks
+   * `"SimplePhysics"`・`"KinematicCharacter"`・`"DynamicCharacter"` など
+   * 物理演算系のモードでは、このメソッドは機能しません（`setScaleNow()` も同様）。
+   * 物理モードでの拡大率の変更はサポートされていません。
+   *
+   * @param x x 軸の拡大率（または `Vec3`）
+   * @param y y 軸の拡大率
+   * @param z z 軸の拡大率
+   */
   setScale(x: number, y: number, z: number): void;
   setScale(v: Vec3): void;
   setScale(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -278,6 +421,19 @@ export class ObjectA3 {
     this.transformer.setScale(tmp.v0);
   }
 
+  /**
+   * このオブジェクトの拡大率を即座に設定します。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   *
+   * @remarks
+   * `"SimplePhysics"`・`"KinematicCharacter"`・`"DynamicCharacter"` など
+   * 物理演算系のモードでは、このメソッドは機能しません。
+   * 物理モードでの拡大率の変更はサポートされていません。
+   *
+   * @param x x 軸の拡大率（または `Vec3`）
+   * @param y y 軸の拡大率
+   * @param z z 軸の拡大率
+   */
   setScaleNow(x: number, y: number, z: number): void;
   setScaleNow(v: Vec3): void;
   setScaleNow(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -290,10 +446,20 @@ export class ObjectA3 {
   }
 
   /**
-   * オイラー角で回転を設定。単位はラジアンではなくデグリー
-   * (360度で1回転)とする。回転の合成の順番はthis.rotationOrderの
-   * 設定によるが、それがundefinedの時はObject3D.defaultRotationOrderの
-   * 順番になる。
+   * このオブジェクトの目標回転をオイラー角（度数法）で設定します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * すぐに反映させたい場合は `setRotationNow()` を使ってください。
+   *
+   * 回転の適用順は `rotationOrder` プロパティ（未設定時は `ObjectA3.defaultRotationOrder`）に従います。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   * 物理モードで回転を強制変更するには `setRotationNow()` を使ってください。
+   *
+   * @param x x 軸の回転量（度）（または `Vec3`）
+   * @param y y 軸の回転量（度）
+   * @param z z 軸の回転量（度）
    */
   setRotation(x: number, y: number, z: number): void;
   setRotation(v: Vec3): void;
@@ -308,6 +474,18 @@ export class ObjectA3 {
     this.setQuat(tmp.q1);
   }
 
+  /**
+   * このオブジェクトの回転をオイラー角（度数法）で即座に設定します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * 回転の適用順は `rotationOrder` プロパティ（未設定時は `ObjectA3.defaultRotationOrder`）に従います。
+   *
+   * @param x x 軸の回転量（度）（または `Vec3`）
+   * @param y y 軸の回転量（度）
+   * @param z z 軸の回転量（度）
+   */
   setRotationNow(x: number, y: number, z: number): void;
   setRotationNow(v: Vec3): void;
   setRotationNow(xOrV: number | Vec3, y?: number, z?: number): void {
@@ -321,6 +499,18 @@ export class ObjectA3 {
     this.setQuatNow(tmp.q0);
   }
 
+  /**
+   * このオブジェクトを、指定した位置・オブジェクトの方向に向けます。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * すぐに反映させたい場合は `lookAtNow()` を使ってください。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param y 向く先の y 座標
+   * @param z 向く先の z 座標
+   */
   lookAt(x: number, y: number, z: number): void;
   lookAt(v: Vec3): void;
   lookAt(o: ObjectA3): void;
@@ -337,6 +527,15 @@ export class ObjectA3 {
     this.setQuat(tmp.q1);
   }
 
+  /**
+   * このオブジェクトを、指定した位置・オブジェクトの方向に即座に向けます。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param y 向く先の y 座標
+   * @param z 向く先の z 座標
+   */
   lookAtNow(x: number, y: number, z: number): void;
   lookAtNow(v: Vec3): void;
   lookAtNow(o: ObjectA3): void;
@@ -353,19 +552,46 @@ export class ObjectA3 {
     this.setQuatNow(tmp.q1);
   }
 
+  /**
+   * このオブジェクトのローカル X 軸方向の単位ベクトルを返します。
+   * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns ローカル X 軸の単位ベクトル（ワールド座標）
+   */
   getUnitVecX(out?: Vec3): Vec3 {
     if (out) { out.set(1,0,0); return out.apply(this.object3D.quaternion); }
     return new Vec3(1,0,0).apply(this.object3D.quaternion);
   }
+  /**
+   * このオブジェクトのローカル Y 軸方向の単位ベクトルを返します。
+   * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns ローカル Y 軸の単位ベクトル（ワールド座標）
+   */
   getUnitVecY(out?: Vec3): Vec3 {
     if (out) { out.set(0,1,0); return out.apply(this.object3D.quaternion); }
     return new Vec3(0,1,0).apply(this.object3D.quaternion);
   }
+  /**
+   * このオブジェクトのローカル Z 軸方向の単位ベクトルを返します。
+   * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns ローカル Z 軸の単位ベクトル（ワールド座標）
+   */
   getUnitVecZ(out?: Vec3): Vec3 {
     if (out) { out.set(0,0,1); return out.apply(this.object3D.quaternion); }
     return new Vec3(0,0,1).apply(this.object3D.quaternion);
   }
 
+  /**
+   * このオブジェクトの位置を、指定した量だけ移動します（ワールド座標）。
+   * 現在位置に加算されます。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 方向の移動量（または `Vec3`）
+   * @param y y 方向の移動量
+   * @param z z 方向の移動量
+   */
   translate(v: Vec3): void;
   translate(x: number, y: number, z: number): void;
   translate(xOrV: number | Vec3, y?: number, z?: number) {
@@ -377,6 +603,15 @@ export class ObjectA3 {
     this.setPosition(tmp.v1);
   }
 
+  /**
+   * このオブジェクトの位置を、指定した量だけ即座に移動します（ワールド座標）。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 方向の移動量（または `Vec3`）
+   * @param y y 方向の移動量
+   * @param z z 方向の移動量
+   */
   translateNow(v: Vec3): void;
   translateNow(x: number, y: number, z: number): void;
   translateNow(xOrV: number | Vec3, y?: number, z?: number) {
@@ -388,6 +623,18 @@ export class ObjectA3 {
     this.setPositionNow(tmp.v1);
   }
 
+  /**
+   * このオブジェクトの回転に、指定したクォータニオンを右から掛け合わせます。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 成分（または `Quat`）
+   * @param y y 成分
+   * @param z z 成分
+   * @param w w 成分
+   */
   mulQuat(q: Quat): void;
   mulQuat(x: number, y: number, z: number, w: number): void;
   mulQuat(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
@@ -399,6 +646,16 @@ export class ObjectA3 {
     this.setQuat(tmp.q1);
   }
 
+  /**
+   * このオブジェクトの回転に、指定したクォータニオンを即座に右から掛け合わせます。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 成分（または `Quat`）
+   * @param y y 成分
+   * @param z z 成分
+   * @param w w 成分
+   */
   mulQuatNow(q: Quat): void;
   mulQuatNow(x: number, y: number, z: number, w: number): void;
   mulQuatNow(xOrQ: number | Quat, y?: number, z?: number, w?: number) {
@@ -410,6 +667,18 @@ export class ObjectA3 {
     this.setQuatNow(tmp.q1);
   }
 
+  /**
+   * このオブジェクトの現在の回転に、オイラー角（度数法）で回転を追加します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません。
+   *
+   * @param x x 軸の追加回転量（度）（または `Vec3`）
+   * @param y y 軸の追加回転量（度）
+   * @param z z 軸の追加回転量（度）
+   */
   mulRotation(v: Vec3): void;
   mulRotation(x: number, y: number, z: number): void;
   mulRotation(xOrV: number | Vec3, y?: number, z?: number) {
@@ -425,6 +694,16 @@ export class ObjectA3 {
     this.setQuat(tmp.q0);
   }
 
+  /**
+   * このオブジェクトの現在の回転に、オイラー角（度数法）で回転を即座に追加します。
+   * 単位はラジアンではなくデグリーです（360 で 1 回転）。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   * 物理演算系のモードでも強制的に反映されます。
+   *
+   * @param x x 軸の追加回転量（度）（または `Vec3`）
+   * @param y y 軸の追加回転量（度）
+   * @param z z 軸の追加回転量（度）
+   */
   mulRotationNow(v: Vec3): void;
   mulRotationNow(x: number, y: number, z: number): void;
   mulRotationNow(xOrV: number | Vec3, y?: number, z?: number) {
@@ -440,6 +719,17 @@ export class ObjectA3 {
     this.setQuatNow(tmp.q0);
   }
 
+  /**
+   * このオブジェクトの現在の拡大率に、指定した値を乗算します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   *
+   * @remarks
+   * 物理演算系のモードでは機能しません（`mulScaleNow()` も同様）。
+   *
+   * @param x x 軸の乗数（または `Vec3`）
+   * @param y y 軸の乗数
+   * @param z z 軸の乗数
+   */
   scaleBy(v: Vec3): void;
   scaleBy(x: number, y: number, z: number): void;
   scaleBy(xOrV: number | Vec3, y?: number, z?: number) {
@@ -451,6 +741,19 @@ export class ObjectA3 {
     this.setScale(tmp.v0);
   }
 
+  /**
+   * このオブジェクトの現在の拡大率に、指定した値を即座に乗算します。
+   * `"Smooth"` モードのなめらかな補間を無視してすぐに反映します。
+   *
+   * @remarks
+   * `"SimplePhysics"`・`"KinematicCharacter"`・`"DynamicCharacter"` など
+   * 物理演算系のモードでは、このメソッドは機能しません。
+   * 物理モードでの拡大率の変更はサポートされていません。
+   *
+   * @param x x 軸の乗数（または `Vec3`）
+   * @param y y 軸の乗数
+   * @param z z 軸の乗数
+   */
   mulScaleNow(v: Vec3): void;
   mulScaleNow(x: number, y: number, z: number): void;
   mulScaleNow(xOrV: number | Vec3, y?: number, z?: number) {
@@ -462,126 +765,241 @@ export class ObjectA3 {
     this.setScaleNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Z 軸の正方向（前方）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param f 移動距離
+   */
   moveForward(f: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(f);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Z 軸の正方向（前方）へ即座に移動します。
+   * @param f 移動距離
+   */
   moveForwardNow(f: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(f);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Z 軸の負方向（後方）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param b 移動距離
+   */
   moveBackward(b: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(-b);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Z 軸の負方向（後方）へ即座に移動します。
+   * @param b 移動距離
+   */
   moveBackwardNow(b: number) {
     this.getUnitVecZ(tmp.v0);
     tmp.v0.scale(-b);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル X 軸の負方向（右方向）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param r 移動距離
+   */
   moveRight(r: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(-r);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル X 軸の負方向（右方向）へ即座に移動します。
+   * @param r 移動距離
+   */
   moveRightNow(r: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(-r);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル X 軸の正方向（左方向）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param l 移動距離
+   */
   moveLeft(l: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(l);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル X 軸の正方向（左方向）へ即座に移動します。
+   * @param l 移動距離
+   */
   moveLeftNow(l: number) {
     this.getUnitVecX(tmp.v0);
     tmp.v0.scale(l);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Y 軸の正方向（上方向）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param u 移動距離
+   */
   moveUp(u: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(u);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Y 軸の正方向（上方向）へ即座に移動します。
+   * @param u 移動距離
+   */
   moveUpNow(u: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(u);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Y 軸の負方向（下方向）へ移動します。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param d 移動距離
+   */
   moveDown(d: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(-d);
     this.translate(tmp.v0);
   }
 
+  /**
+   * このオブジェクトをローカル Y 軸の負方向（下方向）へ即座に移動します。
+   * @param d 移動距離
+   */
   moveDownNow(d: number) {
     this.getUnitVecY(tmp.v0);
     tmp.v0.scale(-d);
     this.translateNow(tmp.v0);
   }
 
+  /**
+   * このオブジェクトを上向きに回転させます（X 軸回りに仰角方向）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param u 回転量（度）
+   */
   turnUp(u: number) {
     this.mulRotation(-u,0,0);
   }
 
+  /**
+   * このオブジェクトを上向きに即座に回転させます（X 軸回りに仰角方向）。
+   * @param u 回転量（度）
+   */
   turnUpNow(u: number) {
     this.mulRotationNow(-u,0,0);
   }
 
+  /**
+   * このオブジェクトを下向きに回転させます（X 軸回りに俯角方向）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param d 回転量（度）
+   */
   turnDown(d: number) {
     this.mulRotation(d,0,0);
   }
 
+  /**
+   * このオブジェクトを下向きに即座に回転させます（X 軸回りに俯角方向）。
+   * @param d 回転量（度）
+   */
   turnDownNow(d: number) {
     this.mulRotationNow(d,0,0);
   }
 
+  /**
+   * このオブジェクトを右向きに回転させます（Y 軸回りに右旋回）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param r 回転量（度）
+   */
   turnRight(r: number) {
     this.mulRotation(0,-r,0);
   }
 
+  /**
+   * このオブジェクトを右向きに即座に回転させます（Y 軸回りに右旋回）。
+   * @param r 回転量（度）
+   */
   turnRightNow(r: number) {
     this.mulRotationNow(0,-r,0);
   }
 
+  /**
+   * このオブジェクトを左向きに回転させます（Y 軸回りに左旋回）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param l 回転量（度）
+   */
   turnLeft(l: number) {
     this.mulRotation(0,l,0);
   }
 
+  /**
+   * このオブジェクトを左向きに即座に回転させます（Y 軸回りに左旋回）。
+   * @param l 回転量（度）
+   */
   turnLeftNow(l: number) {
     this.mulRotationNow(0,l,0);
   }
 
+  /**
+   * このオブジェクトを右方向にロール回転させます（Z 軸回りに時計回り）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param r 回転量（度）
+   */
   rollRight(r: number) {
     this.mulRotation(0,0,r);
   }
 
+  /**
+   * このオブジェクトを右方向に即座にロール回転させます（Z 軸回りに時計回り）。
+   * @param r 回転量（度）
+   */
   rollRightNow(r: number) {
     this.mulRotationNow(0,0,r);
   }
 
+  /**
+   * このオブジェクトを左方向にロール回転させます（Z 軸回りに反時計回り）。
+   * `"Smooth"` モードの場合はなめらかに補間されます。
+   * @param l 回転量（度）
+   */
   rollLeft(l: number) {
     this.mulRotation(0,0,-l);
   }
 
+  /**
+   * このオブジェクトを左方向に即座にロール回転させます（Z 軸回りに反時計回り）。
+   * @param l 回転量（度）
+   */
   rollLeftNow(l: number) {
     this.mulRotationNow(0,0,-l);
   }
 
+  /**
+   * このオブジェクトの線速度を設定します。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   setLinearVelocity(v: Vec3): void;
   setLinearVelocity(x: number, y: number, z: number): void;
   setLinearVelocity(xOrV: number | Vec3, y?: number, z?: number) {
@@ -592,10 +1010,23 @@ export class ObjectA3 {
     }
     this.transformer.setLinearVelocity(tmp.v0);
   }
+  /**
+   * このオブジェクトの線速度を返します。
+   * 物理演算系のモードでのみ有効な値が返ります。
+   * @param v 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns 線速度
+   */
   getLinearVelocity(v: Vec3 | undefined): Vec3 {
     return this.transformer.getLinearVelocity(v);
   }
 
+  /**
+   * このオブジェクトの角速度を設定します（単位：ラジアン/秒）。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   setAngularVelocity(v: Vec3): void;
   setAngularVelocity(x: number, y: number, z: number): void;
   setAngularVelocity(xOrV: number | Vec3, y?: number, z?: number) {
@@ -606,13 +1037,30 @@ export class ObjectA3 {
     }
     this.transformer.setAngularVelocity(tmp.v0);
   }
+  /**
+   * このオブジェクトの角速度を返します（単位：ラジアン/秒）。
+   * 物理演算系のモードでのみ有効な値が返ります。
+   * @param v 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
+   * @returns 角速度
+   */
   getAngularVelocity(v: Vec3 | undefined): Vec3 {
     return this.transformer.getAngularVelocity(v);
   }
 
+  /**
+   * このオブジェクトに加えられている力をリセットします。
+   * 物理演算系のモードでのみ有効です。
+   */
   resetForce(): void {
     this.transformer.resetForce();
   }
+  /**
+   * このオブジェクトに力を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   addForce(v: Vec3): void;
   addForce(x: number, y: number, z: number): void;
   addForce(xOrV: number | Vec3, y?: number, z?: number) {
@@ -624,6 +1072,12 @@ export class ObjectA3 {
     this.transformer.addForce(tmp.v0);
   }
 
+  /**
+   * 力点を指定してこのオブジェクトに力を加えます。力点はワールド座標で指定します。
+   * 物理演算系のモードでのみ有効です。
+   * @param f 力（または力の x 成分）
+   * @param p 力点（または力の y 成分）
+   */
   addForceAtPoint(f: Vec3, p: Vec3): void;
   addForceAtPoint(fx: number, fy: number, fz: number, px: number, py: number, pz: number): void;
   addForceAtPoint(fOrFx: Vec3 | number, pOrFy: Vec3 | number, fz?: number, px?: number, py?: number, pz?: number): void {
@@ -647,9 +1101,20 @@ export class ObjectA3 {
     this.transformer.addForceAtPoint(tmp.v0,tmp.v1);
   }
 
+  /**
+   * このオブジェクトに加えられているトルクをリセットします。
+   * 物理演算系のモードでのみ有効です。
+   */
   resetTorque(): void {
     this.transformer.resetTorque();
   }
+  /**
+   * このオブジェクトにトルク（回転力）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   addTorque(v: Vec3): void;
   addTorque(x: number, y: number, z: number): void;
   addTorque(xOrV: number | Vec3, y?: number, z?: number) {
@@ -661,6 +1126,13 @@ export class ObjectA3 {
     this.transformer.addTorque(tmp.v0);
   }
 
+  /**
+   * このオブジェクトにインパルス（瞬間的な力）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   applyImpulse(v: Vec3): void;
   applyImpulse(x: number, y: number, z: number): void;
   applyImpulse(xOrV: number | Vec3, y?: number, z?: number) {
@@ -672,6 +1144,12 @@ export class ObjectA3 {
     this.transformer.applyImpulse(tmp.v0);
   }
 
+  /**
+   * 力点を指定してこのオブジェクトにインパルスを加えます。力点はワールド座標で指定します。
+   * 物理演算系のモードでのみ有効です。
+   * @param i インパルス（または x 成分）
+   * @param p 力点（または y 成分）
+   */
   applyImpulseAtPoint(i: Vec3, p: Vec3): void;
   applyImpulseAtPoint(ix: number, iy: number, iz: number, px: number, py: number, pz: number): void;
   applyImpulseAtPoint(iOrFx: Vec3 | number, pOrFy: Vec3 | number, iz?: number, px?: number, py?: number, pz?: number): void {
@@ -695,6 +1173,13 @@ export class ObjectA3 {
     this.transformer.applyImpulseAtPoint(tmp.v0,tmp.v1);
   }
 
+  /**
+   * このオブジェクトにトルクインパルス（瞬間的なトルク）を加えます。
+   * 物理演算系のモードでのみ有効です。
+   * @param x x 成分（または `Vec3`）
+   * @param y y 成分
+   * @param z z 成分
+   */
   applyTorqueImpulse(v: Vec3): void;
   applyTorqueImpulse(x: number, y: number, z: number): void;
   applyTorqueImpulse(xOrV: number | Vec3, y?: number, z?: number) {
@@ -715,11 +1200,11 @@ export class ObjectA3 {
   }
 
   /**
-   * TransformerがCharacterTransformerなどの場合だけ
-   * 他のオブジェクトを考慮して現在接地していうかどうかを
-   * 判定してくれる。それ以外の時は、Y座標が0以下の時接地している
-   * と判定するのが普通。
-   * @returns 接地してるかどうか
+   * このオブジェクトが地面に接地しているかどうかを返します。
+   * `"KinematicCharacter"` や `"DynamicCharacter"` モードでは
+   * 他のオブジェクトとの衝突を考慮した正確な判定を行います。
+   * それ以外のモードでは、Y 座標が 0 以下のとき接地していると判定します。
+   * @returns 接地しているとき `true`
    */
   isGrounded(): boolean {
     return this.transformer.isGrounded();
@@ -750,231 +1235,170 @@ class BalloonInfo {
 
 
 /**
- * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
- * position,quaternion(rotation),scaleのみをコントロールする
- * モーションのインタフェース。コントロールするというだけでなく、
- * ObjectA3の位置、回転、拡大・縮小率に関する情報はこの
- * インタフェースのインスタンスが管理しており、これがObjectA3の
- * 正式な情報で、ObjectA3.object.positionなどは表示の都合で
- * 管理されている情報という位置付けとなる。
- * 
- * ObjectA3に各種方法で登録されることで、そのObjectA3の
- * 移動などに関する処理に影響を与える。ObjectA3に登録することが
- * できるTransformerは必ず一つである。
- * 
- * このインタフェースにはsetPosition()やsetQuat()などの外部の
- * プログラムから位置や回転を指定す要求を受け付けるメソッドが
- * あるが、これらは必ずしも要求に応答しなければならないという
- * わけではない。例えばSmoothTransformerでは、移動が
- * 目視できるように1秒ほど時間をかけて移動するし、物理系の
- * Transformerの場合は、基本的に要求を無視して物理法則通りに
- * 移動させるというのが正解の場合もある。ただし、setPositionNow()や
- * setQuatNow()のようにメソッドの最後にNowが付いている物については
- * 可能なかぎり要求に即座に答えなければならない。
- * 
- * 
- * このTransformerを実装することでInterpolateTransformer、
- * BillboardTransformer、DynamicCharacterTransformerなどが作られる。
+ * `ObjectA3` の位置・回転・拡大率を制御するストラテジーインターフェースです。
+ *
+ * `ObjectA3` は常に 1 つの `Transformer` を持ち、毎フレーム `update()` が呼ばれます。
+ * `Transformer` が `ObjectA3` の位置・回転・拡大率の正式な情報を管理しており、
+ * `THREE.Object3D` の `position` / `quaternion` / `scale` は表示用として書き込まれます。
+ *
+ * `setPosition()` などの要求メソッドは、実装によって即座に反映しないことがあります
+ * （`SmoothTransformer` はなめらかに補間し、物理系 Transformer は物理演算を優先します）。
+ * `Now` 付きのメソッド（`setPositionNow()` など）は可能な限り即座に反映しなければなりません。
+ *
+ * 独自の Transformer を実装することで、`DefaultTransformer`・`BillboardTransformer`・
+ * `DynamicCharacterTransformer` などと同様のカスタム制御が可能です。
  */
 export interface Transformer {
   /**
-   * このTransformerが管理している位置、回転、拡大・縮小率。
-   * 常に最新の位置、回転、拡大・縮小率が、ここに反映されていなければ
-   * ならない。
+   * このTransformerが管理する位置・回転・拡大率。
+   * `update()` の後、常に最新の状態が反映されていなければなりません。
    */
   transform: Transform;
 
   /**
-   * このTransformerの動作に必要な初期化処理を実装する
-   * メソッド。引数にコントロール対象のa3.ObjectA3(中に
-   * THREE.Object3Dも入ってる)を渡されるので、必要に応じて
-   * それをスキャンして情報を得ることは許可されるが、変更を
-   * 加えてはならない。特に初期の位置、回転、拡大・縮小率は、
-   * 第一引数のtransから得なければならず、objectA3.object
-   * (THREE.Object3D)から得てはならない。すでに設定されている
-   * 状態で呼び出された場合には、再設定という意味で対応しなければ
-   * ならない。
-   * @param trans 初期位置、回転、拡大・縮小率
-   * @param objectA3 動きをコントロールする対象となるa3.ObjectA3
+   * このTransformerの初期化処理です。
+   * `ObjectA3` に登録される際に呼び出されます。
+   * 初期位置・回転・拡大率は `trans` から取得してください。
+   * @param trans 引き継ぐ位置・回転・拡大率
+   * @param objectA3 制御対象の `ObjectA3`
    */
   init(trans: Transform, objectA3: ObjectA3): void;
 
   /**
-   * 物理演算が必要な場合にRigidBodyやColliderを
-   * PhysicsWorldに登録する必要があるので、このメソッドで
-   * 対応する。必要無い場合は何もしなくてOK。
-   * @param world 登録対象のPhysicsWorld
+   * 物理エンジンに剛体やコライダーを登録する処理です。
+   * 物理演算が不要な Transformer は何もしない実装で構いません。
+   * @param world 登録先の物理ワールド
    */
   addOneselfToPhysics(world: PhysicsWorld): void;
 
   /**
-   * このTransformerが不必要となった時に、PhysicsWorldに
-   * 登録していたRigidBodyやColliderを、登録解除する
-   * 処理を行うメソッド。
-   * @param world 解除対象のPhysicsWorld
+   * 物理エンジンから剛体やコライダーを登録解除する処理です。
+   * 物理演算が不要な Transformer は何もしない実装で構いません。
+   * @param world 解除対象の物理ワールド
    */
   removeOneselfFromPhysics(world: PhysicsWorld): void;
 
   /**
-   * このTransformerがコントロールする3Dオブジェクトが
-   * 地面に接地しているかどうかを返す。実際には
-   * CharacterTransformerのようなTransfomerだけが意味の
-   * ある応答が可能だが、それ以外の場合は
-   * 「return this.trans.loc.y <= 0;」で良し。
+   * このオブジェクトが地面に接地しているかどうかを返します。
+   * キャラクター系 Transformer 以外では `this.transform.loc.y <= 0` で判定して構いません。
+   * @returns 接地しているとき `true`
    */
   isGrounded(): boolean;
 
   /**
-   * 指定の場所に移動せよとの外部からの要求を受け付ける
-   * ためのメソッド。実際にそれを反映させる処理はupdate()
-   * メソッドに書く。
-   * @param loc 指定場所
+   * 目標位置を設定します。次の `update()` 以降に反映されます。
+   * @param loc 目標位置
    */
   setPosition(loc: Vec3): void;
 
   /**
-   * 指定の場所に直ちに移動せよとの外部からの要求を受け付ける
-   * ためのメソッド。実際にそれを反映させる処理はupdate()
-   * メソッドに書く。
-   * @param loc 指定場所
+   * 位置を即座に設定します。
+   * @param loc 目標位置
    */
   setPositionNow(loc: Vec3): void;
 
   /**
-   * 指定の角度に回転せよとの外部からの要求を受け付ける
-   * ためのメソッド。実際にそれを反映させる処理はupdate()
-   * メソッドに書く。
-   * @param quat 指定の回転
+   * 目標回転をクォータニオンで設定します。次の `update()` 以降に反映されます。
+   * @param quat 目標回転
    */
   setQuat(quat: Quat): void;
 
   /**
-   * 指定の角度に直ちに回転せよとの外部からの要求を受け付ける
-   * ためのメソッド。実際にそれを反映させる処理はupdate()
-   * メソッドに書く。
-   * @param quat 指定の回転
+   * 回転をクォータニオンで即座に設定します。
+   * @param quat 目標回転
    */
   setQuatNow(quat: Quat): void;
 
   /**
-   * 指定の大きさ(拡大・縮小率)に変形せよとの外部からの要求を
-   * 受け付けるためのメソッド。実際にそれを反映させる処理は
-   * update()メソッドに書く。
-   * @param scale 指定の大きさ
+   * 目標拡大率を設定します。次の `update()` 以降に反映されます。
+   * @param scale 目標拡大率
    */
   setScale(scale: Vec3): void;
 
   /**
-   * 指定の大きさ(拡大・縮小率)に直ちに変形せよとの外部からの
-   * 要求を受け付けるためのメソッド。実際にそれを反映させる処理は
-   * update()メソッドに書く。
-   * @param scale 指定の大きさ
+   * 拡大率を即座に設定します。
+   * @param scale 目標拡大率
    */
   setScaleNow(scale: Vec3): void;
 
   /**
-   * 速度を設定する。物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
-   * @param vel 速度。
+   * 線速度を設定します。物理系の Transformer のみ実装が必要です。
+   * @param vel 線速度
    */
   setLinearVelocity(vel: Vec3): void;
 
   /**
-   * 速度を得る。物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は正しい
-   * 値を返さない。
-   * @param v 値を受け取るためのVec3、またはundefined。
-   * @return 速度。
+   * 線速度を返します。物理系の Transformer のみ有効な値を返します。
+   * @param v 書き込み先の `Vec3`（省略可）
+   * @returns 線速度
    */
   getLinearVelocity(v: Vec3 | undefined): Vec3;
 
   /**
-   * 角速度を設定する。単位はラジアン/秒。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 角速度を設定します（単位：ラジアン/秒）。物理系の Transformer のみ実装が必要です。
    * @param angvel 角速度
    */
   setAngularVelocity(angvel: Vec3): void;
 
   /**
-   * 角速度を得る。物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は正しい
-   * 値を返さない。
-   * @param v 値を受け取るためのVec3、またはundefined。
-   * @return 角速度。
+   * 角速度を返します（単位：ラジアン/秒）。物理系の Transformer のみ有効な値を返します。
+   * @param v 書き込み先の `Vec3`（省略可）
+   * @returns 角速度
    */
   getAngularVelocity(v: Vec3 | undefined): Vec3;
 
   /**
-   * addForceで加えられた力をリセットする。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 加えられている力をリセットします。物理系の Transformer のみ実装が必要です。
    */
   resetForce(): void;
 
   /**
-   * 力を設定する。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 力を加えます。物理系の Transformer のみ実装が必要です。
    * @param f 力
    */
   addForce(f: Vec3): void;
 
   /**
-   * 力点を指定して力を設定する。力点は世界座標での座標。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 力点を指定して力を加えます（力点はワールド座標）。物理系の Transformer のみ実装が必要です。
    * @param f 力
-   * @param p 力点
+   * @param p 力点（ワールド座標）
    */
   addForceAtPoint(f: Vec3, p: Vec3): void;
 
   /**
-   * addTorqueで加えられたトルクをリセットする。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 加えられているトルクをリセットします。物理系の Transformer のみ実装が必要です。
    */
   resetTorque(): void;
 
   /**
-   * トルク(回転力)を設定する。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * トルク（回転力）を加えます。物理系の Transformer のみ実装が必要です。
    * @param t トルク
    */
   addTorque(t: Vec3): void;
 
   /**
-   * 一瞬、力を設定する。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * インパルス（瞬間的な力）を加えます。物理系の Transformer のみ実装が必要です。
    * @param i インパルス
    */
   applyImpulse(i: Vec3): void;
 
   /**
-   * 力点を指定して、一瞬、力を設定する。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * 力点を指定してインパルスを加えます（力点はワールド座標）。物理系の Transformer のみ実装が必要です。
    * @param i インパルス
-   * @param p 力点
+   * @param p 力点（ワールド座標）
    */
   applyImpulseAtPoint(i: Vec3, p: Vec3): void;
 
   /**
-   * 一瞬、トルクを設定する。
-   * 物理系のTransformerのみ対応すれば
-   * 良い物で、それ以外の場合はメソッドの実装は空で良い。
+   * トルクインパルス（瞬間的なトルク）を加えます。物理系の Transformer のみ実装が必要です。
+   * @param ti トルクインパルス
    */
   applyTorqueImpulse(ti: Vec3): void;
 
   /**
-   * 経過時間に応じて、位置、回転、拡大・縮小率を更新するための
-   * メソッド。毎フレーム呼び出される。その時点での位置、回転、
-   * 拡大・縮小率は必ずthis.transに反映させなければならない。
-   * 外部からの指示がなくても自動的に移動するようなことが実現
-   * される。
-   * @param dt 経過時間(秒)
+   * 毎フレーム呼び出され、位置・回転・拡大率を更新します。
+   * 更新後の状態は必ず `this.transform` に反映してください。
+   * @param dt 経過時間（秒）
    */
   update(dt: number): void;
 }

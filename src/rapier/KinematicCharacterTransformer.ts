@@ -5,10 +5,17 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transformer } from '../core/ObjectA3';
 
+/**
+ * `"KinematicCharacter"` モードで使用されるオプションです。
+ */
 export interface KinematicCharacterTransformerOptions {
+  /** コライダーと地面・壁との間に保持する最小隙間（メートル）。デフォルトは `0.01`。 */
   offset: number,
-  auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
+  /** `true` のとき、オブジェクトのメッシュ形状からカプセルの高さと半径を自動計算します。デフォルトは `true`。 */
+  auto: boolean,
+  /** カプセルコライダーの高さ（メートル）。`auto: false` のときに使用されます。デフォルトは `1.5`。 */
   height: number,
+  /** カプセルコライダーの半径（メートル）。`auto: false` のときに使用されます。デフォルトは `0.3`。 */
   radius: number
 }
 
@@ -19,6 +26,16 @@ export const defaultKinematicCharacterTransformerOptions = {
   radius: 0.3
 };
 
+/**
+ * `"KinematicCharacter"` モードで使用される Transformer の Rapier3D 実装です。
+ * `setTransformMode("KinematicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ *
+ * カプセル形状のコライダーを使い、壁・地面への衝突を考慮しながらオブジェクトを移動させます。
+ * 速度・力・トルク系のメソッドは無効です。位置を直接制御することでキャラクターを動かします。
+ *
+ * @remarks
+ * 直接インスタンスを生成するのではなく、`setTransformMode("KinematicCharacter", options)` を通じて使用してください。
+ */
 export class KinematicCharacterTransformer implements Transformer {
   transform: Transform;
   objectA3?: ObjectA3;

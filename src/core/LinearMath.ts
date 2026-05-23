@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 
+/**
+ * x, y, z の3成分を持つ可変オブジェクトのインターフェースです。
+ * `THREE.Vector3` など、x/y/z プロパティを持つオブジェクトはこのインターフェースを満たします。
+ */
 export interface MutableVec3 {
     x: number;
     y: number;
@@ -9,6 +13,10 @@ export interface MutableVec3 {
 
 type Arg1Vec3 = number | Vec3 | MutableVec3;
 
+/**
+ * x, y, z, w の4成分を持つ可変オブジェクトのインターフェースです。
+ * `THREE.Quaternion` など、x/y/z/w プロパティを持つオブジェクトはこのインターフェースを満たします。
+ */
 export interface MutableQuat {
     x: number;
     y: number;
@@ -19,7 +27,22 @@ export interface MutableQuat {
 type Arg1Quat = number | Quat | MutableQuat;
 
 /**
- * 3次元ベクトル
+ * 3次元ベクトルを表すクラスです。
+ *
+ * 3D 空間上の位置・方向・速度などを x, y, z の3成分で表現します。
+ * `add()`・`sub()`・`scale()` など基本的な演算メソッドを持ちます。
+ *
+ * @example
+ * ```ts
+ * // 成分を直接指定して作成
+ * const v = new Vec3(1, 2, 3);
+ *
+ * // 別のベクトルをコピーして作成
+ * const v2 = new Vec3(v);
+ *
+ * // 足し算
+ * v.add(v2);
+ * ```
  */
 export class Vec3 {
   x = 0;
@@ -44,16 +67,29 @@ export class Vec3 {
     }
   }
 
+  /**
+   * このベクトルのコピーを新しい `Vec3` インスタンスとして返します。
+   * @returns コピーされた新しい `Vec3`
+   */
   clone() {
     return new Vec3(this);
   }
 
+  /**
+   * このベクトルの値を `MutableVec3` を実装したオブジェクト（例: `THREE.Vector3`）に書き込みます。
+   * @param q 書き込み先のオブジェクト
+   */
   write(q: MutableVec3) {
     q.x = this.x;
     q.y = this.y;
     q.z = this.z;
   }
 
+  /**
+   * このベクトルを正規化します（長さを1にします）。
+   * ゼロベクトルを正規化しようとした場合はコンソールに警告を出します。
+   * @returns `this`（メソッドチェーン用）
+   */
   normalize() {
     const l0 = this.x*this.x + this.y*this.y + this.z*this.z;
     const l1 = Math.sqrt(l0);
@@ -67,6 +103,10 @@ export class Vec3 {
     return this;
   }
 
+  /**
+   * このベクトルの各成分の符号を反転します（x, y, z をそれぞれ -1 倍します）。
+   * @returns `this`（メソッドチェーン用）
+   */
   negate() {
     this.x *= -1;
     this.y *= -1;
@@ -74,10 +114,21 @@ export class Vec3 {
     return this;
   }
 
+  /**
+   * このベクトルの長さ（ユークリッドノルム）を返します。
+   * @returns ベクトルの長さ
+   */
   length() {
     return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
   }
 
+  /**
+   * このベクトルの値を設定します。
+   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param y y 成分
+   * @param z z 成分
+   * @returns `this`（メソッドチェーン用）
+   */
   set(v: Vec3): Vec3;
   set(v: MutableVec3): Vec3;
   set(x: number, y: number, z: number): Vec3;
@@ -94,6 +145,13 @@ export class Vec3 {
     return this;
   }
 
+  /**
+   * 別のベクトルをこのベクトルに加算します（`this += v`）。
+   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param y y 成分
+   * @param z z 成分
+   * @returns `this`（メソッドチェーン用）
+   */
   add(v: Vec3): Vec3;
   add(v: MutableVec3): Vec3;
   add(x: number, y: number, z: number): Vec3;
@@ -110,6 +168,13 @@ export class Vec3 {
     return this;
   }
   
+  /**
+   * 別のベクトルをこのベクトルから減算します（`this -= v`）。
+   * @param x x 成分（または `Vec3` / `MutableVec3`）
+   * @param y y 成分
+   * @param z z 成分
+   * @returns `this`（メソッドチェーン用）
+   */
   sub(v: Vec3): Vec3;
   sub(v: MutableVec3): Vec3;
   sub(x: number, y: number, z: number): Vec3;
@@ -126,6 +191,11 @@ export class Vec3 {
     return this;
   }
 
+  /**
+   * このベクトルをスカラー倍します（`this *= s`）。
+   * @param s スケール値
+   * @returns `this`（メソッドチェーン用）
+   */
   scale(s: number) {
     this.x *= s;
     this.y *= s;
@@ -133,7 +203,17 @@ export class Vec3 {
     return this;
   }
 
-  // 自分自身ん引数に与えるとダメな実装
+  /**
+   * `v1` と `v2` の外積を計算し、結果をこのベクトルに設定します。
+   *
+   * @remarks
+   * `v1` または `v2` にこのベクトル自身（`this`）を渡すと結果が不正になります。
+   * 自分自身を引数として渡さないでください。
+   *
+   * @param v1 外積の第1ベクトル
+   * @param v2 外積の第2ベクトル
+   * @returns `this`（メソッドチェーン用）
+   */
   cross(v1: Vec3, v2: Vec3) {
     this.x = v1.y*v2.z - v1.z*v2.y;
     this.y = v1.z*v2.x - v1.x*v2.z;
@@ -141,6 +221,12 @@ export class Vec3 {
     return this;
   }
 
+  /**
+   * クォータニオン `q` による回転をこのベクトルに適用します。
+   * 方向ベクトルを回転させる際に使います。
+   * @param q 適用するクォータニオン（または x, y, z, w の数値）
+   * @returns `this`（メソッドチェーン用）
+   */
   apply(q: Quat): Vec3;
   apply(q: MutableQuat): Vec3;
   apply(x: number, y: number, z: number, w: number): Vec3;
@@ -161,7 +247,13 @@ export class Vec3 {
     return this;
   }
 
-  // 線形補間
+  /**
+   * 2つのベクトル `v1` と `v2` を線形補間し、結果をこのベクトルに設定します。
+   * `t=0` のとき `v1`、`t=1` のとき `v2` と等しくなります。
+   * @param v1 補間の始点
+   * @param v2 補間の終点
+   * @param t 補間係数（0〜1）
+   */
   lerp(v1: Vec3, v2: Vec3, t: number) {
     this.x = (1-t)*v1.x + t*v2.x;
     this.y = (1-t)*v1.y + t*v2.y;
@@ -173,13 +265,29 @@ export class Vec3 {
 // ################################################################
 
 /**
- * オイラー角(ラジアン)を四元数に変換する時に、軸の回転順番を
- * 指定するための型。
+ * オイラー角を四元数に変換するときに、軸の回転順番を
+ * 指定するための型です。デフォルトは `"ZXY"` です。
  */
 export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
 
 /**
- * 四元数
+ * 四元数（クォータニオン）を表すクラスです。
+ *
+ * 3D 空間における回転を表現するために使います。
+ * オイラー角（X, Y, Z 軸まわりの角度）よりも数値的に安定しているため、
+ * a3js では回転の内部表現としてこのクラスを使用しています。
+ *
+ * 通常はこのクラスを直接操作するよりも `ObjectA3.setRotation()` などの
+ * 高レベルなメソッドを使うことを推奨します。
+ *
+ * @example
+ * ```ts
+ * // 単位クォータニオン（回転なし）を作成
+ * const q = new Quat();
+ *
+ * // 別のクォータニオンをコピーして作成
+ * const q2 = new Quat(q);
+ * ```
  */
 export class Quat {
   x = 0;
@@ -208,10 +316,18 @@ export class Quat {
     }
   }
 
+  /**
+   * このクォータニオンのコピーを新しい `Quat` インスタンスとして返します。
+   * @returns コピーされた新しい `Quat`
+   */
   clone() {
     return new Quat(this);
   }
 
+  /**
+   * このクォータニオンの値を `MutableQuat` を実装したオブジェクト（例: `THREE.Quaternion`）に書き込みます。
+   * @param q 書き込み先のオブジェクト
+   */
   write(q: MutableQuat) {
     q.x = this.x;
     q.y = this.y;
@@ -219,6 +335,10 @@ export class Quat {
     q.w = this.w;
   }
 
+  /**
+   * このクォータニオンを正規化します（長さを1にします）。
+   * @returns `this`（メソッドチェーン用）
+   */
   normalize() {
     const l0 = this.x*this.x + this.y*this.y + this.z*this.z + this.w*this.w;
     const l1 = Math.sqrt(l0);
@@ -233,6 +353,11 @@ export class Quat {
     return this;
   }
 
+  /**
+   * このクォータニオンの共役を返します（x, y, z 成分の符号を反転します）。
+   * 逆回転を表すために使います（正規化されている場合は逆クォータニオンと一致します）。
+   * @returns `this`（メソッドチェーン用）
+   */
   conjugate() {
     this.x *= -1;
     this.y *= -1;
@@ -241,6 +366,14 @@ export class Quat {
     return this;
   }
 
+  /**
+   * このクォータニオンの値を設定します。
+   * @param x x 成分（または `Quat` / `MutableQuat`）
+   * @param y y 成分
+   * @param z z 成分
+   * @param w w 成分
+   * @returns `this`（メソッドチェーン用）
+   */
   set(q: Quat): Quat;
   set(q: MutableQuat): Quat;
   set(x: number, y: number, z: number, w: number): Quat;
@@ -259,6 +392,12 @@ export class Quat {
     return this;
   }
 
+  /**
+   * このクォータニオンに別のクォータニオン `q` を右から掛け合わせます（`this = this * q`）。
+   * 回転を合成するために使います。
+   * @param q 掛けるクォータニオン（または x, y, z, w の数値）
+   * @returns `this`（メソッドチェーン用）
+   */
   mul(q: Quat): Quat;
   mul(q: MutableQuat): Quat;
   mul(x: number, y: number, z: number, w: number): Quat;
@@ -277,8 +416,14 @@ export class Quat {
     return this;
   }
 
-  // 線形補間
-  // 引数のq1が自分自身という場合でも使える
+  /**
+   * 2つのクォータニオン `q1` と `q2` を線形補間し、結果をこのクォータニオンに設定します。
+   * `t=0` のとき `q1`、`t=1` のとき `q2` と等しくなります。
+   * `q1` に `this` 自身を渡しても安全です。
+   * @param q1 補間の始点
+   * @param q2 補間の終点
+   * @param t 補間係数（0〜1）
+   */
   lerp(q1: Quat, q2: Quat, t: number) {
     this.x = (1-t)*q1.x + t*q2.x;
     this.y = (1-t)*q1.y + t*q2.y;
@@ -286,8 +431,14 @@ export class Quat {
     this.w = (1-t)*q1.w + t*q2.w;
   }
 
-  // 球面線形補間
-  // 引数のq1が自分自身という場合でも使えるはず
+  /**
+   * 2つのクォータニオン `q1` と `q2` を球面線形補間（Slerp）し、結果をこのクォータニオンに設定します。
+   * `t=0` のとき `q1`、`t=1` のとき `q2` と等しくなります。
+   * `lerp()` より滑らかな回転補間が得られます。`q1` に `this` 自身を渡しても安全です。
+   * @param q1 補間の始点
+   * @param q2 補間の終点
+   * @param t 補間係数（0〜1）
+   */
   slerp(q1: Quat, q2: Quat, t: number) {
     if (t<0 || t>1) {
       console.warn('Quat.slerp(): t must be in [0,1]');
@@ -341,15 +492,13 @@ export class Quat {
 const q3 = new Quat(); // 計算のテンポラリで使う
 
 /**
- * 自分(me)が対象(target)の方を向くための四元数を計算で出します。
- * 3つ目の引数に上方向ベクトル(up)も与えて下さい。glTFのモデルを
- * 基準にしたいので、これにあわせてZ軸の正の方向を自分の前方向と
- * 考えて、これを対象に向ける回転を計算する。
- *
- * 直接、ここの計算とは関係ないがカメラだけはZ軸の負の方向を
- * 前としなければならないので、a3.Camera.lookAt()は
- * a3.ObjectA3.lookAt()をオーバーライドすることで反対方向を向く
- * ようにしている。
+ * ある地点（`me`）から対象（`target`）の方を向くためのクォータニオンを計算します。
+ * glTF モデルの座標系に合わせ、Z 軸の正方向を「前」として計算します。
+ * @param me 自分の位置
+ * @param target 向く先の位置
+ * @param up 上方向ベクトル（通常 `(0, 1, 0)`）
+ * @param out 結果を書き込む `Quat`。省略時は新しい `Quat` を返します。
+ * @returns 計算されたクォータニオン
  */
 export function getLookAtQuaternion(me: Vec3, target: Vec3, up: Vec3, out?: Quat): Quat {
   up.normalize();
@@ -383,8 +532,11 @@ export function getLookAtQuaternion(me: Vec3, target: Vec3, up: Vec3, out?: Quat
 
 
 /**
- * オイラー角(ラジアン)を四元数に変換する関数、2番目の引数は
- * 軸の回転順番を指定するRotationOrder。
+ * オイラー角（ラジアン）をクォータニオンに変換します。
+ * @param rot 各軸の回転角（ラジアン）を表す `Vec3`
+ * @param order 軸の回転順番。デフォルトは `"ZXY"`
+ * @param out 結果を書き込む `Quat`。省略時は新しい `Quat` を返します。
+ * @returns 変換されたクォータニオン
  */
 export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "ZXY", out?: Quat): Quat {
   const quat = out !== undefined ? out.set(0, 0, 0, 1) : new Quat(0, 0, 0, 1);
@@ -437,8 +589,11 @@ export function quatToMatrix(q: Quat): number[][] {
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
 /**
- * 四元数をオイラー角(ラジアン)に変換する関数、2番目の引数は
- * 軸の回転順番を指定するRotationOrder。
+ * クォータニオンをオイラー角（ラジアン）に変換します。
+ * @param q 変換するクォータニオン
+ * @param order 軸の回転順番。デフォルトは `"ZXY"`
+ * @param out 結果を書き込む `Vec3`。省略時は新しい `Vec3` を返します。
+ * @returns 変換されたオイラー角（ラジアン）を表す `Vec3`
  */
 export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY", out?: Vec3): Vec3 {
   const m = quatToMatrix(q);
@@ -518,9 +673,16 @@ export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY", out?: Vec
 
 // ###################################################################
 
+/**
+ * 3D オブジェクトの位置・回転・拡大率をまとめて保持するクラスです。
+ * `Transformer` が管理する正式な Transform 情報として使われます。
+ */
 export class Transform {
+  /** 位置（ワールド座標）。 */
   loc: Vec3;
+  /** 回転（クォータニオン）。 */
   quat: Quat;
+  /** 拡大率（各軸の倍率）。初期値は `(1, 1, 1)`。 */
   scale: Vec3;
 
   constructor() {

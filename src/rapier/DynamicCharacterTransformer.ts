@@ -5,9 +5,15 @@ import { Vec3, Quat, Transform } from '../core/LinearMath';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transformer } from '../core/ObjectA3';
 
+/**
+ * `"DynamicCharacter"` モードで使用されるオプションです。
+ */
 export interface DynamicCharacterTransformerOptions {
-  auto: boolean, // object3Dから自動でCapsuleの高さと半径を計算させるか
+  /** `true` のとき、オブジェクトのメッシュ形状からカプセルの高さと半径を自動計算します。デフォルトは `true`。 */
+  auto: boolean,
+  /** カプセルコライダーの高さ（メートル）。`auto: false` のときに使用されます。デフォルトは `1.5`。 */
   height: number,
+  /** カプセルコライダーの半径（メートル）。`auto: false` のときに使用されます。デフォルトは `0.3`。 */
   radius: number
 }
 
@@ -17,6 +23,17 @@ export const defaultDynamicCharacterTransformerOptions = {
   radius: 0.3
 };
 
+/**
+ * `"DynamicCharacter"` モードで使用される Transformer の Rapier3D 実装です。
+ * `setTransformMode("DynamicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ *
+ * カプセル形状の dynamic 剛体を使い、物理演算（重力・衝突）の影響を受けながら
+ * 速度・力制御でキャラクターを動かします。
+ * `"KinematicCharacter"` と異なり、物理的な慣性の影響を受けます。
+ *
+ * @remarks
+ * 直接インスタンスを生成するのではなく、`setTransformMode("DynamicCharacter", options)` を通じて使用してください。
+ */
 export class DynamicCharacterTransformer implements Transformer {
   transform: Transform;
   objectA3?: ObjectA3;

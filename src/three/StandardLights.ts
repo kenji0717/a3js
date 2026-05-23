@@ -2,7 +2,17 @@ import * as THREE from 'three';
 import { ObjectA3 } from '../core/ObjectA3';
 
 /**
- * Three.jsのDirectionalLightとAmbientLightからなる光源。
+ * 標準的なライティングを提供する光源オブジェクトです。
+ * 太陽光に相当する `THREE.DirectionalLight`（指向性ライト）と、
+ * 全体を均一に照らす `THREE.AmbientLight`（環境光）の組み合わせです。
+ *
+ * `MeshStandardMaterial` を使ったオブジェクトを正しく表示するには光源が必要です。
+ *
+ * @example
+ * ```ts
+ * const lights = new StandardLights();
+ * scene.add(lights);
+ * ```
  */
 export class StandardLights extends ObjectA3 {
     constructor() {

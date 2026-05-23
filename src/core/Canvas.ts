@@ -11,12 +11,19 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
 import { recreateGLTFLoader } from './GLTF';
 
+/**
+ * `Canvas` の生成オプションです。
+ */
 export interface CanvasOptions {
+  /** 使用するカメラ。省略時はデフォルトの透視投影カメラが使用されます。 */
   camera: ThreeCamera | undefined;
+  /** アンチエイリアスを有効にするかどうか。`true` にすると描画品質が上がりますが処理が重くなります。デフォルトは `false`。 */
   antialias: boolean;
+  /** 背景を透過するかどうか。`true` にすると 3D キャンバスの背景が透明になります。デフォルトは `false`。 */
   transparent: boolean;
 }
 
+/** `CanvasOptions` のデフォルト値です。 */
 export const defaultCanvasOptions: CanvasOptions = {
   camera: undefined,
   antialias: false,
@@ -24,18 +31,47 @@ export const defaultCanvasOptions: CanvasOptions = {
 };
 
 /**
- * HTMLのエレメント(a3-canvas)として使えるView。
+ * HTML カスタム要素 `<canvas-a3>` として使用できる 3D 表示クラスです。
+ *
+ * `<canvas-a3>` タグを HTML に記述するか、JavaScript で `new Canvas()` して
+ * DOM に追加することで使用できます。
+ * `scene`・`camera`・`controller` が生成時に自動的に作られ、すぐに表示できる状態になります。
+ *
+ * @example
+ * ```html
+ * <!-- HTML での使用例 -->
+ * <canvas-a3 style="width: 800px; height: 600px;"></canvas-a3>
+ * ```
+ *
+ * @example
+ * ```ts
+ * // JavaScript での使用例
+ * const view = new Canvas();
+ * document.body.appendChild(view);
+ *
+ * const box = new Box();
+ * view.scene.add(box);
+ * ```
  */
 export class Canvas extends HTMLElement implements View {
+  /** 生成オプション。 */
   options: CanvasOptions;
   private ro?: ResizeObserver;
+  /** `View` の基本機能を提供する `BaseView`。 */
   base: BaseView;
-  renderer;
+  /** 3D レンダリングに使用する Three.js の `THREE.WebGLRenderer`。 */
+  renderer: THREE.WebGLRenderer;
+  /** HTML オーバーレイ（`Html3D` など）を描画する `CSS2DRenderer`。 */
   css2DRenderer: CSS2DRenderer;
+  /** このビューが表示している `Scene`。 */
   scene: Scene;
+  /** このビューのカメラ。 */
   camera: Camera;
+  /** このビューの入力コントローラー。 */
   controller: Controller;
+  /** 内部で使用している Three.js の `THREE.Camera`。 */
   camera3js: THREE.Camera;
+  /** フレーム間の経過時間を計測する `THREE.Timer`。 */
   timer: THREE.Timer;
   private _canvas: HTMLCanvasElement;
   private _css2DCanvas: HTMLElement;
@@ -241,6 +277,13 @@ export class Canvas extends HTMLElement implements View {
     }
   }
 
+  /**
+   * キャンバス内にアラートダイアログを表示します。
+   * ユーザーが「OK」ボタンをクリックするまで処理を待機します。
+   * @param message 表示するメッセージ
+   * @param func OK ボタンクリック時に呼ばれる関数（省略可）
+   * @returns OK ボタンがクリックされたら解決する `Promise`
+   */
   alert(message: string, func?: ()=>void): Promise<void> {
     return new Promise((resolve) => {
       const div = document.createElement('div');
@@ -263,6 +306,13 @@ export class Canvas extends HTMLElement implements View {
     });
   }
 
+  /**
+   * キャンバス内にテキスト入力ダイアログを表示します。
+   * ユーザーが「OK」ボタンをクリックするまで処理を待機し、入力値を返します。
+   * @param message 表示するメッセージ
+   * @param func OK ボタンクリック時に呼ばれる関数（省略可）
+   * @returns ユーザーが入力したテキストを値に持つ `Promise`
+   */
   prompt(message: string, func?: ()=>void): Promise<string> {
     return new Promise((resolve) => {
       const div = document.createElement('div');

@@ -7,17 +7,21 @@ import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 
 let font: Font | null = null;
 /**
- * Text3Dを使う前にフォントを初期化しなければならないので、
- * この関数で初期化する。フォントはttfファイルから
- * TypeFace.js (https://gero3.github.io/facetype.js/) を
- * 使ってJSONファイルにする。日本語フォントとかだとサイズが
- * 大きくなるので、そのZIP圧縮ファイルにも対応させた。もと
- * もとのフォントファイルのファイル名がabcdefg.jsonの時は、
- * `zip abcdefg.json.zip abcdefg.json`として圧縮ファイルを
- * 作って下さい。(つまりその圧縮ファイルの中に含まれている
- * もとのファイルのファイル名が圧縮ファイルのファイル名から
- * 予測できるようにする。)
- */ 
+ * `Text3D` を使う前に、このメソッドでフォントを初期化してください。
+ *
+ * フォントは TTF ファイルを TypeFace.js（https://gero3.github.io/facetype.js/）で変換した JSON ファイルを使います。
+ * 日本語フォントのようにファイルが大きくなる場合は、JSON を ZIP 圧縮したファイル（`.json.zip`）も使用できます。
+ * （例: `abcdefg.json` → `zip abcdefg.json.zip abcdefg.json`）
+ *
+ * @param path フォントファイルのパス（`.json` または `.json.zip`）
+ *
+ * @example
+ * ```ts
+ * await initFont('fonts/helvetiker_regular.typeface.json');
+ * const text = new Text3D('Hello!');
+ * scene.add(text);
+ * ```
+ */
 export async function initFont(path: string) {
   if (path.match(/.zip$/i)) {
     let path2 = path.substring(path.lastIndexOf('/')); // zipファイル前のpathを削る
@@ -32,6 +36,18 @@ export async function initFont(path: string) {
   }
 }
 
+/**
+ * 3D テキストを表示するオブジェクトです。
+ * 事前に `initFont()` でフォントを読み込んでから使ってください。
+ * フォントが初期化されていない場合は赤いボックスが表示されます。
+ *
+ * @example
+ * ```ts
+ * await initFont('fonts/helvetiker_regular.typeface.json');
+ * const text = new Text3D('Score: 100');
+ * scene.add(text);
+ * ```
+ */
 export class Text3D extends ObjectA3 {
   initObject(data: any) {
     let str;

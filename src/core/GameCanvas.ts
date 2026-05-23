@@ -5,35 +5,72 @@ import type { Controller } from './Controller';
 import type { Vec3 } from './LinearMath';
 import type { Scene } from './Scene';
 
+/**
+ * `GameCanvas` の生成オプションです。
+ */
 export interface GameCanvasOptions {
+  /** タッチデバイス用UIを表示するかどうか。`true` でジョイスティックとボタンを表示します。省略時はタッチ対応デバイスか自動判定します。 */
   touchDevice: boolean;
 }
 
+/** `GameCanvasOptions` のデフォルト値です。タッチポイント数でスマホかPCかを自動判定します。 */
 export const defaultGameCanvasOptions: GameCanvasOptions = {
-  // スマホかPCかの判定をタッチデバイスの数で判定
   touchDevice: (navigator.maxTouchPoints > 0)
 };
 
+/**
+ * スマートフォン向けのジョイスティック UI 付き 3D 表示クラスです。
+ * HTML カスタム要素 `<game-canvas-a3>` として使用できます。
+ *
+ * 画面左下に左ジョイスティック、右下に右ジョイスティックと L/R ボタンが表示されます。
+ * PC 環境（タッチ非対応）ではジョイスティックとボタンは非表示になります。
+ * PC では W/A/S/D キーが左ジョイスティック、矢印キーが右ジョイスティック、
+ * Space が左ボタン、Enter が右ボタンに対応します。
+ *
+ * @example
+ * ```ts
+ * const view = new GameCanvas();
+ * document.body.appendChild(view);
+ *
+ * // 毎フレーム左ジョイスティックの値を参照して移動
+ * function animate() {
+ *   const { x, y } = view.leftJoystick; // -1 〜 1 の値
+ *   avatar.moveForward(y * 0.1);
+ *   avatar.turnLeft(x * 2);
+ * }
+ * ```
+ */
 export class GameCanvas extends HTMLElement implements View {
+  /** 生成オプション。 */
   options: GameCanvasOptions;
+  /** 内部で使用している `Canvas`。 */
   canvas: Canvas;
+  /** このビューが表示している `Scene`。 */
   scene: Scene;
+  /** このビューのカメラ。 */
   camera: Camera;
+  /** このビューの入力コントローラー。 */
   controller: Controller;
-  // 以下ジョイスティック用情報
   _maxDistance: number;
-  // 左ジョイスティック用
   _leftActive: boolean;
   _leftCenter: {x:number, y:number};
+  /**
+   * 左ジョイスティックの現在の入力値です。
+   * `x`・`y` ともに -1 〜 1 の範囲で、中央が `0`、最大傾きが `±1` です。
+   */
   leftJoystick: {x: number, y: number};
-  // 右ジョイスティック用
   _rightActive: boolean;
   _rightCenter: {x:number, y:number};
+  /**
+   * 右ジョイスティックの現在の入力値です。
+   * `x`・`y` ともに -1 〜 1 の範囲で、中央が `0`、最大傾きが `±1` です。
+   */
   rightJoystick: {x: number, y: number};
-  // 以下ボタン用情報
+  /** 左ボタンが押されているとき `true`（PC では Space キーに対応）。 */
   leftButton: boolean;
+  /** 右ボタンが押されているとき `true`（PC では Enter キーに対応）。 */
   rightButton: boolean;
-  // 以下キーの情報
+  /** 現在押下中のキーコードの集合。 */
   keys: Set<string>;
   private _ro?: ResizeObserver;
 

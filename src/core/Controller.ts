@@ -4,49 +4,65 @@ import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from '.
 import { tmp } from '../utils/math';
 
 /**
- * キーやマウスなどの様々なイベントを受け取り
- * ナビゲーションなどを行うコントローラのインターフェース。
+ * キーボードやマウスなどの入力を受け取り、カメラやオブジェクトを操作するコントローラのインターフェースです。
  *
- * a3.Windowやa3.Canvasなどのa3.Viewにセットして使う。
- * a3.Viewの方で発生した色々なイベントを受け取ることが
- * 可能でそれに応答して様々な処理を行わせるための基盤。
+ * `Canvas`・`Window`・`GameCanvas` などの `View` に `setController()` でセットして使います。
+ * `View` 側でキーやマウスのイベントが発生すると、このインターフェースの各メソッドが自動的に呼び出されます。
  *
- * このControllerインタフェースのupdate()以外の
- * メソッドでは基本的に外部(this.view.cameraとか
- * this.view.sceneとか)に影響を及ぼす処理は
- * 書かないようにしてください。つまり、キーイベントや
- * マウスイベントをキャッチした時は、その情報を
- * メンバ変数などに保存しておき、update()が呼ばれたら
- * 保存しておいた情報をもとにして外部に影響を及ぼす
- * プログラムを書くようにして下さい。
+ * 独自のコントローラを作る場合は `BaseController` を継承し、
+ * 必要なメソッドだけオーバーライドしてください。
  */
 export interface Controller {
+  /** このコントローラが操作する `View`。`setView()` で設定されます。 */
   view?: View;
+  /**
+   * このコントローラを操作する `View` を設定します。
+   * @param view 関連付ける `View`
+   */
   setView(view: View): void;
+  /**
+   * 毎フレーム呼び出されます。ここでカメラやオブジェクトへの実際の操作を行います。
+   * @param dt 前フレームからの経過時間（秒）
+   */
   update(dt: number): void;
+  /** このコントローラを有効化します。 */
   activate(): void;
+  /** このコントローラを無効化します。 */
   deactivate(): void;
+  /** キーが押されたときに呼び出されます。 */
   keyDown(event: KeyboardEvent): void;
+  /** キーが離されたときに呼び出されます。 */
   keyUp(event: KeyboardEvent): void;
+  /** キーが押されたときに呼び出されます（文字入力向け）。 */
   keyPress(event: KeyboardEvent): void;
+  /** マウスボタンが押されたときに呼び出されます。 */
   mouseDown(event: MouseEvent): void;
+  /** マウスボタンが離されたときに呼び出されます。 */
   mouseUp(event: MouseEvent): void;
+  /** マウスが移動したときに呼び出されます。 */
   mouseMove(event: MouseEvent): void;
+  /** マウスがクリックされたときに呼び出されます。 */
   mouseClick(event: MouseEvent): void;
+  /** マウスが要素に入ったときに呼び出されます。 */
   mouseEnter(event: MouseEvent): void;
+  /** マウスが要素から出たときに呼び出されます。 */
   mouseLeave(event: MouseEvent): void;
+  /** マウスホイールが操作されたときに呼び出されます。 */
   mouseWheel(event: WheelEvent): void;
+  /** タッチ開始時に呼び出されます。 */
   touchStart(event: TouchEvent): void;
+  /** タッチ終了時に呼び出されます。 */
   touchEnd(event: TouchEvent): void;
+  /** タッチ移動時に呼び出されます。 */
   touchMove(event: TouchEvent): void;
+  /** タッチがキャンセルされたときに呼び出されます。 */
   touchCancel(event: TouchEvent): void;
 }
 
 /**
-  * ほとんど何もしないController。不要なメソッドを
-  * 実装しなくて良いように、これを継承して実用的な
-  * Controllerを作ると良い。
-  */
+ * `Controller` インターフェースのデフォルト実装です。すべてのメソッドが空実装になっています。
+ * 独自のコントローラを作る場合は、このクラスを継承して必要なメソッドだけオーバーライドしてください。
+ */
 export class BaseController implements Controller {
   view?: View;
 
@@ -71,17 +87,35 @@ export class BaseController implements Controller {
 }
 
 /**
-  * Three.jsのOrbitControlsと同様の処理をしてくれるコントローラ。
-  * Ctrlキーを押してマウスドラッグすると、平行移動も可能。
-  */
+ * Three.js の OrbitControls と同様の操作ができるコントローラです。
+ * デフォルトで `Canvas`・`Window`・`GameCanvas` に設定されています。
+ *
+ * - **左ドラッグ**: 指定した注視点を中心にカメラを回転させます。
+ * - **左ドラッグ + Ctrl キー**: カメラを平行移動させます。
+ * - **マウスホイール**: カメラを前後にズームします。
+ *
+ * @example
+ * ```ts
+ * // 注視点を (0, 1, 0) に設定して OrbitController を使用する
+ * view.setController(new OrbitController(0, 1, 0));
+ * ```
+ */
 export class OrbitController extends BaseController {
+  /** 前フレームのマウス位置。 */
   lastMousePosition: {x:number,y:number};
+  /** 今フレームのマウスの x 方向の移動量。 */
   dx: number = 0;
+  /** 今フレームのマウスの y 方向の移動量。 */
   dy: number = 0;
+  /** 左マウスボタンが押されているか。 */
   isLeftDown: boolean = false;
+  /** 右マウスボタンが押されているか。 */
   isRightDown: boolean = false;
+  /** Ctrl キーが押されているか。 */
   ctrlKey: boolean = false;
-  deltaY: number = 0; // マウスホイールの値
+  /** マウスホイールの移動量。 */
+  deltaY: number = 0;
+  /** カメラが注視する対象の位置（ワールド座標）。 */
   target: Vec3;
 
   constructor(target: Vec3);
@@ -186,26 +220,34 @@ console.log(`GAHA: touchStart()`,event);
 */
 }
 
+/**
+ * `AvatarPositionController` の設定オプションです。
+ */
 export interface AvatarPositionControllerOptions {
+  /** 移動速度（1フレームあたりの移動距離）。デフォルトは `0.1`。 */
   speed: number;
+  /** 回転速度（1フレームあたりのラジアン）。デフォルトは `0.01`。 */
   angSpeed: number;
 }
 
+/** `AvatarPositionControllerOptions` のデフォルト値。 */
 export const defaultAvatarPositionControllerOptions: AvatarPositionControllerOptions = {
   speed: 0.1,
   angSpeed: 0.01
 };
 
 /**
-  * コンストラクタで指定されているアバターをキーボードで
-  * コントロールするコントローラ。こちらはRAPIERのCharacter
-  * controllerとavatar.transformer.setPosition()でコントロールする方。
-  * 地面判定が性格で安定性が高いけれど、まわりのRigidBodyから
-  * 押されたり押したりできない。
-  *
-  * RigidBodyとavatar.transformer.setLinearVelocity()でコントロールする方は
-  * AvatarVelocityController。
-  */
+ * キーボードでアバターを操作するコントローラです。
+ * `setPosition()` で位置を指定する方式のため、接地判定が正確で安定しています。
+ *
+ * - **W/A/S/D**: 前後左右に移動します。
+ * - **←→ 矢印キー**: 左右に回転します。
+ * - **Space**: ジャンプします。
+ *
+ * @remarks
+ * `"KinematicCharacter"` または `"DynamicCharacter"` モードのアバターと組み合わせて使います。
+ * 周囲の剛体から押されたり押したりする相互作用が必要な場合は `AvatarVelocityController` を使ってください。
+ */
 export class AvatarPositionController extends BaseController {
   options: AvatarPositionControllerOptions;
   private _avatar: ObjectA3;
@@ -288,12 +330,19 @@ export class AvatarPositionController extends BaseController {
   }
 }
 
+/**
+ * `AvatarVelocityController` の設定オプションです。
+ */
 export interface AvatarVelocityControllerOptions {
+  /** 移動速度（m/秒）。デフォルトは `5.0`。 */
   speed: number;
+  /** 回転速度（ラジアン/フレーム）。デフォルトは `0.3`。 */
   angSpeed: number;
+  /** ジャンプ速度（m/秒）。デフォルトは `15.0`。 */
   jumpSpeed: number;
 }
 
+/** `AvatarVelocityControllerOptions` のデフォルト値。 */
 export const defaultAvatarVelocityControllerOptions: AvatarVelocityControllerOptions = {
   speed: 5.0,
   angSpeed: 0.3,
@@ -301,15 +350,18 @@ export const defaultAvatarVelocityControllerOptions: AvatarVelocityControllerOpt
 };
 
 /**
-  * コンストラクタで指定されているアバターをキーボードで
-  * コントロールするコントローラ。こちらはRigidBodyと
-  * avatar.transformer.setLinearVelocity()でコントロールする方。
-  * 地面判定が不正確だけど、まわりのRigidBodyから押されたり、
-  * 押したりできる。
-  *
-  * RAPIERのCharacter controllerとavatar.transformer.setPosition()で
-  * コントロールする方はAvatarPositionController。
-  */
+ * キーボードでアバターを操作するコントローラです。
+ * `setLinearVelocity()` で速度を指定する方式のため、周囲の剛体と物理的に相互作用できます。
+ *
+ * - **W/A/S/D**: 前後左右に移動します。
+ * - **←→ 矢印キー**: 左右に回転します。
+ * - **Space**: ジャンプします。
+ *
+ * @remarks
+ * `"DynamicCharacter"` モードのアバターと組み合わせて使います。
+ * 接地判定が `AvatarPositionController` より不正確です。
+ * より安定した接地判定が必要な場合は `AvatarPositionController` を使ってください。
+ */
 export class AvatarVelocityController extends BaseController {
   options: AvatarVelocityControllerOptions;
   private _avatar: ObjectA3;

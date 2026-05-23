@@ -11,20 +11,42 @@ import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tmp } from '../utils/math';
 import { recreateGLTFLoader } from './GLTF';
 
+/**
+ * `Window` の生成オプションです。
+ */
 export interface WindowOptions {
+  /** ウィンドウの初期幅（ピクセル）。デフォルトは `600`。 */
   width: number;
+  /** ウィンドウの初期高さ（ピクセル）。デフォルトは `300`。 */
   height: number;
+  /** 使用するカメラ。省略時はデフォルトの透視投影カメラが使用されます。 */
   camera: ThreeCamera | undefined;
 }
 
+/** `WindowOptions` のデフォルト値です。 */
 export const defaultWindowOptions: WindowOptions = {
   width: 600,
   height: 300,
   camera: undefined
 }
 
-//type ResizeDir = "" | "n" | "s" | "e" | "w" | "ne" | "sw" | "nw" | "se";
-
+/**
+ * タイトルバー付き浮動ウィンドウとして使用できる 3D 表示クラスです。
+ * HTML カスタム要素 `<window-a3>` として使用できます。
+ *
+ * `new Window()` で生成すると自動的に `document.body` に追加されます。
+ * タイトルバーでドラッグして移動、端をドラッグしてリサイズできます。
+ * `×` ボタンで閉じることができます。
+ *
+ * @example
+ * ```ts
+ * // JavaScript から生成する（自動で body に追加される）
+ * const win = new Window(800, 600);
+ *
+ * const box = new Box();
+ * win.scene.add(box);
+ * ```
+ */
 export class Window extends HTMLElement implements View {
   // ########## WebComponent関係のセットアップ ##########
   private _resizeObserver?: ResizeObserver;
@@ -45,14 +67,23 @@ export class Window extends HTMLElement implements View {
   private _closeBtn: HTMLElement | null = null;
   // ########## WebComponent関係のセットアップ終り ##########
 
+  /** 生成オプション。 */
   options: WindowOptions;
+  /** `View` の基本機能を提供する `BaseView`。 */
   base: BaseView;
-  renderer;
+  /** 3D レンダリングに使用する Three.js の `THREE.WebGLRenderer`。 */
+  renderer: THREE.WebGLRenderer;
+  /** HTML オーバーレイ（`Html3D` など）を描画する `CSS2DRenderer`。 */
   css2DRenderer: CSS2DRenderer;
+  /** このビューが表示している `Scene`。 */
   scene: Scene;
+  /** このビューのカメラ。 */
   camera: Camera;
+  /** このビューの入力コントローラー。 */
   controller: Controller;
+  /** 内部で使用している Three.js の `THREE.Camera`。 */
   camera3js: THREE.Camera;
+  /** フレーム間の経過時間を計測する `THREE.Timer`。 */
   timer: THREE.Timer;
 
   constructor(width=600, height=300, options: Partial<WindowOptions> = {}) {
@@ -436,6 +467,13 @@ export class Window extends HTMLElement implements View {
     }
   }
 
+  /**
+   * ウィンドウ内にアラートダイアログを表示します。
+   * ユーザーが「OK」ボタンをクリックするまで処理を待機します。
+   * @param message 表示するメッセージ
+   * @param func OK ボタンクリック時に呼ばれる関数（省略可）
+   * @returns OK ボタンがクリックされたら解決する `Promise`
+   */
   alert(message: string, func?: ()=>void): Promise<void> {
     return new Promise((resolve) => {
       const div = document.createElement('div');
@@ -458,6 +496,13 @@ export class Window extends HTMLElement implements View {
     });
   }
 
+  /**
+   * ウィンドウ内にテキスト入力ダイアログを表示します。
+   * ユーザーが「OK」ボタンをクリックするまで処理を待機し、入力値を返します。
+   * @param message 表示するメッセージ
+   * @param func OK ボタンクリック時に呼ばれる関数（省略可）
+   * @returns ユーザーが入力したテキストを値に持つ `Promise`
+   */
   prompt(message: string, func?: ()=>void): Promise<string> {
     return new Promise((resolve) => {
       const div = document.createElement('div');

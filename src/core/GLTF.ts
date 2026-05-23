@@ -31,19 +31,32 @@ function hasMorphTargets(
   );
 }
 
+/**
+ * glTF ローダーの設定オプションです。
+ */
 export interface GLTFOptions {
-  renderer?: THREE.WebGLRenderer /*| THREE.WebGPURenderer*/,
+  /** DRACO・KTX2 の圧縮解除に使用するレンダラー。`Canvas` / `Window` から自動的に設定されます。 */
+  renderer?: THREE.WebGLRenderer,
+  /** DRACO 圧縮デコーダーの CDN パス。デフォルトは `unpkg.com` 上の three.js 同梱版。 */
   draco: string,
+  /** KTX2 テクスチャトランスコーダーの CDN パス。 */
   ktx2: string,
+  /** Meshopt 圧縮を有効にするか。デフォルトは `true`。 */
   meshopt: boolean
 }
 
+/** `GLTFOptions` のデフォルト値。 */
 export const defaultGLTFOptions = {
   draco: 'https://unpkg.com/three@0.182/examples/jsm/libs/draco/',
   ktx2: 'https://unpkg.com/three@0.182.0/examples/jsm/libs/basis/',
   meshopt: true
 };
 
+/**
+ * glTF ローダーを再生成します。`Canvas` / `Window` の生成時に自動的に呼び出されます。
+ * 特殊なオプションを指定したい場合に手動で呼び出すこともできます。
+ * @param options ローダーオプション
+ */
 export function recreateGLTFLoader(options: Partial<GLTFOptions>={}) {
   const opt = {
     ...defaultGLTFOptions,
@@ -77,9 +90,27 @@ class GLTFAction extends Action {
 
 
 /**
- * glTFモデルを読み込み表示するためのクラス。
+ * glTF 形式（`.glb` / `.gltf`）の 3D モデルを読み込み、表示・アニメーション再生するクラスです。
+ * DRACO / KTX2 / Meshopt 圧縮に対応しています。
+ *
+ * このクラスは `AsyncInitRequired` を実装しています。
+ * `await gltf.ready` でモデルの読み込み完了を待ってからシーンに追加してください。
+ *
+ * glTF ファイルにアニメーションが含まれている場合、各アニメーション名が自動的にアクション名として登録されます。
+ *
+ * @example
+ * ```ts
+ * const gltf = new GLTF('model.glb');
+ * await gltf.ready;
+ * scene.add(gltf);
+ *
+ * // アニメーション名でアクションを切り替える
+ * gltf.setState('Idle');
+ * gltf.setEmote('Wave');
+ * ```
  */
 export class GLTF extends ActionObject<GLTF> {
+  /** 読み込んだ glTF の生データ。Three.js の `GLTF` オブジェクトです。 */
   gltf?: THREE_GLTF;
 
   constructor(data: any) {

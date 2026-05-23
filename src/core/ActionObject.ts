@@ -5,8 +5,14 @@ import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
 import { Scene } from './Scene';
 
+/**
+ * `ActionObject` が持つひとつのアクション（アニメーション状態）を表すクラスです。
+ * 3D モデルの形状（`Figure`）とそのモーション（`Motion`）をセットで管理します。
+ */
 export class Action {
+  /** このアクションの 3D モデル形状。 */
   shape: Figure;
+  /** このアクションのモーション（アニメーション）。 */
   motion: Motion;
 
   constructor(shape: Figure, motion: Motion) {
@@ -25,28 +31,56 @@ export class Action {
   }
 }
 
+/**
+ * `Action` が持つ 3D モデルの形状を表すインターフェースです。
+ * ルートの `Object3D` と、ボーン情報・スケルトン情報を持ちます。
+ */
 export interface Figure {
+  /** この形状のルートとなる Three.js `Object3D`。 */
   root: THREE.Object3D;
+  /** ボーン名と `Object3D` のマップ。ボーンアニメーションに使用します。 */
   bones?: Record<string,THREE.Object3D>;
+  /** スケルトン情報（スキンメッシュアニメーション用）。 */
   skeleton?: THREE.Skeleton;
 }
 
 /**
- * アクションを含む3Dオブジェクト。a3jsではアクション(Action)という
- * 単位で3Dオブジェクト内の動きを扱う方法を提供する。アニメーションの
- * 情報を含むglTFなどが典型的な対象。必ずしも初期化に非同期処理を必要
- * としない場合も考えられるが、非同期処理が必要な場合にあわせた。
-  * 
- * a3jsのActionという方法に馴染まない場合は、ObjectA3を独自に継承して
- * 独自の方法で動きを含む3Dオブジェクトを作成してもかまわない。
+ * 複数のアクション（アニメーション）を持つ 3D オブジェクトの基底クラスです。
+ *
+ * `GLTF`・`Acerola3D` などはこのクラスを継承しています。
+ * アクションは名前で管理され、`setState()` でループするアクション、
+ * `setEmote()` で一度だけ再生するアクションを切り替えられます。
+ *
+ * @remarks
+ * このクラスは `AsyncInitRequired<T>` を実装しており、
+ * 非同期でのモデル読み込みが完了するまで `await obj.ready` で待機する必要があります。
+ *
+ * @example
+ * ```ts
+ * const gltf = new GLTF('model.glb');
+ * await gltf.ready;         // 読み込み完了を待つ
+ * scene.add(gltf);
+ * gltf.setState('walk');    // 歩きアクションをループ再生
+ * gltf.setEmote('jump');    // ジャンプアクションを一度だけ再生
+ * ```
  */
 export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequired<T> {
+  /**
+   * 非同期初期化の完了を待つための `Promise`。
+   * `await obj.ready` でモデルの読み込み完了を待機してください。
+   */
   readonly ready: Promise<T>;
+  /** 名前で管理されているアクションの辞書。 */
   actions: Record<string,Action>;
+  /** 現在再生中のアクション。 */
   currentAction?: Action;
+  /** ループ再生するアクション（`setState()` で設定）。 */
   stateAction?: Action;
+  /** 一度だけ再生するアクション（`setEmote()` で設定）。再生終了後に `stateAction` に戻ります。 */
   emoteAction?: Action;
+  /** モーフィング（表情・形状変化）の情報。 */
   morphs: Record<string, {array: Array<number>, idx: number}>;
+  /** `true` のとき、モーションのモーフィング値を上書きしません。 */
   overwriteMorphs: boolean;
 
   constructor(data?: any) {
@@ -130,6 +164,12 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     return Object.keys(this.actions);
   }
 
+  /**
+   * 指定した名前のアクションをループ再生します（基本アクション）。
+   * 現在のアクションを停止してから切り替えます。
+   * `setEmote()` で一時的に別のアクションを再生した後も、このアクションに戻ります。
+   * @param name アクション名
+   */
   setState(name: string) {
     const a = this.actions[name];
     if (a) {
@@ -142,6 +182,11 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     }
   }
 
+  /**
+   * 指定した名前のアクションを一度だけ再生します（エモートアクション）。
+   * 再生が終わると `setState()` で設定したアクションに自動的に戻ります。
+   * @param name アクション名
+   */
   setEmote(name: string) {
     const a = this.actions[name];
     if (a) {
@@ -153,12 +198,21 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     }
   }
 
-  // 今のところ、こんな感じでにげる。AnimationMixerを
-  // 完全に真似するまでは時間がかかりそう。
+  /**
+   * `true` にすると、モーションのモーフィング値がオブジェクトに上書きされなくなります。
+   * `setMorph()` で手動設定した値を保持したい場合に使います。
+   * @param b `true` で上書きを無効化
+   */
   setMorphsOverwrite(b: boolean) {
     this.overwriteMorphs = b;
   }
 
+  /**
+   * 指定した名前のモーフ（表情・形状変化）の値を設定します。
+   * 値の範囲はモデルによって異なりますが、通常は 0.0 〜 1.0 です。
+   * @param name モーフ名
+   * @param value モーフの値
+   */
   setMorph(name: string, value: number) {
     if (name in this.morphs) {
       const { array, idx } = this.morphs[name];
@@ -166,6 +220,10 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     }
   }
 
+  /**
+   * このオブジェクトが持つモーフ名の一覧を返します。
+   * @returns モーフ名の配列
+   */
   getMorphNames() {
     return Object.keys(this.morphs);
   }
@@ -255,35 +313,21 @@ export type Pose = Record<string, {loc?: Vec3, quat?: Quat, scale?: Vec3, morphs
 
 
 /**
- * ObjectA3のobjectプロパティに保存されているTHREE.Object3Dの
- * インスタンスには影響を与えないけど、その中に含まれている
- * 要素をコントロールするモーションインターフェース。
- * キャラクターの様々なジェスチャーを表すようなモーションを
- * コントロールすることなどに使われる。
- * 
- * このインタフェースにはcontrolMotion()や、setPause()、
- * setTime()などのメソッドがある。update()はPose型の情報を
- * 返すことで3Dの要素に動きを与えるメソッド。どのメソッドも、
- * 原則そのメソッドが示す処理を実装することになるが、どのような
- * InnerMotionかによって、その処理内容は様々な場合がありうる。
-  *
- * Three.jsではTHREE.AnimationClipに対応する対象と考えてもらいたい。
+ * `ActionObject` の内部アニメーションを制御するインターフェースです。
+ *
+ * 毎フレーム `update()` が呼ばれ、`Pose` 型のボーン情報を返すことでアニメーションを実現します。
+ * Three.js の `THREE.AnimationClip` に相当します。
+ *
+ * 独自のモーションを作る場合はこのインターフェースを実装してください。
  */
 export interface Motion {
-  /**
-   * このMotionが何回再生されたかを保存している。
-   *
-   */
+  /** このモーションが何回再生されたかを表す値。`emoteAction` の終了判定に使用されます。 */
   playCount: number;
-  
-  /**
-   * 現在再生中のモーションがスータトから何秒経過した状態かを示す。
-   */
+
+  /** 現在の再生位置（スタートから何秒経過したか）。 */
   time: number;
 
-  /**
-   * モーションの再生が最後まで来た時に呼び出されるイベントリスナー。
-   */
+  /** モーションの再生が最後まで終わったときに呼び出されるリスナー。 */
   finishListener?: ()=>void;
 
   /**
@@ -338,6 +382,10 @@ export interface Motion {
   update(dt: number): Pose;
 }
 
+/**
+ * 何もしない `Motion` の実装です。
+ * ポーズも動きも持たないプレースホルダーとして使います。
+ */
 export class DummyMotion implements Motion {
   name: string;
   playCount: number;

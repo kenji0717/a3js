@@ -9,44 +9,77 @@ import { Sound } from '../three/Sound';
 
 
 /**
-  * Canvasなどの3D表示を担当するクラスをまとめるための
-  * インターフェース。基本、表示がメインのクラスだが、
-  * 初心者用であることを考えてコンストラクタ内で必ず
-  * 空のSceneとCameraも生成して持っておき、すぐに
-  * 表示可能な状態で生成されるようにする。このSceneは、
-  * 必要な時に交換することができ、シーンの切り替えができる。
-  * 将来的にはTHREE.StereoCameraとかWebXRとか実装したい
-  * ところ。
-  * 
-  * 細かいこととして、これを実装するクラスでは、Cameraは
-  * Sceneに配置した上で、座標(0,0,3)の場所に配置し、
-  * (0,0,-1)の方向を向かせて、上は(0,1,0)にするように統一する。
-  * BaseViewクラスも参照。
-  */
+ * 3D 表示を担うクラスが実装するインターフェースです。
+ *
+ * `Canvas`・`Window`・`GameCanvas` などはすべてこのインターフェースを実装しています。
+ * `scene`・`camera`・`controller` を持ち、生成直後から表示できる状態で作られます。
+ * `replaceScene()` でシーンを切り替えることができます。
+ */
 export interface View {
+  /** このビューが表示している `Scene`。 */
   scene: Scene;
+  /** このビューのカメラ。初期位置は `(0, 0, 3)` です。 */
   camera: Camera;
+  /** このビューの入力コントローラー。デフォルトは `OrbitController` です。 */
   controller: Controller;
-  replaceScene(newScene: Scene): Scene
+  /**
+   * このビューが表示するシーンを切り替えます。
+   * @param newScene 新しいシーン
+   * @returns 古いシーン
+   */
+  replaceScene(newScene: Scene): Scene;
+  /**
+   * 入力コントローラーを切り替えます。
+   * @param controller 新しいコントローラー
+   */
   setController(controller: Controller): void;
+  /**
+   * ワールド座標を画面上のピクセル座標に変換します。
+   * @param loc ワールド座標
+   * @returns 画面上のピクセル座標 `{ x, y }`
+   */
   worldToScreen(loc: Vec3): { x: number, y: number };
+  /**
+   * 画面上のピクセル座標をワールド座標に変換します。
+   * @param x 画面上の x 座標
+   * @param y 画面上の y 座標
+   * @param depth カメラからの深度（クリップ座標系）
+   * @returns ワールド座標
+   */
   screenToWorld(x: number, y: number, depth: number): Vec3;
+  /**
+   * カメラ座標を画面上のピクセル座標に変換します。
+   * @param loc カメラ座標
+   * @returns 画面上のピクセル座標 `{ x, y }`
+   */
   cameraToScreen(loc: Vec3): { x: number, y: number };
+  /**
+   * 画面上のピクセル座標をカメラ座標に変換します。
+   * @param x 画面上の x 座標
+   * @param y 画面上の y 座標
+   * @param depth カメラからの深度
+   * @returns カメラ座標
+   */
   screenToCamera(x: number, y: number, depth: number): Vec3;
+  /**
+   * 次のフレームが描画されるまで待機します。
+   * @returns 経過時間（ミリ秒）を解決する `Promise`
+   */
   waitForRender(): Promise<number>;
 }
 
 
 /**
- * Viewに必須な機能だけを実装したクラス。
- * これを拡張して新しい表示クラスを作っても良い。
- * CanvasなどはHTMLElementのサブクラスとして実装
- * しないといけないので、このBaseViewのインスタンスを
- * プロパティに保存してラッパーとして実装している。
+ * `View` インターフェースの基本実装クラスです。
+ * `Canvas` などの HTML 要素は `BaseView` を内部にプロパティとして持ちラッパーとして実装されています。
+ * 独自の表示クラスを作る場合は、このクラスを継承するか参考にしてください。
  */
 export class BaseView implements View {
+  /** このビューが表示している `Scene`。 */
   scene: Scene;
+  /** このビューのカメラ。 */
   camera: Camera;
+  /** このビューの入力コントローラー。 */
   controller: Controller;
 
   constructor(camera: Camera) {
@@ -69,12 +102,21 @@ export class BaseView implements View {
     return oldScene;
   }
 
+  /**
+   * シーンの更新処理を行います。毎フレーム呼び出される内部メソッドです。
+   * @param dt 前フレームからの経過時間（秒）
+   */
   updateScene(dt: number) {
     this.scene.update(dt);
     this.controller?.update(dt);
     this.camera.update(dt);
   }
 
+  /**
+   * 入力コントローラーを切り替えます。
+   * 現在のコントローラーを無効化してから新しいコントローラーを有効化します。
+   * @param controller 新しいコントローラー
+   */
   setController(controller: Controller) {
     this.controller.deactivate();
     this.controller = controller;

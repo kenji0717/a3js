@@ -13,45 +13,82 @@ import type { Motion, Pose } from '../core/ActionObject';
  */
 
 /**
- * CarControlを生成するために使用する全てのパラメータを
- * 含んだインタフェース。
+ * `CarControl` の生成オプションです。
+ * 車体・タイヤのサイズやサスペンション特性など、車の物理パラメータを設定します。
+ *
+ * タイヤの順番は FL(0)・FR(1)・RL(2)・RR(3) で統一されています。
  */
 export interface CarControlOptions {
+  /** 車体の質量（kg）。デフォルトは `10.0`。 */
   mass: number;
+  /** 初期位置。デフォルトは `{ x: 0, y: 1, z: 0 }`。 */
   defaultLocation: {x: number, y: number, z: number };
+  /** 初期回転（クォータニオン）。デフォルトは無回転。 */
   defaultQuat: {x: number, y: number, z: number, w: number };
+  /** シャーシの幅（メートル）。デフォルトは `2.0`。 */
   chassisWidth: number;
+  /** シャーシの高さ（メートル）。デフォルトは `1.0`。 */
   chassisHeight: number;
+  /** シャーシの長さ（メートル）。デフォルトは `4.0`。 */
   chassisLength: number;
-  chassisOffset: {x: number, y: number, z: number }; // 表示のずれを補正するやつ
+  /** 3D モデルとコライダーの位置ずれを補正するオフセット。デフォルトは `{ x: 0, y: -0.5, z: 0 }`。 */
+  chassisOffset: {x: number, y: number, z: number };
+  /** シャーシの摩擦係数。デフォルトは `0.1`。 */
   chassisFriction: number;
+  /** 前輪の Y 方向位置（メートル）。デフォルトは `0.0`。 */
   wheelFrontYPosition: number;
+  /** 前輪の Z 方向位置（メートル）。デフォルトは `1.5`。 */
   wheelFrontZPosition: number;
+  /** 前輪の車軸長（メートル）。デフォルトは `2.0`。 */
   wheelFrontAxleLength: number;
+  /** 後輪の Y 方向位置（メートル）。デフォルトは `0.0`。 */
   wheelRearYPosition: number;
+  /** 後輪の Z 方向位置（メートル）。デフォルトは `-1.5`。 */
   wheelRearZPosition: number;
+  /** 後輪の車軸長（メートル）。デフォルトは `2.0`。 */
   wheelRearAxleLength: number;
+  /** 前輪の半径（メートル）。デフォルトは `0.3`。 */
   wheelFrontRadius: number;
+  /** 後輪の半径（メートル）。デフォルトは `0.3`。 */
   wheelRearRadius: number;
+  /** 前輪の幅（メートル）。デフォルトは `0.4`。 */
   wheelFrontWidth: number;
+  /** 後輪の幅（メートル）。デフォルトは `0.4`。 */
   wheelRearWidth: number;
+  /** 前輪のサスペンション自然長（メートル）。デフォルトは `0.8`。 */
   wheelFrontSuspensionRestLength: number;
+  /** 後輪のサスペンション自然長（メートル）。デフォルトは `0.8`。 */
   wheelRearSuspensionRestLength: number;
+  /** 前輪のサスペンション方向ベクトル。デフォルトは下向き `{ x: 0, y: -1, z: 0 }`。 */
   wheelFrontDirection: {x: number, y: number, z: number };
+  /** 後輪のサスペンション方向ベクトル。デフォルトは下向き `{ x: 0, y: -1, z: 0 }`。 */
   wheelRearDirection: {x: number, y: number, z: number };
+  /** 前輪の車軸方向ベクトル。デフォルトは `{ x: -1, y: 0, z: 0 }`。 */
   wheelFrontAxle: {x: number, y: number, z: number };
+  /** 後輪の車軸方向ベクトル。デフォルトは `{ x: -1, y: 0, z: 0 }`。 */
   wheelRearAxle: {x: number, y: number, z: number };
+  /** 前輪のサスペンション剛性。デフォルトは `24.0`。 */
   wheelFrontSuspensionStiffness: number;
+  /** 後輪のサスペンション剛性。デフォルトは `24.0`。 */
   wheelRearSuspensionStiffness: number;
+  /** 前輪のサスペンション圧縮ダンパー係数。デフォルトは `4.0`。 */
   wheelFrontSuspensionCompression: number;
+  /** 後輪のサスペンション圧縮ダンパー係数。デフォルトは `4.0`。 */
   wheelRearSuspensionCompression: number;
+  /** 前輪のサスペンション伸長ダンパー係数。デフォルトは `3.0`。 */
   wheelFrontSuspensionRelaxation: number;
+  /** 後輪のサスペンション伸長ダンパー係数。デフォルトは `3.0`。 */
   wheelRearSuspensionRelaxation: number;
+  /** 前輪の摩擦スリップ係数（大きいほどグリップ力が高い）。デフォルトは `100.0`。 */
   wheelFrontWheelFrictionSlip: number;
+  /** 後輪の摩擦スリップ係数。デフォルトは `100.0`。 */
   wheelRearWheelFrictionSlip: number;
+  /** 前輪のサスペンション最大ストローク（メートル）。デフォルトは `0.25`。 */
   wheelFrontMaxSuspensionTravel: number;
+  /** 後輪のサスペンション最大ストローク（メートル）。デフォルトは `0.25`。 */
   wheelRearMaxSuspensionTravel: number;
-  aerodynamicDrag: number; // 空気抵抗
+  /** 空気抵抗係数。`0` で無効。デフォルトは `0`。 */
+  aerodynamicDrag: number;
 }
 
 /**
@@ -97,10 +134,28 @@ export const defaultCarControlOptions = {
 };
 
 /**
- * 4輪車で左右対象であることを前提にした、車の動きの
- * 物理計算をしてくれるオブジェクト。このオブジェクトの
- * 中に trans: CarTransformerと motion: CarMotionが入って
- * おり、それぞれをActionObjectに設定して使う。
+ * 4輪車の物理演算を管理するオブジェクトです。
+ *
+ * 左右対称の4輪車を前提としており、Rapier3D の `DynamicRayCastVehicleController` を使って
+ * 車体・タイヤの動きをシミュレーションします。
+ *
+ * このオブジェクトは内部に `trans`（`CarTransformer`）と `motion`（`CarMotion`）を持ちます。
+ * `ActionObject` に対して `trans` を Transformer、`motion` を Motion として設定して使用します。
+ *
+ * @example
+ * ```ts
+ * const car = new CarControl({ mass: 20 });
+ * const carObj = new GLTF('car.glb');
+ * await carObj.ready;
+ * carObj.setTransformer(car.trans);
+ * carObj.setMotion('default', car.motion);
+ * scene.add(carObj);
+ *
+ * // ゲームループ内で操作
+ * car.steer(0.3);      // ハンドル操作（ラジアン）
+ * car.accelerate(500); // アクセル
+ * car.brake(0);        // ブレーキ
+ * ```
  */
 export class CarControl {
   opt: CarControlOptions;
@@ -116,6 +171,10 @@ export class CarControl {
     this.motion = new CarMotion(this);
   }
 
+  /**
+   * ハンドルを操作します。
+   * @param angle ステアリング角度（ラジアン）。正の値で右方向に曲がります。
+   */
   steer(angle: number) {
     if (this.trans.controller) {
       this.trans.controller.setWheelSteering(0,angle);
@@ -123,6 +182,10 @@ export class CarControl {
     }
   }
 
+  /**
+   * アクセルを操作します。全4輪にエンジン力を加えます。
+   * @param value エンジン力（ニュートン）。正の値で前進、負の値で後退します。
+   */
   accelerate(value: number) {
     if (this.trans.controller) {
       this.trans.controller.setWheelEngineForce(0,value);
@@ -132,12 +195,10 @@ export class CarControl {
     }
   }
 
-  // brakeに設定する値は、減速に使用する最大インパルスって
-  // ことみたいだけど、あまり効いてない気がする。Three.jsの
-  // サンプルなんかも、車両重量を設定するプログラムが書いて
-  // なかったので1kgとかの仮定で動いてるのかもしれない。
-  // 試しに10kgぐらいにしたら、調整で上手くいきそうな
-  // 感じになった。DynamicRayCastVehicleController。
+  /**
+   * ブレーキを操作します。全4輪にブレーキ力を加えます。
+   * @param b ブレーキ力（大きいほど強くブレーキがかかります）。`0` でブレーキ解除。
+   */
   brake(b: number) {
     if (this.trans.controller) {
       this.trans.controller.setWheelBrake(0, b);
@@ -147,6 +208,12 @@ export class CarControl {
     }
   }
 
+  /**
+   * 車をリセットします。指定した位置・回転に車体を瞬間移動させ、速度をゼロにします。
+   * 省略時は `defaultLocation` / `defaultQuat` に戻します。
+   * @param loc リセット先の位置。省略時は初期位置。
+   * @param quat リセット先の回転。省略時は初期回転。
+   */
   reset(loc?: Vec3, quat?: Quat) {
     if (this.trans.chassisBody) {
       if (loc)
@@ -163,6 +230,11 @@ export class CarControl {
   }
 }
 
+/**
+ * `CarControl` が内部で使用するシャーシの Transformer です。
+ * `ActionObject` の Transformer として設定して使用します。
+ * 直接インスタンスを生成するのではなく、`CarControl` の `trans` プロパティを通じて使用してください。
+ */
 export class CarTransformer implements Transformer {
   cc: CarControl;
   transform: Transform;
@@ -361,6 +433,13 @@ export class CarTransformer implements Transformer {
   }
 }
 
+/**
+ * `CarControl` が内部で使用するタイヤ・シャーシアニメーションの Motion です。
+ * `ActionObject` の Motion として設定して使用します。
+ * シャーシとタイヤそれぞれのボーン名（`"chassis"`, `"frontLeft"`, `"frontRight"`, `"rearLeft"`, `"rearRight"`）に
+ * 対応する位置・回転を毎フレーム返します。
+ * 直接インスタンスを生成するのではなく、`CarControl` の `motion` プロパティを通じて使用してください。
+ */
 export class CarMotion implements Motion {
   cm: CarControl;
   name: string;

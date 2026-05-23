@@ -5,17 +5,25 @@ import { Quat, Vec3 } from '../core/LinearMath';
 import type { PhysicsWorld } from '../core/Physics';
 
 /**
- * BVHやglTFファイルから読み込まれるモーションキャプチャ
- * データなどから生成されるTHREE.AnimationClipに含まれる
- * 1つのアニメーションを表すクラス。
-  */
+ * Three.js の `THREE.AnimationClip` を `Motion` として再生するクラスです。
+ * glTF や BVH から読み込まれたアニメーションデータの再生に使用されます。
+ *
+ * 通常は `GLTF` や `Acerola3D` が内部で自動的に生成するため、直接インスタンス化する機会は少ないです。
+ */
 export class ClipMotion implements Motion {
+  /** このモーションの名前。 */
   name: string;
+  /** 現在の再生位置（秒）。 */
   time: number;
+  /** 再生完了時のリスナー。 */
   finishListener?: ()=>void;
+  /** このモーションの総再生時間（秒）。 */
   duration: number;
+  /** 一時停止中かどうか。 */
   isPaused: boolean;
+  /** 再生回数。 */
   playCount: number;
+  /** ボーンごとの補間器。内部処理用です。 */
   interpolants: Record<string,THREE.Interpolant>;
 
   constructor(clip: THREE.AnimationClip, name?: string) {

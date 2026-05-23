@@ -4,11 +4,11 @@ import { ObjectA3 } from "./ObjectA3";
 import type { Transformer } from "./ObjectA3";
 
 /**
- * 最も簡単なTransformerの実装クラス。座標、回転、拡大率の
- * 指定を即座に反映する。その他の機能は無い。ただ、メソッドは
- * 全て実装されているので、ちょっとしたTransformerを作りたい
- * 時は、このクラスを拡張して必要なところだけオーバーライド
- * するのがお勧め。
+ * `"Default"` モードの `Transformer` 実装です。
+ * 位置・回転・拡大率の変更を即座に反映します。
+ * `setTransformMode("Default")` と同等です。
+ *
+ * 独自の `Transformer` を作る場合は、このクラスを継承して必要なメソッドだけオーバーライドするのがおすすめです。
  */
 export class DefaultTransformer implements Transformer {
   transform: Transform;
@@ -64,10 +64,9 @@ export class DefaultTransformer implements Transformer {
 }
 
 /**
- * まったく動かすことができないTransformer。物理エンジン
- * でコントロールするTransformerでは、DefaultTransformer
- * よりも、こちらの方をベースにした方がやりやすい場合があると
- * 思う。
+ * 一切動かない `Transformer` 実装です。
+ * `setPosition()` などの変更要求をすべて無視します。
+ * 物理エンジン連携の `Transformer` を作る場合のベースクラスとして利用しやすいです。
  */
 export class StaticTransformer implements Transformer {
   transform: Transform;
@@ -110,6 +109,11 @@ export class StaticTransformer implements Transformer {
   update(_dt: number) {}
 }
 
+/**
+ * `"Smooth"` モードの `Transformer` 実装です。
+ * 位置・回転・拡大率の変更を約1秒かけてなめらかに補間します。
+ * `setTransformMode("Smooth")` と同等です。
+ */
 export class SmoothTransformer implements Transformer {
   startTransform: Transform;
   transform: Transform; // 現在のTransform
@@ -225,29 +229,38 @@ const tmpVec1: Vec3 = new Vec3();
 const tmpVec2: Vec3 = new Vec3();
 
 
+/** `BillboardTransformer` の内部オプション型。 */
 export interface BillboardTransformerOptions {
   target?: ObjectA3;
   up: Vec3;
 }
 
+/**
+ * `BillboardTransformer` の生成オプションです。
+ */
 export interface BillboardTransformerInputOptions {
+  /** 常に向き続ける対象のオブジェクト。通常はカメラを指定します。 */
   target: ObjectA3;
+  /** 上方向ベクトル。省略時は `(0, 1, 0)` です。 */
   up?: Vec3;
 }
 
+/** `BillboardTransformerOptions` のデフォルト値。 */
 export const defaultBillboardTransformerOptions: BillboardTransformerOptions = {
   up: new Vec3(0,1,0)
 }
 
 /**
- * targetで指定した物の方を正面として向き続けるための
- * Transformer。特にtargetをカメラにするような使い方を
- * 想定しているけど、実際には何をtargetにしても良い。
- * 外部からの要求は全て無視して向きをtargetに向けるだけ
- * のTransformerとなっている。
-  */
+ * `"Billboard"` モードの `Transformer` 実装です。
+ * `target` で指定したオブジェクトの方向に常に向き続けます。
+ * カメラを `target` に指定すれば、常にカメラを向くビルボード表示ができます。
+ * 回転への外部からの変更はすべて無視されます。
+ * `setTransformMode("Billboard", { target: camera })` と同等です。
+ */
 export class BillboardTransformer extends DefaultTransformer {
+  /** 上方向ベクトル。 */
   up: Vec3;
+  /** 常に向き続ける対象のオブジェクト。 */
   target: ObjectA3;
 
   constructor(options: BillboardTransformerInputOptions) {
@@ -286,22 +299,36 @@ export class BillboardTransformer extends DefaultTransformer {
   }
 }
 
+/** `SmoothBillboardTransformer` の内部オプション型。 */
 export interface SmoothBillboardTransformerOptions {
   target?: ObjectA3;
   up: Vec3;
 }
 
+/**
+ * `SmoothBillboardTransformer` の生成オプションです。
+ */
 export interface SmoothBillboardTransformerInputOptions {
+  /** 常に向き続ける対象のオブジェクト。 */
   target: ObjectA3;
+  /** 上方向ベクトル。省略時は `(0, 1, 0)` です。 */
   up?: Vec3;
 }
 
+/** `SmoothBillboardTransformerOptions` のデフォルト値。 */
 export const defaultSmoothBillboardTransformerOptions: SmoothBillboardTransformerOptions = {
   up: new Vec3(0,1,0)
 };
 
+/**
+ * `"SmoothBillboard"` モードの `Transformer` 実装です。
+ * `BillboardTransformer` のスムーズ補間版です。なめらかにターゲットの方向を向きます。
+ * `setTransformMode("SmoothBillboard", { target: camera })` と同等です。
+ */
 export class SmoothBillboardTransformer extends SmoothTransformer {
+  /** 上方向ベクトル。 */
   up: Vec3;
+  /** 常に向き続ける対象のオブジェクト。 */
   target: ObjectA3;
 
   constructor(options: SmoothBillboardTransformerInputOptions) {
@@ -335,36 +362,47 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
   }
 }
 
+/** `FollowTransformer` の内部オプション型。 */
 export interface FollowTransformerOptions {
   target?: ObjectA3;
   lookFrom: {x:number, y:number, z:number};
-  /** smoothness in [0,1) */
+  /** なめらかさ。0 に近いほどすぐに追従し、1 に近いほどゆっくり追従します。0 以上 1 未満で指定します。 */
   smoothness: number;
 }
 
+/**
+ * `FollowTransformer` の生成オプションです。
+ */
 export interface FollowTransformerInputOptions {
+  /** 追従する対象のオブジェクト。 */
   target: ObjectA3;
+  /** 対象から見た相対位置（カメラをどこから見るか）。省略時は `{ x:0, y:5, z:-10 }`（後方上方）。 */
   lookFrom?: {x:number, y:number, z:number};
-  /** smoothness in [0,1) */
+  /** なめらかさ。0 に近いほどすぐに追従し、1 に近いほどゆっくり追従します。省略時は `0.9`。 */
   smoothness?: number;
 }
 
+/** `FollowTransformerOptions` のデフォルト値。 */
 export const defaultFollowTransformerOptions: FollowTransformerOptions = {
   lookFrom: {x:0, y:5, z:-10},
   smoothness: 0.9
 };
 
 /**
- * targetで指定したObjectA3を追従するTransformer。
- * targetの動きに常に追従するオブジェクトを作りたい時に
- * 使用するのはもちろん、view.cameraにセットすれば、
- * 特定のキャラクタを追尾するカメラにすることができる。
- * そのかわりsetPosition()などでは動かせなくなる。
+ * `"Follow"` モードの `Transformer` 実装です。
+ * `target` で指定したオブジェクトを追従し続けます。
+ * カメラに設定すれば特定のキャラクターを追尾する三人称視点カメラを実現できます。
+ * `setPosition()` などの外部からの変更はすべて無視されます。
+ * `setTransformMode("Follow", { target: avatar })` と同等です。
  */
 export class FollowTransformer extends StaticTransformer {
+  /** 追従する対象のオブジェクト。 */
   target: ObjectA3;
+  /** 対象から見た相対位置（カメラをどこに配置するか）。 */
   lookFrom: Vec3;
+  /** 上方向ベクトル。 */
   up: Vec3;
+  /** なめらかさ（0 以上 1 未満）。 */
   smoothness: number;
 
   constructor(options: FollowTransformerInputOptions) {

@@ -4,36 +4,57 @@ import type { View } from './View';
 import { Vec3, getLookAtQuaternion } from './LinearMath';
 
 /**
-  * a3jsのカメラのベーストなるアブストラクトクラス。
-  * a3jsのカメラはデフォルトでヘッドライトがONの状態
-  * で持ってないといけないので、それもカメラに含まれる
-  * ものとする。
-  */
+ * a3js のカメラの基底となる抽象クラスです。
+ *
+ * a3js のカメラはデフォルトでヘッドライト（スポットライト）を持っており、
+ * カメラと一緒に移動します。
+ *
+ * 通常は `ThreeCamera` をインスタンス化して使用します。
+ * `Canvas` や `Window` は生成時にデフォルトカメラを自動的に作成します。
+ */
 export abstract class Camera extends ObjectA3 {
+  /** このカメラが属する `View`。`View.camera` として設定されるまでは `undefined` です。 */
   view?: View;
 
+  /**
+   * このカメラを指定した `View` に関連付けます。通常は自動的に呼ばれます。
+   * @param view 関連付ける `View`
+   */
   setView(view: View) {
     this.view = view;
   }
 
   /**
-   * 耳の役割を持つTHREE.AudioListenerをカメラに
-   * 取り付ける。普通にTHREE.Cameraだったら、Object3D
-   * のサブクラスなんで、それにaddすればOK。
+   * 3D 音声（ポジショナルオーディオ）のリスナーをカメラに取り付けます。
+   * リスナーをカメラに取り付けることで、カメラ位置を基準に音の方向・距離が計算されます。
+   * @param listener Three.js の `THREE.AudioListener`
    */
   abstract setAudioListener(listener: THREE.AudioListener): void;
 
   /**
-   * ワールド座標 → 正規化デバイス座標（NDC）
+   * ワールド座標を正規化デバイス座標（NDC: -1 〜 1 の範囲）に変換します。
+   * 画面上の位置計算に使用します。
+   * @param loc ワールド座標
+   * @returns 正規化デバイス座標 `{ x, y }` （中央が `0,0`、右上が `1,1`）
    */
-  abstract calcNDC(loc: Vec3): {x: number, y: number}; 
+  abstract calcNDC(loc: Vec3): {x: number, y: number};
 
+  /**
+   * カメラのヘッドライトの有効・無効を切り替えます。
+   * @param b `true` で有効、`false` で無効
+   */
   abstract setHeadLightEnable(b: boolean): void;
 
   /**
-   * カメラのlookAtは通常のObjectA3のlookAtと異なり、
-   * Z軸の負の方向を正面として処理される。
-   * @param v ターゲットの座標
+   * カメラが指定した位置・オブジェクトの方を向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAt()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param y 向く先の y 座標
+   * @param z 向く先の z 座標
    */
   lookAt(v: Vec3): void;
   lookAt(o: ObjectA3): void;
@@ -54,9 +75,15 @@ export abstract class Camera extends ObjectA3 {
   }
 
   /**
-   * カメラのlookAtNowは通常のObjectA3のlookAtNowと異なり、
-   * Z軸の負の方向を正面として処理される。
-   * @param v ターゲットの座標
+   * カメラが指定した位置・オブジェクトの方を即座に向くように回転します。
+   *
+   * @remarks
+   * 通常の `ObjectA3.lookAtNow()` と異なり、カメラは Z 軸の**負**方向が正面になるため、
+   * 内部で 180° 補正されています。
+   *
+   * @param x 向く先の x 座標（または `Vec3` / `ObjectA3`）
+   * @param y 向く先の y 座標
+   * @param z 向く先の z 座標
    */
   lookAtNow(v: Vec3): void;
   lookAtNow(o: ObjectA3): void;

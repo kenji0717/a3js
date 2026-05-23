@@ -13,11 +13,15 @@ import type { Motion } from '../core/ActionObject';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
 
-/**
- * ColliderのIDとObjectA3の対応を記録しておくためのMap
- */
+/** @internal コライダーの ID と ObjectA3 の対応を保持する内部マップです。 */
 export const collisionMap: Map<number,ObjectA3> = new Map();
 
+/**
+ * Rapier3D 物理エンジンを管理するクラスです。
+ * `PhysicsEngine` インターフェースの Rapier3D 実装です。
+ *
+ * 通常はこのクラスを直接使用せず、`initPhysics()` 関数を呼び出してください。
+ */
 export class RapierPhysicsEngine implements PhysicsEngine {
   static RAPIER: typeof import('@dimforge/rapier3d-compat');
   isInitialized: boolean = false;
@@ -56,11 +60,21 @@ export class RapierPhysicsEngine implements PhysicsEngine {
   }
 }
 
+/**
+ * Rapier3D 物理ワールドの生成オプションです。
+ * `PhysicsWorldOptions` を拡張し、Rapier3D 固有の設定を追加します。
+ */
 export interface RapierPhysicsWorldOptions extends PhysicsWorldOptions {
   //enableCCD: boolean;
+  /** 物理シミュレーションの1ステップあたりの時間（秒）。デフォルトは `1/60`。 */
   timestep: number;
 }
 
+/**
+ * Rapier3D の物理演算空間を管理するクラスです。
+ * `PhysicsWorld` インターフェースの Rapier3D 実装です。
+ * `Scene` が内部で自動的に生成・管理するため、通常は直接使用しません。
+ */
 export class RapierPhysicsWorld implements PhysicsWorld {
   world: Rapier.World;
   timestep: number;
@@ -107,6 +121,16 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 }
 
+/**
+ * `"SimplePhysics"` モードで使用される Transformer の Rapier3D 実装です。
+ * `setTransformMode("SimplePhysics", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ *
+ * オブジェクトのメッシュ形状から自動的にコライダーを生成し、
+ * Rapier3D の剛体シミュレーションに従ってオブジェクトを動かします。
+ *
+ * @remarks
+ * 直接インスタンスを生成するのではなく、`setTransformMode("SimplePhysics", options)` を通じて使用してください。
+ */
 export class RapierTransformer implements Transformer {
   transform: Transform;
   objectA3?: ObjectA3;
@@ -507,8 +531,24 @@ export function getShapeAndVolumeFromPrimitive( geometry: THREE.BufferGeometry )
   return null;
 }
 
+/** @internal a3js 全体で共有する Rapier3D 物理エンジンのインスタンスです。 */
 export const physicsEngineInstance: RapierPhysicsEngine = new RapierPhysicsEngine();
 
+/**
+ * Rapier3D 物理エンジンを初期化します。
+ * 物理演算（`"SimplePhysics"` / `"KinematicCharacter"` / `"DynamicCharacter"` モード）を使用する場合は、
+ * `Scene` を生成する前に `await initPhysics()` を呼び出してください。
+ *
+ * @remarks
+ * Rapier3D は WebAssembly モジュールであるため、初回呼び出し時に非同期でロードされます。
+ * 2回目以降の呼び出しは即座に返ります。
+ *
+ * @example
+ * ```ts
+ * await initPhysics();
+ * const scene = new Scene({ physics: { gravity: { x: 0, y: -9.81, z: 0 } } });
+ * ```
+ */
 export async function initPhysics(): Promise<void> {
   await physicsEngineInstance.init();
 }

@@ -23,6 +23,11 @@ class DummyBVH implements BVH {
 const bvhs: Record<string,BVH> = {}; // 同じ物、2度読まないように
 const vrmls: Record<string,THREE.Object3D> = {}; // 同じ物、2度読まないように
 
+/**
+ * `Acerola3D` が内部で使用するアクションクラスです。
+ * `Action` を拡張し、サウンド再生や背景テクスチャ・フォグの切り替えをサポートします。
+ * 通常はユーザーが直接使用する必要はありません。
+ */
 export class A3Action extends Action {
   loop: boolean;
   sound?: Sound;
@@ -87,21 +92,81 @@ export class A3Action extends Action {
 
 
 /**
- * まだ適当。
+ * Acerola3D（`.a3`）形式のファイルを読み込んで表示するオブジェクトです。
+ *
+ * `.a3` ファイルは VRML と BVH アニメーション、サウンドなどを ZIP 形式でまとめた独自フォーマットです。
+ * CATALOG.XML に記述された複数のアクションを持ち、`setState()` や `setEmote()` でアニメーションを切り替えられます。
+ *
+ * このクラスは `AsyncInitRequired` を実装しており、
+ * `await acerola3d.ready` で読み込み完了を待ってから `scene.add()` してください。
+ *
+ * @example
+ * ```ts
+ * await initPhysics();
+ * const chara = new Acerola3D('character.a3');
+ * await chara.ready;
+ * scene.add(chara);
+ * chara.setState('walk');
+ * ```
  */
 export class Acerola3D extends ActionObject<Acerola3D> {
-  haltActionNo: number = 0; // 未実装 GAHA
-  walkActionNo: number = 0; // 未実装 GAHA
-  runActionNo: number = 0; // 未実装 GAHA
-  minWalkSpeed: number = 0.1; // 未実装 GAHA
-  minRunSpeed: number = 1.0; // 未実装 GAHA
-  isBillboard: boolean = false; // 未実装 GAHA
-  comment: string | null = null; // CATALOG.XMLの<c>の中
-  tags: string[] = []; // 未実装 GAHA
-  profiles: string[] = []; // 未実装 GAHA
-  thumbnails: Blob[] = []; // 未実装 GAHA
-  rdf: Element | null = null; // 未実装 GAHA
-  htmlfile: string = ''; // 未実装 GAHA
+  /**
+   * 静止時のアクション番号。
+   * @remarks 現在未実装です。
+   */
+  haltActionNo: number = 0;
+  /**
+   * 歩行時のアクション番号。
+   * @remarks 現在未実装です。
+   */
+  walkActionNo: number = 0;
+  /**
+   * 走行時のアクション番号。
+   * @remarks 現在未実装です。
+   */
+  runActionNo: number = 0;
+  /**
+   * 歩行と判定する最低速度（m/s）。
+   * @remarks 現在未実装です。
+   */
+  minWalkSpeed: number = 0.1;
+  /**
+   * 走行と判定する最低速度（m/s）。
+   * @remarks 現在未実装です。
+   */
+  minRunSpeed: number = 1.0;
+  /**
+   * ビルボード表示（常にカメラ方向を向く）を有効にするか。
+   * @remarks 現在未実装です。
+   */
+  isBillboard: boolean = false;
+  /** CATALOG.XML の `<c>` タグに記述されたコメント文字列。ない場合は `null`。 */
+  comment: string | null = null;
+  /**
+   * CATALOG.XML に記述されたタグ一覧。
+   * @remarks 現在未実装です。
+   */
+  tags: string[] = [];
+  /**
+   * CATALOG.XML に記述されたプロファイル URI 一覧。
+   * @remarks 現在未実装です。
+   */
+  profiles: string[] = [];
+  /**
+   * CATALOG.XML に記述されたサムネイル画像の Blob 一覧。
+   * @remarks 現在未実装です。
+   */
+  thumbnails: Blob[] = [];
+  /**
+   * CATALOG.XML に含まれる RDF メタデータ要素。ない場合は `null`。
+   * @remarks 現在未実装です。
+   */
+  rdf: Element | null = null;
+  /**
+   * CATALOG.XML に記述された HTML ファイルの内容文字列。
+   * @remarks 現在未実装です。
+   */
+  htmlfile: string = '';
 
   constructor(url: string) {
     super(url);

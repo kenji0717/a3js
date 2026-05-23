@@ -6,15 +6,36 @@ import type { PhysicsWorld, Collision } from './Physics';
 import { Acerola3D, A3Action } from './Acerola3D';
 
 /**
-  * 3D仮想空間を表すクラス。THREE.Sceneを内包していて
-  * アップデート処理とかも、ここで行う。
-  */
+ * 3D 仮想空間を管理するクラスです。
+ *
+ * `ObjectA3` を追加・削除してシーンを構築します。
+ * 毎フレームの更新処理（位置計算・物理シミュレーション・衝突検知）もこのクラスが行います。
+ *
+ * @example
+ * ```ts
+ * const scene = new Scene();
+ *
+ * const box = new Box();
+ * scene.add(box);
+ *
+ * // 毎フレーム呼び出す
+ * function animate(dt: number) {
+ *   scene.update(dt);
+ * }
+ * ```
+ */
 export class Scene {
+  /** 内部で使用している Three.js の `THREE.Scene`。直接操作するよりも `Scene` のメソッドを使うことを推奨します。 */
   scene: THREE.Scene;
+  /** このシーンに追加されているすべての `ObjectA3` の配列です。 */
   objects: ObjectA3[];
+  /** 物理ワールドのインスタンス。`initPhysics()` が呼ばれていない場合は `null` です。 */
   physicsWorld: PhysicsWorld | null = null;
+  /** 物理シミュレーションの時間刻み（秒）。初期値は `1/60` 秒です。 */
   physicsDt = 1/60;
+  /** 衝突が検知されたときに呼び出されるリスナー。`setCollisionListener()` で登録します。 */
   collisionListener?: (cs: Collision[]) => void;
+  /** 物理デバッグモード時に表示するコライダーの輪郭線。`setPhysicsDebugMode(true)` で有効になります。 */
   rapierLines?: THREE.LineSegments;
 
   constructor() {
@@ -28,6 +49,12 @@ export class Scene {
     }
   }
 
+  /**
+   * `ObjectA3` をこのシーンに追加します。
+   * 追加されたオブジェクトは毎フレームの `update()` で更新されるようになります。
+   * 物理エンジンが有効な場合は物理ワールドへの登録も自動的に行われます。
+   * @param object 追加する `ObjectA3`
+   */
   add(object: ObjectA3) {
     this.scene.add(object.object3D);
     this.objects.push(object);
@@ -54,6 +81,11 @@ export class Scene {
     }
   }
 
+  /**
+   * `ObjectA3` をこのシーンから取り除きます。
+   * 物理エンジンが有効な場合は物理ワールドからの登録解除も自動的に行われます。
+   * @param object 取り除く `ObjectA3`
+   */
   remove(object: ObjectA3) {
     this.scene.remove(object.object3D);
     {
@@ -87,11 +119,19 @@ export class Scene {
     }
   }
 
+  /**
+   * このシーンに追加されているすべての `ObjectA3` を取り除きます。
+   */
   removeAll() {
     const tmpObjects = [...this.objects];
     tmpObjects.forEach((o)=>{this.remove(o);});
   }
 
+  /**
+   * 物理エンジンが衝突を検知したときに呼び出されるリスナーを登録します。
+   * 個別のオブジェクトの衝突を処理したい場合は `ObjectA3.handleCollision()` のオーバーライドを使ってください。
+   * @param func 衝突情報の配列 `Collision[]` を受け取る関数
+   */
   setCollisionListener(func: (cs: Collision[]) => void) {
     this.collisionListener = func;
   }
@@ -125,6 +165,11 @@ export class Scene {
     }
   }
 
+  /**
+   * 物理エンジンのデバッグ表示を切り替えます。
+   * `true` にすると、コライダー（衝突判定の形状）の輪郭線が 3D 空間に表示されます。
+   * @param debug `true` でデバッグ表示を有効化、`false` で無効化
+   */
   setPhysicsDebugMode(debug: boolean) {
     if (debug) {
       this.rapierLines = new THREE.LineSegments(

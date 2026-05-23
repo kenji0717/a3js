@@ -26,6 +26,17 @@ export const defaultSampleObjectOptions: SampleObjectOptions = {
   testMode: true,
 }
 
+/**
+ * a3js の動作確認・サンプル用のオブジェクトです。
+ * 緑色のボックスが自動的に回転し、「Hello Box!」というラベルが表示されます。
+ * a3js が正しく動作しているかの確認や、コードのテンプレートとして利用できます。
+ *
+ * @example
+ * ```ts
+ * const sample = new SampleObject();
+ * scene.add(sample);
+ * ```
+ */
 export class SampleObject extends ObjectA3 {
   constructor(options: DeepPartial<SampleObjectOptions> = {}) {
     super(options);
