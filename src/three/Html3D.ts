@@ -22,6 +22,12 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 export class Html3D extends ObjectA3 {
   constructor(element: HTMLElement) {
     super(element);
+    // view.scene(html);のようなプログラムを書いても消えてくれないので、
+    // 以下の実装を追加。たぶんThree.jsのCSS3DObjectのバグ。
+    const css2dObj = this.object3D.children[0] as CSS2DObject;
+    this.object3D.addEventListener('removed', () => {
+      css2dObj.element.remove();
+    });
   }
 
   // 引数が上とあってなさそうだけど、こうするのが正解
