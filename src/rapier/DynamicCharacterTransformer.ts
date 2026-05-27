@@ -43,7 +43,6 @@ export class DynamicCharacterTransformer implements Transformer {
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   capsuleCenter: Vec3;
-  nextLocation: Vec3;
   tmpV1: Vec3;
   tmpV2: Vec3;
   tmpQ1: Quat;
@@ -56,7 +55,6 @@ export class DynamicCharacterTransformer implements Transformer {
     };
     this.transform = new Transform();
     this.capsuleCenter = new Vec3();
-    this.nextLocation = new Vec3();
     this.tmpV1 = new Vec3();
     this.tmpV2 = new Vec3();
     this.tmpQ1 = new Quat();
@@ -120,21 +118,17 @@ export class DynamicCharacterTransformer implements Transformer {
     this.physicsWorld = undefined;
   }
 
-  setPosition(v: Vec3): void {
-    this.tmpV1.set(v);
-    this.tmpV1.add(this.capsuleCenter);
-    this.nextLocation.set(this.tmpV1);
+  setPosition(_v: Vec3): void {
+    // できないものとする
   }
   setPositionNow(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
-    v = this.tmpV1;
     if (this.body)
-      this.body.setTranslation(v,true);
+      this.body.setTranslation(this.tmpV1,true);
     else
-      this.bodyDesc?.setTranslation(v.x,v.y,v.z);
+      this.bodyDesc?.setTranslation(this.tmpV1.x,this.tmpV1.y,this.tmpV1.z);
     this.transform.loc.set(v);
-    this.nextLocation.set(v);
   }
 
   setQuat(q: Quat): void {

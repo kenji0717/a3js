@@ -123,11 +123,10 @@ export class KinematicCharacterTransformer implements Transformer {
   setPositionNow(v: Vec3): void {
     this.tmpV1.set(v);
     this.tmpV1.add(this.capsuleCenter);
-    v = this.tmpV1;
     if (this.collider)
-      this.collider.setTranslation(v);
+      this.collider.setTranslation(this.tmpV1);
     this.transform.loc.set(v);
-    this.nextLocation.set(v);
+    this.nextLocation.set(this.tmpV1);
   }
 
   setQuat(q: Quat): void {
