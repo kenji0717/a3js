@@ -1,14 +1,20 @@
 
 APIの心配ごと
 
-* setTransformMode()の引数が3つもあって良いのか？
-    + 関係するのはFollow, BillboardTransformer, SmoothBillboardTransformer
-      のコンストラクタ
+* ？？？
 
 -----
 
-a3.Text3Dは手抜きすぎる。色、マテリアルを指定できるようにするべし。
-a3.SmoothTransformerのコンストラクタにもオプション引数を付けるべし。
+* a3.Text3Dは手抜きすぎる。色、マテリアルを指定できるようにするべし。
+* a3.SmoothTransformerのコンストラクタにもオプション引数を付けるべし。
+* GLTFLoaderの読み込みでキャッシュを有効にするために
+  `THREE.Cache.enabled = true;`を試してみたけど。ブラウザの
+  コンソールにThree.jsのインスタンスが複数作られてる警告が
+  出たので、a3js内部でやんないとダメからも。そして、
+  これはネットワーク層のキャッシュっぽい
+  のだが、自分でGLTFLoaderで読み込み来んだやつのキャッシュを
+  Mapで作るとさらに良いかもしれない。その時は単純なclone()で
+  なくて、SkeletonUtils.clone()でないとダメかも。
 
 -----
 
