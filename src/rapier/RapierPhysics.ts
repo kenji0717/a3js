@@ -251,12 +251,12 @@ export class RapierTransformer implements Transformer {
     //this.body.setScale(???); // 保留
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.body)
-      world.world.removeRigidBody(this.body);
     this.colliders.forEach((collider) => {
-      world.world.removeCollider(collider,false); // falseでOK
+      world.world.removeCollider(collider,true); // trueで子も消す
       collisionMap.delete(collider.handle);
     });
+    if (this.body)
+      world.world.removeRigidBody(this.body);
   }
   // ここはなんとかできそうな気もするけど、とりあえず。
   isGrounded(): boolean { return this.transform.loc.y <= 0; }

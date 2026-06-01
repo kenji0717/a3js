@@ -345,12 +345,12 @@ export class CarTransformer implements Transformer {
     }
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.chassisBody)
-      world.world.removeRigidBody(this.chassisBody);
     if (this.chassisCollider) {
       world.world.removeCollider(this.chassisCollider,false); // falseでOK
       collisionMap.delete(this.chassisCollider.handle);
     }
+    if (this.chassisBody)
+      world.world.removeRigidBody(this.chassisBody);
   }
 
   setPosition(_v: Vec3): void {}

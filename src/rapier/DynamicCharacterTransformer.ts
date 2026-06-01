@@ -109,12 +109,12 @@ export class DynamicCharacterTransformer implements Transformer {
       collisionMap.set(this.collider.handle,this.objectA3);
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
-    if (this.body)
-      world.world.removeRigidBody(this.body); // falseでOK
     if (this.collider) {
-      world.world.removeCollider(this.collider,false); // falseでOK
+      world.world.removeCollider(this.collider,true); // trueで子も消す
       collisionMap.delete(this.collider.handle);
     }
+    if (this.body)
+      world.world.removeRigidBody(this.body); // falseでOK
     this.physicsWorld = undefined;
   }
 
