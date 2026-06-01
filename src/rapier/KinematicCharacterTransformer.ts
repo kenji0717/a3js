@@ -112,6 +112,7 @@ export class KinematicCharacterTransformer implements Transformer {
     if (this.collider) {
       world.world.removeCollider(this.collider,false); // falseでOK
       collisionMap.delete(this.collider.handle);
+      this.collider = undefined;
     }
   }
 

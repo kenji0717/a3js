@@ -346,11 +346,13 @@ export class CarTransformer implements Transformer {
   }
   removeOneselfFromPhysics(world: RapierPhysicsWorld): void {
     if (this.chassisCollider) {
-      world.world.removeCollider(this.chassisCollider,false); // falseでOK
+      world.world.removeCollider(this.chassisCollider,true); // trueで子も削除
       collisionMap.delete(this.chassisCollider.handle);
+      this.chassisCollider = undefined;
     }
     if (this.chassisBody)
       world.world.removeRigidBody(this.chassisBody);
+      this.chassisBody = undefined;
   }
 
   setPosition(_v: Vec3): void {}

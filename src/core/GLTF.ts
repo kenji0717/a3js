@@ -58,6 +58,7 @@ export const defaultGLTFOptions = {
  * @param options ローダーオプション
  */
 export function recreateGLTFLoader(options: Partial<GLTFOptions>={}) {
+  THREE.Cache.enabled = true;
   const opt = {
     ...defaultGLTFOptions,
     ...options

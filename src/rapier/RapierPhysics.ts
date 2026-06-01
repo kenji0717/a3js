@@ -255,8 +255,11 @@ export class RapierTransformer implements Transformer {
       world.world.removeCollider(collider,true); // trueで子も消す
       collisionMap.delete(collider.handle);
     });
-    if (this.body)
+    this.colliders.length = 0;
+    if (this.body) {
       world.world.removeRigidBody(this.body);
+      this.body = undefined;
+    }
   }
   // ここはなんとかできそうな気もするけど、とりあえず。
   isGrounded(): boolean { return this.transform.loc.y <= 0; }

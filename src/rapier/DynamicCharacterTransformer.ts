@@ -112,9 +112,12 @@ export class DynamicCharacterTransformer implements Transformer {
     if (this.collider) {
       world.world.removeCollider(this.collider,true); // trueで子も消す
       collisionMap.delete(this.collider.handle);
+      this.collider = undefined;
     }
-    if (this.body)
-      world.world.removeRigidBody(this.body); // falseでOK
+    if (this.body) {
+      world.world.removeRigidBody(this.body);
+      this.body = undefined;
+    }
     this.physicsWorld = undefined;
   }
 
