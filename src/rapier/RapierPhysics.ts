@@ -79,12 +79,14 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   world: Rapier.World;
   timestep: number;
   collisionEventQueue: Rapier.EventQueue;
+  kinematicCharacterCollisionEventQueue: Collision[];
 
   constructor(world:Rapier.World, timestep:number) {
     this.world = world;
     this.timestep = timestep;
     this.collisionEventQueue = new RAPIER.EventQueue(true);
     this.world.integrationParameters.dt = this.timestep;
+    this.kinematicCharacterCollisionEventQueue = [];
   }
 
   add(motion: Transformer | Motion) {
@@ -117,6 +119,8 @@ export class RapierPhysicsWorld implements PhysicsWorld {
         });
       }
     });
+    collisions.push(...this.kinematicCharacterCollisionEventQueue);
+    this.kinematicCharacterCollisionEventQueue.length=0;
     return collisions;
   }
 }
@@ -211,6 +215,7 @@ export class RapierTransformer implements Transformer {
             c.setCollisionGroups(collisionGroups);
             if (opt.collisionDetection)
               c.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+            c.setRestitution(opt.restitution).setFriction(opt.friction);
             this.colliderDescs.push(c);
             volumes.push(v);
           }

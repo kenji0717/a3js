@@ -10,17 +10,35 @@ import type { Transformer } from '../core/ObjectA3';
  */
 export interface DynamicCharacterTransformerOptions {
   /** `true` のとき、オブジェクトのメッシュ形状からカプセルの高さと半径を自動計算します。デフォルトは `true`。 */
-  auto: boolean,
+  auto: boolean;
   /** カプセルコライダーの高さ（メートル）。`auto: false` のときに使用されます。デフォルトは `1.5`。 */
-  height: number,
+  height: number;
   /** カプセルコライダーの半径（メートル）。`auto: false` のときに使用されます。デフォルトは `0.3`。 */
-  radius: number
+  radius: number;
+  /** 質量（kg）。デフォルトは `1.0`。 */
+  mass: number;
+  /** 摩擦係数（0.0 〜 1.0）。デフォルトは `0.5`。 */
+  friction: number;
+  /** 反発係数（0.0 〜 1.0）。0 で完全非弾性衝突、1 で完全弾性衝突。デフォルトは `0.5`。 */
+  restitution: number;
+  /** 衝突グループのメンバーシップビットマスク。デフォルトは `0b0000000000000001`。 */
+  membership: number;
+  /** 衝突フィルタービットマスク（`membership` と AND を取って衝突を判定）。デフォルトは `0b0000000000000001`。 */
+  filter: number;
+  /** 衝突検知コールバック（`handleCollision()`）を有効にするか。デフォルトは `false`。 */
+  collisionDetection: boolean;
 }
 
-export const defaultDynamicCharacterTransformerOptions = {
+export const defaultDynamicCharacterTransformerOptions: DynamicCharacterTransformerOptions = {
   auto: true,
   height: 1.5,
-  radius: 0.3
+  radius: 0.3,
+  mass: 1.0,
+  friction: 0.5,
+  restitution: 0.5,
+  membership: 0b0000000000000001,
+  filter: 0b0000000000000001,
+  collisionDetection: false
 };
 
 /**
@@ -62,6 +80,7 @@ export class DynamicCharacterTransformer implements Transformer {
 
   init(trans: Transform, objectA3: ObjectA3) {
     this.transform.set(trans);
+    this.objectA3 = objectA3;
     if (this.completeOptions.auto) {
       const tmpV = new THREE.Vector3();
       const tmpQ = new THREE.Quaternion();
@@ -82,6 +101,7 @@ export class DynamicCharacterTransformer implements Transformer {
       box.getCenter(tmpV);
       this.capsuleCenter.set(tmpV);
     }
+    const opt = this.completeOptions;
     this.bodyDesc = RAPIER.RigidBodyDesc.dynamic();
     this.bodyDesc.setTranslation(
       trans.loc.x,
@@ -92,6 +112,12 @@ export class DynamicCharacterTransformer implements Transformer {
     this.colliderDesc = RAPIER.ColliderDesc.capsule(
         this.completeOptions.height,
         this.completeOptions.radius);
+    this.colliderDesc.setMass(opt.mass);
+    const collisionGroups = (opt.membership << 16) | opt.filter;
+    this.colliderDesc.setCollisionGroups(collisionGroups);
+    if (opt.collisionDetection)
+      this.colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+    this.colliderDesc.setRestitution(opt.restitution).setFriction(opt.friction);
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
