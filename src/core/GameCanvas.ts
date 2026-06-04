@@ -70,6 +70,8 @@ export class GameCanvas extends HTMLElement implements View {
   leftButton: boolean;
   /** 右ボタンが押されているとき `true`（PC では Enter キーに対応）。 */
   rightButton: boolean;
+  _leftButtonCount: number;
+  _rightButtonCount: number;
   /** 現在押下中のキーコードの集合。 */
   keys: Set<string>;
   private _ro?: ResizeObserver;
@@ -181,6 +183,8 @@ export class GameCanvas extends HTMLElement implements View {
     this.leftButton = false;
     this.rightButton = false;
     this.keys = new Set<string>();
+    this._leftButtonCount = 0;
+    this._rightButtonCount = 0;
     const leftStick = this.shadowRoot!.querySelector<HTMLDivElement>('.joystick.left .stick');
     if (!leftStick) return; // ありえん
     leftStick.addEventListener('pointerdown',(e)=>{
@@ -247,6 +251,7 @@ export class GameCanvas extends HTMLElement implements View {
     if (!leftButton) return; // ありえん
     leftButton.addEventListener('pointerdown',()=>{
       this.leftButton = true;
+      this._leftButtonCount++;
     });
     leftButton.addEventListener('pointerup',()=>{
       this.leftButton = false;
@@ -255,6 +260,7 @@ export class GameCanvas extends HTMLElement implements View {
     if (!rightButton) return; // ありえん
     rightButton.addEventListener('pointerdown',()=>{
       this.rightButton = true;
+      this._rightButtonCount++;
     });
     rightButton.addEventListener('pointerup',()=>{
       this.rightButton = false;
@@ -318,14 +324,30 @@ export class GameCanvas extends HTMLElement implements View {
     const dr = Math.sqrt(tmpR.x*tmpR.x + tmpR.y*tmpR.y);
     if (dr>0) { tmpR.x /= dr; tmpR.y /= dr; }
     this.rightJoystick = tmpR;
-    if (this.keys.has('Space'))
+    if (this.keys.has('Space')) {
       this.leftButton = true;
-    else
+      this._leftButtonCount++;
+    } else
       this.leftButton = false;
-    if (this.keys.has('Enter'))
+    if (this.keys.has('Enter')) {
       this.rightButton = true;
-    else
+      this._rightButtonCount++;
+    } else
       this.rightButton = false;
+  }
+
+  /** 左ボタンを押した回数を読み出して内部変数を0にリセット。 */
+  getLeftButtonCount() {
+    const c = this._leftButtonCount;
+    this._leftButtonCount = 0;
+    return c;
+  }
+
+  /** 右ボタンを押した回数を読み出して内部変数を0にリセット。 */
+  getRightButtonCount() {
+    const c = this._rightButtonCount;
+    this._rightButtonCount = 0;
+    return c;
   }
 
   replaceScene(newScene: Scene): Scene {
