@@ -227,33 +227,30 @@ export class KinematicCharacterTransformer implements Transformer {
     // KinematicCharacterController使う場合は、当たり判定が特殊なので、
     // 以下、自前で判定してRapierPhysicsWorldの通常の当たり判定の処理に
     // 割り込ませる。
-    if (this.collider) {
-      const events = this.collider.activeEvents();
-      if ((events & RAPIER.ActiveEvents.COLLISION_EVENTS) === 0) {
-        return;
-      }
-    }
-    if (this.world && this.objectA3) {
-      for (let i = 0; i < this.controller.numComputedCollisions(); i++) {
-        let c = this.controller.computedCollision(i);
-        if (c && c.collider) {
-          const events = c.collider.activeEvents();
-          if ((events & RAPIER.ActiveEvents.COLLISION_EVENTS) === 0) {
-            return;
-          }
-          const objectA = collisionMap.get(c.collider.handle);
-          if (!objectA) continue;
-          const a = c.collider.collisionGroups();
-          const b = this.collider.collisionGroups();
-          if (canCollide(a,b)) {
-            this.world.kinematicCharacterCollisionEventQueue.push({
-              objectA,
-              partOfA: c.collider.handle,
-              objectB: this.objectA3,
-              partOfB: this.collider.handle,
-              started: true
-            });
-          }
+    if (!this.collider) return;
+    if (!this.world) return;
+    if (!this.objectA3) return;
+    const myEvents = this.collider.activeEvents();
+    const meIsActive = ((myEvents & RAPIER.ActiveEvents.COLLISION_EVENTS) !== 0);
+    const meCollisionGroups = this.collider.collisionGroups();
+    for (let i = 0; i < this.controller.numComputedCollisions(); i++) {
+      let c = this.controller.computedCollision(i);
+      if (c && c.collider) {
+        const events = c.collider.activeEvents();
+        const youIsActive = ((events & RAPIER.ActiveEvents.COLLISION_EVENTS) !== 0);
+        if (!meIsActive && !youIsActive)
+          continue;
+        const youObject = collisionMap.get(c.collider.handle);
+        if (!youObject) continue;
+        const youCollisionGroups = c.collider.collisionGroups();
+        if (canCollide(meCollisionGroups,youCollisionGroups)) {
+          this.world.kinematicCharacterCollisionEventQueue.push({
+            objectA: this.objectA3,
+            partOfA: this.collider.handle,
+            objectB: youObject,
+            partOfB: c.collider.handle,
+            started: true
+          });
         }
       }
     }

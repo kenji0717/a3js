@@ -10,10 +10,8 @@ await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.scene.setCollisionListener((is)=>{
   is.forEach((i)=>{
-    if (i.started===false)return;
     console.log(`${i.objectA.constructor.name}->${i.objectB.constructor.name},${i.started}`);
   });
-  console.log('-----')
 });
 
 const field = await new Field('./assets/grass-ground2.glb').ready;
