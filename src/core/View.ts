@@ -66,6 +66,11 @@ export interface View {
    * @returns 経過時間（ミリ秒）を解決する `Promise`
    */
   waitForRender(): Promise<number>;
+  /**
+   * このViewのレンダラが影の描画のためのShadowMapを有効にするかどうかを設定します。
+   * @param value `true`の時は有効にします。`false`の時は無効にします。
+   */
+  setShadowMap(value: boolean): void;
 }
 
 
@@ -168,5 +173,9 @@ export class BaseView implements View {
   async waitForRender(): Promise<number> {
     throw new Error(`BaseViewはwaitForRender()は実装していません`);
     return 0;
+  }
+
+  setShadowMap(_value: boolean) {
+    throw new Error(`BaseViewはsetShadowMap()は実装していません`);
   }
 }

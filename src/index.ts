@@ -25,6 +25,7 @@ export { ThreeObject } from './three/ThreeObject';
 export { Box } from './three/Box';
 export { Sphere } from './three/Sphere';
 export { StandardLights } from './three/StandardLights';
+export type { StandardLightsOptions } from './three/StandardLights';
 export { ImagePlane } from './three/ImagePlane';
 export { Html3D } from './three/Html3D';
 export { GameCanvas, defaultGameCanvasOptions } from './core/GameCanvas';

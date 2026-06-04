@@ -337,6 +337,10 @@ export class Canvas extends HTMLElement implements View {
       });
     });
   }
+
+  setShadowMap(value: boolean) {
+    this.renderer.shadowMap.enabled = value;
+  }
 }
 
 customElements.define("canvas-a3", Canvas);

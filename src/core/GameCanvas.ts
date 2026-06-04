@@ -379,6 +379,10 @@ export class GameCanvas extends HTMLElement implements View {
   prompt(msg: string, func?: ()=>void): Promise<string> {
     return this.canvas.prompt(msg,func);
   }
+
+  setShadowMap(value: boolean) {
+    this.canvas.setShadowMap(value);
+  }
 }
 
 customElements.define("game-canvas-a3", GameCanvas);

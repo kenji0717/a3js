@@ -283,6 +283,44 @@ export class ObjectA3 {
   }
 
   /**
+   * このオブジェクトが影を落すかどうかを設定します。
+   * @param value `true`の時は影を落す。`false`の時は影を落さない。
+   */
+  setCastShadow(value: boolean) {
+    this.object3D.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.castShadow = value;
+      }
+    });
+  }
+
+  /**
+   * このオブジェクトが影を描画するかどうかを設定します。
+   * @param value `true`の時は描画する。`false`の時は描画しない。
+   */
+  setReceiveShadow(value: boolean) {
+    this.object3D.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.receiveShadow = value;
+      }
+    });
+  }
+
+  /**
+   * このオブジェクトの中に含まれるLightが影を作るかどうかを設定します。
+   * @param value `true`の時は作る。`false`の時は作らない。
+   */
+  setLightShadow(value: boolean) {
+    this.object3D.traverse((o) => {
+      if (o instanceof THREE.DirectionalLight ||
+          o instanceof THREE.SpotLight ||
+          o instanceof THREE.PointLight) {
+        o.castShadow = value;
+      }
+    });
+  }
+
+  /**
    * このオブジェクトの現在の位置を返します。
    * @param out 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
    * @returns 現在の位置

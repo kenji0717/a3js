@@ -1,7 +1,13 @@
 
 APIの心配ごと
 
-* ？？？
+* ObjectA3のsetTransformMode()をsetMode()に簡略化したくなった。
+* CameraのsetHeadLightEnable()をsetHeadLight()に簡略化したくなった。
+
+-----
+
+StandardLightsのフィールドでirectionalLight?: THREE.DirectionalLight;
+などがdeclareの宣言が必要な理由が難解だったので気をつけないと。
 
 -----
 
