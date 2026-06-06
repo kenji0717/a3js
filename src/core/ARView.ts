@@ -33,7 +33,7 @@ export interface ARViewOptions {
 export const defaultARViewOptions: ARViewOptions = {
   camera: undefined,
   antialias: false,
-  optionalFeatures: [],
+  optionalFeatures: [ 'local-floor' ], // 'local-floor'が無いと真っ暗？
   requiredFeatures: []
 };
 
@@ -91,11 +91,12 @@ export class ARView extends HTMLElement implements View {
 
     this.base = new BaseView(this.camera);
     this.scene = this.base.scene;
-    this.camera = this.base.camera;
     this.controller = this.base.controller;
     this.timer = new THREE.Timer();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: this.options.antialias, alpha: true });
+    //this.renderer.setSize(window.innerWidth, window.innerHeight);
+    //this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.xr.enabled = true;
     recreateGLTFLoader({ renderer: this.renderer });
 
