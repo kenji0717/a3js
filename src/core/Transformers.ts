@@ -1,4 +1,5 @@
 import { Vec3, Quat, getLookAtQuaternion, quatToVec3Euler, Transform } from './LinearMath';
+import type { MutableVec3 } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
 import type { Transformer } from "./ObjectA3";
@@ -365,7 +366,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
 /** `FollowTransformer` の内部オプション型。 */
 export interface FollowTransformerOptions {
   target?: ObjectA3;
-  lookFrom: {x:number, y:number, z:number};
+  lookFrom: MutableVec3;
   /** なめらかさ。0 に近いほどすぐに追従し、1 に近いほどゆっくり追従します。0 以上 1 未満で指定します。 */
   smoothness: number;
 }
@@ -399,7 +400,7 @@ export class FollowTransformer extends StaticTransformer {
   /** 追従する対象のオブジェクト。 */
   target: ObjectA3;
   /** 対象から見た相対位置（カメラをどこに配置するか）。 */
-  lookFrom: Vec3;
+  lookFrom: MutableVec3;
   /** 上方向ベクトル。 */
   up: Vec3;
   /** なめらかさ（0 以上 1 未満）。 */
@@ -412,7 +413,7 @@ export class FollowTransformer extends StaticTransformer {
       ...options
     };
     this.target = completeOpt.target;
-    this.lookFrom = new Vec3(completeOpt.lookFrom);
+    this.lookFrom = completeOpt.lookFrom; // 2026,06/07: そのまま使うことにした
     if (this.target.upVector) {
       this.up = this.target.upVector;
     } else {
