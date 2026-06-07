@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
-import { Vec3, Quat } from './LinearMath';
+import { Vec3, Quat, getLookAtQuaternion } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
 import { Scene } from './Scene';
+import { tmp } from '../utils/math';
 
 /**
  * `ActionObject` が持つひとつのアクション（アニメーション状態）を表すクラスです。
@@ -82,6 +83,20 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   morphs: Record<string, {array: Array<number>, idx: number}>;
   /** `true` のとき、モーションのモーフィング値を上書きしません。 */
   overwriteMorphs: boolean;
+  /** 自動アクション切り替え機能のON、OFF。デフォルトOFF。 */
+  autoAction: boolean = false;
+  /** 自動向き調整機能のON、OFF。デフォルトOFF。 */
+  autoDirection: boolean = false;
+  /** 静止時のアクション名。 */
+  haltActionName: string = 'default';
+  /** 歩行時のアクション名。 */
+  walkActionName: string = 'walk';
+  /** 走行時のアクション名。 */
+  runActionName: string = 'run';
+  /** 歩行と判定する最低速度（m/s）。 */
+  minWalkSpeed: number = 0.1;
+  /** 走行と判定する最低速度（m/s）。 */
+  minRunSpeed: number = 1.0;
 
   constructor(data?: any) {
     super(data);
@@ -89,6 +104,8 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.morphs = {};
     this.overwriteMorphs = false;
     this.ready = this.asyncInit(data);
+    this.autoAction = false;
+    this.autoDirection = false;
   }
 
   /**
@@ -280,6 +297,47 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.object3D.updateMatrixWorld(true); // 必要なのか？
     if (this.currentAction)
       this.currentAction.shape.skeleton?.update(); // 必要なのか？
+    // 以下、自動アクション切り替え機能の実装
+    const vel = this.getLinearVelocity();
+    const speed = vel.length();
+    if (this.autoAction) {
+      if (speed < this.minWalkSpeed) {
+        if (this.actions[this.haltActionName]!==this.stateAction){
+          this.setState(this.haltActionName);}
+      } else if (speed < this.minRunSpeed) {
+        if (this.actions[this.walkActionName]!==this.stateAction){
+          this.setState(this.walkActionName);}
+      } else {
+        if (this.actions[this.runActionName]!==this.stateAction) {
+          this.setState(this.runActionName);}
+      }
+    }
+    // 以下、自動向き調整機能の実装
+    if (this.autoDirection) {
+      if (speed>0.0001) {
+        vel.normalize();
+        tmp.v0.set(0,0,0);
+        const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+        getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
+        this.setQuatNow(tmp.q0);
+      }
+    }
+  }
+
+  /**
+   * 自動アクション切り替え機能のON、OFFを設定します。
+   * @param value `true`の時ON。`false`の時OFF。
+   */
+  setAutoAction(value: boolean) {
+    this.autoAction = value;
+  }
+
+  /**
+   * 自動向き調整機能のON、OFFを設定します。
+   * @param value `true`の時ON。`false`の時OFF。
+   */
+  setAutoDirection(value: boolean) {
+    this.autoDirection = value;
   }
 }
 

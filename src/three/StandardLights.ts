@@ -102,7 +102,6 @@ export class StandardLights extends ObjectA3 {
      * @returns 
      */
     setDebugMode(debug: boolean) {
-console.log(`GAHA: jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj0`,this.directionalLight);
         if (!this.directionalLight)
             return;
         if (debug) {

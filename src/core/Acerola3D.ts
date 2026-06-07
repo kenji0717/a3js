@@ -110,36 +110,12 @@ export class A3Action extends Action {
  * ```
  */
 export class Acerola3D extends ActionObject<Acerola3D> {
-  /**
-   * 静止時のアクション番号。
-   * @remarks 現在未実装です。
-   */
-  haltActionNo: number = 0;
-  /**
-   * 歩行時のアクション番号。
-   * @remarks 現在未実装です。
-   */
-  walkActionNo: number = 0;
-  /**
-   * 走行時のアクション番号。
-   * @remarks 現在未実装です。
-   */
-  runActionNo: number = 0;
-  /**
-   * 歩行と判定する最低速度（m/s）。
-   * @remarks 現在未実装です。
-   */
-  minWalkSpeed: number = 0.1;
-  /**
-   * 走行と判定する最低速度（m/s）。
-   * @remarks 現在未実装です。
-   */
-  minRunSpeed: number = 1.0;
-  /**
+  /*
    * ビルボード表示（常にカメラ方向を向く）を有効にするか。
-   * @remarks 現在未実装です。
+   * とりやめ！
+   * isBillboard: boolean = false;
    */
-  isBillboard: boolean = false;
+
   /** CATALOG.XML の `<c>` タグに記述されたコメント文字列。ない場合は `null`。 */
   comment: string | null = null;
   /**
@@ -183,14 +159,6 @@ export class Acerola3D extends ActionObject<Acerola3D> {
     }
     const ns = 'http://acerola3d.sourceforge.jp/a3/catalog';
     const a3Elms = xmlDoc.getElementsByTagNameNS(ns,'a3');
-    if (a3Elms[0]) {
-      this.haltActionNo = Number(a3Elms[0].getAttribute('haltActionN0'));
-      this.walkActionNo = Number(a3Elms[0].getAttribute('walkActionN0'));
-      this.runActionNo = Number(a3Elms[0].getAttribute('runActionN0'));
-      this.minWalkSpeed = Number(a3Elms[0].getAttribute('minWalkSpeed'));
-      this.minRunSpeed = Number(a3Elms[0].getAttribute('minRunSpeed'));
-      this.isBillboard = Boolean(a3Elms[0].getAttribute('billboard'));
-    }
     const cs = xmlDoc.getElementsByTagNameNS(ns,'c');
     if (cs[0]) this.comment = cs[0].textContent;
     const ts = xmlDoc.getElementsByTagNameNS(ns,'tag');
@@ -214,12 +182,14 @@ export class Acerola3D extends ActionObject<Acerola3D> {
         this.htmlfile = readStringFromUnzippedA3(unzippedA3,n);
     }
 
+    const am = []; // アクション番号からアクション名へのマップがわり
     const as = xmlDoc.getElementsByTagNameNS(ns,'a');
     const actions: Record<string,Action> = {};
     let firstActionName;
     for (const a of Array.from(as)) {
       const actionName = a.getAttribute('an');
       if (actionName) {
+        am.push(actionName);
         if (!firstActionName) firstActionName = actionName;
         let bvh: BVH | undefined;
         const actionBVH = a.getAttribute('bvh'); // 確か無いときもあった
@@ -380,6 +350,22 @@ export class Acerola3D extends ActionObject<Acerola3D> {
           fog);
       }
     }
+
+    if (a3Elms[0]) {
+      if (a3Elms[0].getAttribute('haltActionNo')!==null)
+        this.haltActionName = am[Number(a3Elms[0].getAttribute('haltActionNo'))];
+      if (a3Elms[0].getAttribute('walkActionNo')!==null)
+        this.walkActionName = am[Number(a3Elms[0].getAttribute('walkActionNo'))];
+      if (a3Elms[0].getAttribute('runActionNo')!==null)
+        this.runActionName = am[Number(a3Elms[0].getAttribute('runActionNo'))];
+      if (a3Elms[0].getAttribute('minWalkSpeed')!==null)
+        this.minWalkSpeed = Number(a3Elms[0].getAttribute('minWalkSpeed'));
+      if (a3Elms[0].getAttribute('minRunSpeed')!==null)
+        this.minRunSpeed = Number(a3Elms[0].getAttribute('minRunSpeed'));
+      //if (a3Elms[0].getAttribute('billboard')!==null)
+      //  this.isBillboard = Boolean(a3Elms[0].getAttribute('billboard'));
+    }
+
     if (firstActionName)
       this.syncInit(firstActionName,actions);
     return this;

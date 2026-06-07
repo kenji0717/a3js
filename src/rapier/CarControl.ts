@@ -363,7 +363,7 @@ export class CarTransformer implements Transformer {
   setScaleNow(_s: Vec3): void {}
 
   setLinearVelocity(_vel: Vec3): void {}
-  getLinearVelocity(v: Vec3 | undefined) {
+  getLinearVelocity(v?: Vec3) {
     if (!v) v = new Vec3();
     if (this.chassisBody)
       v.set(this.chassisBody.linvel());
@@ -372,7 +372,7 @@ export class CarTransformer implements Transformer {
     return v;
   }
   setAngularVelocity(_angvel: Vec3): void {}
-  getAngularVelocity(v: Vec3 | undefined) {
+  getAngularVelocity(v?: Vec3) {
     if (!v) v = new Vec3();
     if (this.chassisBody)
       v.set(this.chassisBody.angvel());

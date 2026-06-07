@@ -110,24 +110,40 @@ export class StaticTransformer implements Transformer {
   update(_dt: number) {}
 }
 
+/** `SmoothTransformer` のオプション型。 */
+export interface SmoothTransformerOptions {
+  /** 移動時間（秒）。 */
+  duration: number;
+}
+
+/** `SmoothTransformerOptions` のデフォルト値。 */
+export const defaultSmoothTransformerOptions: SmoothTransformerOptions = {
+  duration: 1.0
+};
+
 /**
  * `"Smooth"` モードの `Transformer` 実装です。
- * 位置・回転・拡大率の変更を約1秒かけてなめらかに補間します。
+ * 位置・回転・拡大率の変更をデフォルトで1秒かけてなめらかに補間します。
  * `setTransformMode("Smooth")` と同等です。
  */
 export class SmoothTransformer implements Transformer {
+  options: SmoothTransformerOptions;
   startTransform: Transform;
   transform: Transform; // 現在のTransform
   endTransform: Transform;
   currentTime: number;
   duration: number;
 
-  constructor() {
+  constructor(options: Partial<SmoothTransformerOptions> = {}) {
+    this.options = {
+      ...defaultSmoothTransformerOptions,
+      ...options
+    };
     this.startTransform = new Transform();
     this.transform = new Transform();
     this.endTransform = new Transform();
     this.currentTime = 0;
-    this.duration = 1;
+    this.duration = this.options.duration;
   }
 
   init(trans: Transform, _objectA3: ObjectA3) {
@@ -174,7 +190,7 @@ export class SmoothTransformer implements Transformer {
   }
 
   setLinearVelocity(_vel: Vec3): void {}
-  getLinearVelocity(v: Vec3 | undefined) {
+  getLinearVelocity(v?: Vec3) {
     if (!v)
       v = new Vec3();
     const x = this.endTransform.loc.x-this.startTransform.loc.x;
@@ -186,7 +202,7 @@ export class SmoothTransformer implements Transformer {
     return v;
   }
   setAngularVelocity(_angvel: Vec3): void {}
-  getAngularVelocity(v: Vec3 | undefined) {
+  getAngularVelocity(v?: Vec3) {
     if (!v)
       v = new Vec3();
     quatToVec3Euler(this.startTransform.quat, 'ZXY', tmpVec1);
@@ -304,6 +320,7 @@ export class BillboardTransformer extends DefaultTransformer {
 export interface SmoothBillboardTransformerOptions {
   target?: ObjectA3;
   up: Vec3;
+  duration: number;
 }
 
 /**
@@ -314,11 +331,14 @@ export interface SmoothBillboardTransformerInputOptions {
   target: ObjectA3;
   /** 上方向ベクトル。省略時は `(0, 1, 0)` です。 */
   up?: Vec3;
+  /** 補間時間。省略時は `1.0` です。 */
+  duration?: number;
 }
 
 /** `SmoothBillboardTransformerOptions` のデフォルト値。 */
 export const defaultSmoothBillboardTransformerOptions: SmoothBillboardTransformerOptions = {
-  up: new Vec3(0,1,0)
+  up: new Vec3(0,1,0),
+  duration: 1.0
 };
 
 /**
@@ -340,6 +360,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
     };
     this.target = completeOpt.target;
     this.up = completeOpt.up;
+    this.duration = completeOpt.duration;
   }
 
   init(trans: Transform, objectA3: ObjectA3) {

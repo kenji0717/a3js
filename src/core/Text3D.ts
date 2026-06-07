@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { ObjectA3 } from './ObjectA3';
-import { isString } from '../utils/TypeGuard';
 import { unzipAsync, readStringFromUnzippedA3 } from '../utils/math';
 
 let font: Font | null = null;
@@ -36,6 +35,17 @@ export async function initFont(path: string) {
   }
 }
 
+/** Text3D生成時に指定可能な設定項目。 */
+export interface Text3DOptions {
+  /** 色。数値で `0xff0000` のように指定する。 */
+  color: number;
+}
+
+/** Text3Dの設定項目のデフォルト値。 */
+export const defaultText3DOptions: Text3DOptions = {
+  color: 0xff0000
+};
+
 /**
  * 3D テキストを表示するオブジェクトです。
  * 事前に `initFont()` でフォントを読み込んでから使ってください。
@@ -49,13 +59,23 @@ export async function initFont(path: string) {
  * ```
  */
 export class Text3D extends ObjectA3 {
-  initObject(data: any) {
-    let str;
-    if (isString(data)) {
-      str = data;
-    } else {
-      str = "ERROR";
-    }
+  options: Text3DOptions;
+
+  constructor(text: string, options: Partial<Text3DOptions>) {
+    const opt = {
+      ...defaultText3DOptions,
+      ...options
+    };
+    const args = {
+      text,
+      color: opt.color
+    };
+    super(args);
+    this.options = opt;
+  }
+
+  initObject(args: {text: string, color: number}) {
+    let str = args.text;
     if (font == null) {
       const geo = new THREE.BoxGeometry();
       const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -65,7 +85,7 @@ export class Text3D extends ObjectA3 {
       const opt = {font: font,size: 1,depth: 0.5,curveSegments: 12};
       const geo = new TextGeometry(str,opt);
       geo.center();
-      const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+      const mat = new THREE.MeshStandardMaterial({ color: args.color });
       const mesh = new THREE.Mesh(geo, mat);
       return mesh;
     }

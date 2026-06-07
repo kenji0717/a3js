@@ -11,36 +11,15 @@ StandardLightsのフィールドでirectionalLight?: THREE.DirectionalLight;
 
 -----
 
-* a3.Text3Dは手抜きすぎる。色、マテリアルを指定できるようにするべし。
-* a3.SmoothTransformerのコンストラクタにもオプション引数を付けるべし。
+* a3.Text3Dは手抜きすぎる。マテリアルを指定できるようにするべし。
 * GLTFLoaderの読み込みでキャッシュを有効にするために
-  `THREE.Cache.enabled = true;`を試してみたけど。ブラウザの
-  コンソールにThree.jsのインスタンスが複数作られてる警告が
-  出たので、a3js内部でやんないとダメからも。そして、
-  これはネットワーク層のキャッシュっぽい
-  のだが、自分でGLTFLoaderで読み込み来んだやつのキャッシュを
+  自分でGLTFLoaderで読み込み来んだやつのキャッシュを
   Mapで作るとさらに良いかもしれない。その時は単純なclone()で
   なくて、SkeletonUtils.clone()でないとダメかも。
 
 -----
 
-setTransformMode('Smooth');
-してみたらsetPosition()とかtranslate()が変かも
-(game01.html)
-
------
-
-SmoothTransformer, BillboardTransformer, SmoothBillboardTransformerの
-コンストラクタにオプション引数を追加してオプションのデフォルトも追加すべし。
-追加したらObjectA3#setTransformModeにも対応すべし。そして
-TransformModeには'User'モードも必要だと思う。
-
------
-
-Claudeに意見をもらってクラス名やメソッド名などを大幅に変更した。
-互換性ないのでメジャーバージョンアップするべきところだけど、まだ
-ネーミングには問題あるし、Vec3などを使い捨てない方向性のメソッド
-追加したいし、テスト中だし・・・ということで0.0.Xを続ける。
+モードが'Smooth','SmoothBillboard'の時の速度計算が変かも。
 
 -----
 
@@ -52,21 +31,15 @@ Acerola3Dのアクションのloop情報は意味を失ったけど、
 
 -----
 
-「影」のこと考えてなかった。影の描写は基本的に、光源から深度
-のみのレンダリングをして、その情報を使って本番レンダリングの
-時に、色を調整するというアルゴリズム。光源が複数あれば、それぞれの
-光源ごとにレンダリングしなきゃならないので重くなる。
+View.setShadowMap();ObjectA3.setLightShadow();ObjectA3.setReceiveShadow();
+ObjectA3.setCastShadow();で「影」は付けれるようになったけど、
+現在Lightのカメラのクリップ(描画範囲)と解像度を指定する方法が無い。
+ObjectA3.setLightShadow(true,専用オプション);とするしかないかな？
 
-影の描画を有効にするには、影を作る物体では`obj.castShadow=true;`、
-影が落る物体では`obj.receiveShadow=true;`の設定がいる。
-忘れがちなのが、`renderer.shadowMap.enabled=true;`の設定。
-その次に忘れがちなのが、`light.castShadow=true;`。
-影を落せる光源にはカメラが内蔵されているので、それの設定も
-適切でないといけない。DirectionalLightだったら正射影カメラで、
+DirectionalLightだったら正射影カメラで、
 どこでクリップするかの設定が必要。そして、その処理の重さは
 シャドウマップの解像度がポイントで、Three.jsのAPIでは、
 `light.shadow.mapSize.set(1024,1024);`という感じ。
-その調整もできるようにしておきたい。
 
 -----
 
@@ -109,13 +82,6 @@ hitの中に入っているnormalを調べて、地面が急角度だったら
 
 -----
 
-DynamicRayCastVehicleControllerのブレーキの実装が、
-車体重量1kgから10kgぐらいでないと上手く動作しない
-んじゃないかという疑惑。とりあえず、ここについては
-深追いしないことにする。
-
------
-
 skeletonが入っていないのに、アニメーションがある
 glTFファイルある(例えば`Parrot.glb`)。その他、
 アニメーション情報の中にモーフィングの情報も入って
@@ -129,47 +95,18 @@ THREE.Object3D.updateMatrixWorld()とか、skeleton.update()
 
 ----------------------------------------
 
-
-やっぱりMotionをRootMotionとPoseMotionに分けることにした。
-PoseMotionの方はChatGPTからアイデアをもらって、Pose
-インターフェースという型を作って、それでポーズの情報を
-受け渡しすればMixerから脱却できて、物理演算との統合も楽に
-なりそうな感じ。だいぶ改変した後の状態だけど、ChatGPTからの
-アイデアを、ここにメモ。
-
-Poseインターフェースは以下。ここが抽象的な情報になって
-いるところがポイントの一つ。
-
-type Pose = Record<string,Transform>;
-class Transform {
-  loc: Vec3; quat: Quat; scale: Vec3;
-}
-
-次にPoseMotionインターフェースの大事なところは、
-
-interface PoseMotion {
-  update(dt: number): Pose;
-}
-
-ここが拡張性の要。PoseMotionにObject3Dとかを触らせずに
-済ますのがポイント。これを実装するにあたり、AnimationClipの
-中にあるKeyframeTrackにあるcreateInterpolant()の機能を使う
-と良い。物理エンジンでもRigidBodyの値を使えばOK。
-
-そして、Mixer使わなくても以下の関数書けばブレンドが可能。
+Mixer使わなくても以下の関数書けばブレンドが可能。
 
 function blendPose(a: Pose, b: Pose, weight: number): Pose;
 
 Quatはslerpで、Vec3の方はlerp使えばOK。
 作ったPoseをThree.jsに反映させるためには、
 applyPoseToSkeleton(pose, skeleton)みたいな関数作って、
-そのの中で
+その中で
 
 skeleton.bones[???].position.copy(...);
 
 のような感じで全てのboneに対して繰り返し処理するだけ。
-
-またブランチを作った`feature/motion2`。また大変だ。
 
 -----
 

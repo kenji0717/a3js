@@ -179,13 +179,13 @@ export class KinematicCharacterTransformer implements Transformer {
   }
 
   setLinearVelocity(_vel: Vec3): void {}
-  getLinearVelocity(v: Vec3 | undefined) { // 適当
+  getLinearVelocity(v?: Vec3) { // 適当
     if (!v) v = new Vec3();
     v.set(0,0,0);
     return v;
   }
   setAngularVelocity(_angvel: Vec3): void {}
-  getAngularVelocity(v: Vec3 | undefined) { // 適当
+  getAngularVelocity(v?: Vec3) { // 適当
     if (!v) v = new Vec3();
     v.set(0,0,0);
     return v;

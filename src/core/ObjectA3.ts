@@ -176,7 +176,7 @@ export class ObjectA3 {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
     else if (mode === "Smooth")
-      this.setTransformer(new SmoothTransformer());
+      this.setTransformer(new SmoothTransformer(options));
     else if (mode === "Follow") {
       this.setTransformer(new FollowTransformer(options));
     } else if (mode === "Billboard") {
@@ -1130,7 +1130,7 @@ export class ObjectA3 {
    * @param v 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
    * @returns 線速度
    */
-  getLinearVelocity(v: Vec3 | undefined): Vec3 {
+  getLinearVelocity(v?: Vec3): Vec3 {
     return this.transformer.getLinearVelocity(v);
   }
 
@@ -1162,7 +1162,7 @@ export class ObjectA3 {
    * @param v 値を書き込む `Vec3`（省略時は新しい `Vec3` を返します）
    * @returns 角速度
    */
-  getAngularVelocity(v: Vec3 | undefined): Vec3 {
+  getAngularVelocity(v?: Vec3): Vec3 {
     return this.transformer.getAngularVelocity(v);
   }
 
@@ -1471,7 +1471,7 @@ export interface Transformer {
    * @param v 書き込み先の `Vec3`（省略可）
    * @returns 線速度
    */
-  getLinearVelocity(v: Vec3 | undefined): Vec3;
+  getLinearVelocity(v?: Vec3): Vec3;
 
   /**
    * 角速度を設定します（単位：ラジアン/秒）。物理系の Transformer のみ実装が必要です。
@@ -1484,7 +1484,7 @@ export interface Transformer {
    * @param v 書き込み先の `Vec3`（省略可）
    * @returns 角速度
    */
-  getAngularVelocity(v: Vec3 | undefined): Vec3;
+  getAngularVelocity(v?: Vec3): Vec3;
 
   /**
    * 加えられている力をリセットします。物理系の Transformer のみ実装が必要です。

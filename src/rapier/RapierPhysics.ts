@@ -305,7 +305,7 @@ export class RapierTransformer implements Transformer {
       this.bodyDesc?.setLinvel(vel.x, vel.y, vel.z);
   }
 
-  getLinearVelocity(v: Vec3 | undefined) {
+  getLinearVelocity(v?: Vec3) {
     if (!v)
       v = new Vec3();
     if (this.body)
@@ -322,7 +322,7 @@ export class RapierTransformer implements Transformer {
       this.bodyDesc?.setAngvel({x:av.x, y:av.y, z:av.z});
   }
 
-  getAngularVelocity(v: Vec3 | undefined) {
+  getAngularVelocity(v?: Vec3) {
     if (!v)
       v = new Vec3();
     if (this.body)

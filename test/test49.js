@@ -8,8 +8,6 @@ view.camera.lookAt(0,0,0);
 view.setShadowMap(true);
 
 const light = new a3.StandardLights();
-console.log(`GAHA: ----`,light.object3D);
-console.log(`GAHA: ----`,light);
 light.setLightShadow(true);
 view.scene.add(light);
 
