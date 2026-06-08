@@ -234,6 +234,16 @@ export class Vec3 {
   }
 
   /**
+   * 自分自身と `v` の内積を計算し結果を返します。
+   *
+   * @param v 自分自身と内積を計算する別のベクトル
+   * @returns 内積結果
+   */
+  dot(v: Vec3) {
+    return this.x * v.x + this.y * v.y + this.z * v.z;
+  }
+
+  /**
    * `v1` と `v2` の外積を計算し、結果をこのベクトルに設定します。
    *
    * @remarks
@@ -250,6 +260,7 @@ export class Vec3 {
     this.z = v1.x*v2.y - v1.y*v2.x;
     return this;
   }
+
 
   /**
    * クォータニオン `q` による回転をこのベクトルに適用します。
