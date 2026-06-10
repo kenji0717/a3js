@@ -6,9 +6,6 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
  * HTML 要素を 3D 空間内の特定位置に表示するためのオブジェクトです。
  * CSS2DRenderer を使って、3D オブジェクトに追従する HTML ラベルやアイコンを表示できます。
  *
- * @remarks
- * **既知の問題**: `scene.remove(html3dInstance)` を呼び出しても CSS2D 表示が画面から消えない場合があります。
- *
  * @example
  * ```ts
  * const label = document.createElement('div');
@@ -22,7 +19,7 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 export class Html3D extends ObjectA3 {
   constructor(element: HTMLElement) {
     super(element);
-    // view.scene(html);のようなプログラムを書いても消えてくれないので、
+    // view.scene.remove(html);のようなプログラムを書いても消えてくれないので、
     // 以下の実装を追加。たぶんThree.jsのCSS3DObjectのバグ。
     const css2dObj = this.object3D.children[0] as CSS2DObject;
     this.object3D.addEventListener('removed', () => {

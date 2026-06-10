@@ -4,17 +4,15 @@
 // KaTeX使いたい人そんなにいないだろうから。
 import * as a3 from 'a3js';
 
-const template = document.createElement('template');
-template.innerHTML = `
-<div>
-  <style>p {color:red;}</style>
-  <p>HTMLの要素: <span id="num">0</span></p>
-</div>
+const div = document.createElement('div');
+div.innerHTML = `
+<p>HTMLの要素: <span id="num">0</span></p>
 `;
+div.style='color:red;';
 
 const view = new a3.Window(600,300);
-const html = new a3.Html3D(template.content.firstElementChild);
-const span = template.content.firstElementChild.querySelector('span');
+const html = new a3.Html3D(div);
+const span = div.querySelector('span');
 view.scene.add(html);
 
 let t = 0;
