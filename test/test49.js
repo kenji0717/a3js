@@ -2,7 +2,7 @@
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
-view.camera.setHeadLightEnable(false);
+view.camera.setHeadLight(false);
 view.camera.setPosition(0,2,5);
 view.camera.lookAt(0,0,0);
 view.setShadowMap(true);

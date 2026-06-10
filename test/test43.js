@@ -6,7 +6,7 @@ const view = new a3.Window(600,300);
 view.scene.setPhysicsDebugMode(true);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 //const ground = await new a3.GLTF('./assets/gltf/collision-world.glb').ready;
-ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
+ground.setMode('SimplePhysics',{meshCollider:'tri_mesh',rigidBody: 'fixed'});
 ground.setPosition(0,-10,0);
 view.scene.add(ground);
 const obj = await new a3.GLTF('./assets/RobotExpressive.glb').ready;
@@ -22,12 +22,12 @@ view.camera.setTransformer(new a3.FollowTransformer({target:obj}));
 
 const obj1 = new a3.Box();
 obj1.setPosition(3,0,0);
-obj1.initSimplePhysics();
+obj1.setMode('SimplePhysics');
 view.scene.add(obj1);
 
 const obj2 = new a3.Box();
 obj2.setPosition(-3,0,0);
-obj2.initSimplePhysics({rigidBody: 'kinematic'});
+obj2.setMode('SimplePhysics',{rigidBody: 'kinematic'});
 view.scene.add(obj2);
 
 let t=0;

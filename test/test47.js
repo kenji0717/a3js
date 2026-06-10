@@ -15,17 +15,17 @@ view.scene.setCollisionListener((is)=>{
 });
 
 const field = await new Field('./assets/grass-ground2.glb').ready;
-field.setTransformMode('SimplePhysics',{meshCollider: 'tri_mesh', rigidBody: 'fixed', collisionDetection: false});
+field.setMode('SimplePhysics',{meshCollider: 'tri_mesh', rigidBody: 'fixed', collisionDetection: false});
 view.scene.add(field);
 
 const obj1 = await new Player('./assets/vesma9.a3').ready;
-obj1.setTransformMode('DynamicCharacter',{collisionDetection: true});
+obj1.setMode('DynamicCharacter',{collisionDetection: true});
 view.scene.add(obj1);
 obj1.setPositionNow(2,0,0);
 
 const obj2 = new MyBox();
 obj2.setPosition(-2,0.5,0);
-obj2.setTransformMode('SimplePhysics',{collisionDetection: true});
+obj2.setMode('SimplePhysics',{collisionDetection: true});
 view.scene.add(obj2);
 
 while (true) {

@@ -38,7 +38,7 @@ await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.scene.setPhysicsDebugMode(true);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
-ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
+ground.setMode('SimplePhysics',{meshCollider:'tri_mesh',rigidBody: 'fixed'});
 ground.setPositionNow(0,0,0);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/stk_tux.a3').ready;

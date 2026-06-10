@@ -4,8 +4,7 @@ import type { Scene } from './Scene'; // ここをtypeにしないと循環参�
 import { DefaultTransformer, SmoothTransformer, FollowTransformer,
          BillboardTransformer, SmoothBillboardTransformer,
        } from './Transformers';
-import { defaultPhysicsMotionOptions } from './Physics';
-import type { PhysicsMotionOptions, PhysicsWorld } from './Physics';
+import type { PhysicsWorld } from './Physics';
 import { RapierTransformer } from '../rapier/RapierPhysics';
 import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
@@ -25,7 +24,7 @@ export type Dir =
 
 /**
  * `ObjectA3` の位置・回転・拡大率の制御モードを表す型です。
- * `setTransformMode()` の引数として使用します。
+ * `setMode()` の引数として使用します。
  *
  * - `"Default"` — 即座に位置・回転・拡大率を反映します。
  * - `"Smooth"` — 約1秒かけてなめらかに補間します。
@@ -172,7 +171,7 @@ export class ObjectA3 {
    * @param mode 設定するモード
    * @param options モードによっては追加のオプションが必要です
    */
-  setTransformMode(mode: TransformMode, options?: any) {
+  setMode(mode: TransformMode, options?: any) {
     if (mode === "Default")
       this.setTransformer(new DefaultTransformer());
     else if (mode === "Smooth")
@@ -190,18 +189,6 @@ export class ObjectA3 {
     } else if (mode === "DynamicCharacter") {
       this.setTransformer(new DynamicCharacterTransformer(options));
     }
-  }
-
-  /**
-   * `"SimplePhysics"` モードを設定します。`setTransformMode("SimplePhysics", options)` と同等です。
-   * @param options 物理挙動のオプション（`PhysicsMotionOptions`）
-   */
-  initSimplePhysics(options: PhysicsMotionOptions) {
-    const opt = {
-      ...defaultPhysicsMotionOptions,
-      ...options
-    };
-    this.setTransformer(new RapierTransformer(opt));
   }
   
   update(dt: number) {

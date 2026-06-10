@@ -74,7 +74,7 @@ export type MeshColliderType = "tri_mesh" | "convex_hull";
 
 /**
  * 物理オブジェクトの挙動を設定するオプションです。
- * `setTransformMode("SimplePhysics", options)` や `initSimplePhysics(options)` に渡します。
+ * `setMode("SimplePhysics", options)` に渡します。
  */
 export interface PhysicsMotionOptions {
   /** 剛体の種類。デフォルトは `"dynamic"`。 */

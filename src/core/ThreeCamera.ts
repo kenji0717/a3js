@@ -62,7 +62,7 @@ export class ThreeCamera extends Camera {
     }
   }
 
-  setHeadLightEnable(b: boolean) {
+  setHeadLight(b: boolean) {
     if (b)
       this.headLight.intensity = 1;
     else

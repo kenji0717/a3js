@@ -8,9 +8,9 @@ view.scene.setCollisionListener((collistions)=>{
 });
 const ground = new a3.Box(10,0.5,10,"red");
 ground.setPositionNow(0,-3,0);
-ground.initSimplePhysics({rigidBody: 'fixed', collisionDetection: true});
+ground.setMode('SimplePhysics',{rigidBody: 'fixed', collisionDetection: true});
 view.scene.add(ground);
 const obj = new a3.Sphere();
 obj.setPositionNow(0,0,0);
-obj.initSimplePhysics({collisionDetection: true});
+obj.setMode('SimplePhysics',{collisionDetection: true});
 view.scene.add(obj);

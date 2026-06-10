@@ -148,7 +148,7 @@ await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.scene.setPhysicsDebugMode(true);
 const ground = new a3.Box(10,1,10);
-ground.initSimplePhysics({rigidBody: 'fixed'});
+ground.setMode('SimplePhysics',{rigidBody: 'fixed'});
 ground.setPositionNow(0,-2,0);
 view.scene.add(ground);
 const obj = await new a3.Acerola3D('./assets/handcart/handcart.a3').ready;

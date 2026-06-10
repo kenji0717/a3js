@@ -3,7 +3,7 @@ import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);
 const obj = new a3.ImagePlane('./assets/kinkakuji.jpg');
-obj.setTransformMode('Billboard',{target: view.camera});
+obj.setMode('Billboard',{target: view.camera});
 view.scene.add(obj);
 
 let t=0;

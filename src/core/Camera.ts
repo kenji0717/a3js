@@ -43,7 +43,7 @@ export abstract class Camera extends ObjectA3 {
    * カメラのヘッドライトの有効・無効を切り替えます。
    * @param b `true` で有効、`false` で無効
    */
-  abstract setHeadLightEnable(b: boolean): void;
+  abstract setHeadLight(b: boolean): void;
 
   /**
    * カメラが指定した位置の方を向くように回転します。

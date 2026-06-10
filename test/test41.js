@@ -1,4 +1,5 @@
 // リソース大量に読み込む場合の書き方見本。
+// 現段階でシーンの切替時にSimpleObject内のCSS2DObjectが消えないバグあり。
 import * as a3 from 'a3js';
 
 const view = new a3.Window(600,300);

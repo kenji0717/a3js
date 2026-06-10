@@ -50,7 +50,7 @@ export class XRCamera extends Camera {
    * カメラのヘッドライトの有効・無効を切り替えます。
    * @param b `true` で有効、`false` で無効
    */
-  setHeadLightEnable(b: boolean) {
+  setHeadLight(b: boolean) {
     this.headLight.intensity = b ? 1 : 0;
   }
 

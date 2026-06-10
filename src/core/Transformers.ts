@@ -7,7 +7,7 @@ import type { Transformer } from "./ObjectA3";
 /**
  * `"Default"` モードの `Transformer` 実装です。
  * 位置・回転・拡大率の変更を即座に反映します。
- * `setTransformMode("Default")` と同等です。
+ * `setMode("Default")` と同等です。
  *
  * 独自の `Transformer` を作る場合は、このクラスを継承して必要なメソッドだけオーバーライドするのがおすすめです。
  */
@@ -124,7 +124,7 @@ export const defaultSmoothTransformerOptions: SmoothTransformerOptions = {
 /**
  * `"Smooth"` モードの `Transformer` 実装です。
  * 位置・回転・拡大率の変更をデフォルトで1秒かけてなめらかに補間します。
- * `setTransformMode("Smooth")` と同等です。
+ * `setMode("Smooth")` と同等です。
  */
 export class SmoothTransformer implements Transformer {
   options: SmoothTransformerOptions;
@@ -272,7 +272,7 @@ export const defaultBillboardTransformerOptions: BillboardTransformerOptions = {
  * `target` で指定したオブジェクトの方向に常に向き続けます。
  * カメラを `target` に指定すれば、常にカメラを向くビルボード表示ができます。
  * 回転への外部からの変更はすべて無視されます。
- * `setTransformMode("Billboard", { target: camera })` と同等です。
+ * `setMode("Billboard", { target: camera })` と同等です。
  */
 export class BillboardTransformer extends DefaultTransformer {
   /** 上方向ベクトル。 */
@@ -344,7 +344,7 @@ export const defaultSmoothBillboardTransformerOptions: SmoothBillboardTransforme
 /**
  * `"SmoothBillboard"` モードの `Transformer` 実装です。
  * `BillboardTransformer` のスムーズ補間版です。なめらかにターゲットの方向を向きます。
- * `setTransformMode("SmoothBillboard", { target: camera })` と同等です。
+ * `setMode("SmoothBillboard", { target: camera })` と同等です。
  */
 export class SmoothBillboardTransformer extends SmoothTransformer {
   /** 上方向ベクトル。 */
@@ -415,7 +415,7 @@ export const defaultFollowTransformerOptions: FollowTransformerOptions = {
  * `target` で指定したオブジェクトを追従し続けます。
  * カメラに設定すれば特定のキャラクターを追尾する三人称視点カメラを実現できます。
  * `setPosition()` などの外部からの変更はすべて無視されます。
- * `setTransformMode("Follow", { target: avatar })` と同等です。
+ * `setMode("Follow", { target: avatar })` と同等です。
  */
 export class FollowTransformer extends StaticTransformer {
   /** 追従する対象のオブジェクト。 */

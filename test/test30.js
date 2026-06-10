@@ -5,11 +5,11 @@ await a3.initPhysics();
 const view = new a3.Window(600,300);
 view.camera.setPosition(0,0,10); // なんとかしないと。
 const ground = new a3.Box(10,0.5,10,"red");
-ground.initSimplePhysics({rigidBody: 'fixed'});
+ground.setMode('SimplePhysics',{rigidBody: 'fixed'});
 ground.setPositionNow(0,-3,0);
 view.scene.add(ground);
 const obj = new a3.Box();
-obj.initSimplePhysics(); // or "convex_hull"
+obj.setMode('SimplePhysics'); // or "convex_hull"
 obj.setPositionNow(0,-2.5,0);
 view.scene.add(obj);
 

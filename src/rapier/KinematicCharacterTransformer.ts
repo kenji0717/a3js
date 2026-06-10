@@ -46,13 +46,13 @@ export const defaultKinematicCharacterTransformerOptions: KinematicCharacterTran
 
 /**
  * `"KinematicCharacter"` モードで使用される Transformer の Rapier3D 実装です。
- * `setTransformMode("KinematicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ * `setMode("KinematicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
  *
  * カプセル形状のコライダーを使い、壁・地面への衝突を考慮しながらオブジェクトを移動させます。
  * 速度・力・トルク系のメソッドは無効です。位置を直接制御することでキャラクターを動かします。
  *
  * @remarks
- * 直接インスタンスを生成するのではなく、`setTransformMode("KinematicCharacter", options)` を通じて使用してください。
+ * 直接インスタンスを生成するのではなく、`setMode("KinematicCharacter", options)` を通じて使用してください。
  */
 export class KinematicCharacterTransformer implements Transformer {
   transform: Transform;

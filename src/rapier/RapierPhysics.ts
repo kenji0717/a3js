@@ -127,13 +127,13 @@ export class RapierPhysicsWorld implements PhysicsWorld {
 
 /**
  * `"SimplePhysics"` モードで使用される Transformer の Rapier3D 実装です。
- * `setTransformMode("SimplePhysics", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ * `setMode("SimplePhysics", options)` を呼び出すと、内部的にこのクラスが使用されます。
  *
  * オブジェクトのメッシュ形状から自動的にコライダーを生成し、
  * Rapier3D の剛体シミュレーションに従ってオブジェクトを動かします。
  *
  * @remarks
- * 直接インスタンスを生成するのではなく、`setTransformMode("SimplePhysics", options)` を通じて使用してください。
+ * 直接インスタンスを生成するのではなく、`setMode("SimplePhysics", options)` を通じて使用してください。
  */
 export class RapierTransformer implements Transformer {
   transform: Transform;

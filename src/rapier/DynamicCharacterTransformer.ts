@@ -43,14 +43,14 @@ export const defaultDynamicCharacterTransformerOptions: DynamicCharacterTransfor
 
 /**
  * `"DynamicCharacter"` モードで使用される Transformer の Rapier3D 実装です。
- * `setTransformMode("DynamicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
+ * `setMode("DynamicCharacter", options)` を呼び出すと、内部的にこのクラスが使用されます。
  *
  * カプセル形状の dynamic 剛体を使い、物理演算（重力・衝突）の影響を受けながら
  * 速度・力制御でキャラクターを動かします。
  * `"KinematicCharacter"` と異なり、物理的な慣性の影響を受けます。
  *
  * @remarks
- * 直接インスタンスを生成するのではなく、`setTransformMode("DynamicCharacter", options)` を通じて使用してください。
+ * 直接インスタンスを生成するのではなく、`setMode("DynamicCharacter", options)` を通じて使用してください。
  */
 export class DynamicCharacterTransformer implements Transformer {
   transform: Transform;

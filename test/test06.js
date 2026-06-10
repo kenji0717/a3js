@@ -4,5 +4,5 @@ import * as a3 from 'a3js';
 await a3.initPhysics();
 const view = new a3.Window(600,300);
 const obj = new a3.Box("red");
-obj.initSimplePhysics();
+obj.setMode('SimplePhysics');
 view.scene.add(obj);

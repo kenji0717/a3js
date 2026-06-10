@@ -11,17 +11,17 @@ const view = new a3.Window(600,300);
 await view.alert(`スタート。`);
 
 const ground = new a3.Box(10,1,10,'red');
-ground.initSimplePhysics({rigidBody:'fixed'});
+ground.setMode('SimplePhysics',{rigidBody:'fixed'});
 ground.setPositionNow(0,-1.5,0);
 view.scene.add(ground);
 
 const obj = new a3.Box();
-obj.initSimplePhysics();
+obj.setMode('SimplePhysics');
 obj.setPositionNow(0,10,0);
 view.scene.add(obj);
 
 //const obj = new a3.Box();
-//obj.setTransformMode('Smooth');
+//obj.setMode('Smooth');
 //obj.setPositionNow(0,10,0);
 //view.scene.add(obj);
 //await a3.asyncSleep(100);

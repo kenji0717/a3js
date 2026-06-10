@@ -8,7 +8,7 @@ const view = new a3.Window(600,300);
 const ground = await new a3.GLTF('./assets/gba_peach_circuit.glb').ready;
 //ground.setScale(10,10,10);
 ground.setPosition(0,-10,0);
-ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody: 'fixed'});
+ground.setMode('SimplePhysics',{meshCollider:'tri_mesh',rigidBody: 'fixed'});
 view.scene.add(ground);
 
 const obj = await new a3.Acerola3D('./assets/TestCar/TestCar.a3').ready;

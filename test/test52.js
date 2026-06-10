@@ -6,7 +6,7 @@ const lookFrom = new a3.Vec3(0,3,-5);
 const view = new a3.Window(600,300);
 const player = await new a3.Acerola3D('./assets/vesma9.a3');
 view.scene.add(player);
-view.camera.setTransformMode('Follow',{target:player,lookFrom});
+view.camera.setMode('Follow',{target:player,lookFrom});
 
 let t = 0;
 while (true) {
