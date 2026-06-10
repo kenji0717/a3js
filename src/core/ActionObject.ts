@@ -316,10 +316,13 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     if (this.autoDirection) {
       if (speed>0.0001) {
         vel.normalize();
-        tmp.v0.set(0,0,0);
         const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-        getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
-        this.setQuatNow(tmp.q0);
+        tmp.v0.cross(vel,up)
+        if (tmp.v0.length()>0.0001) {
+          tmp.v0.set(0,0,0);
+          getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
+          this.setQuatNow(tmp.q0);
+        }
       }
     }
   }
