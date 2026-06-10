@@ -11,11 +11,17 @@ import type { Scene } from './Scene';
 export interface GameCanvasOptions {
   /** タッチデバイス用UIを表示するかどうか。`true` でジョイスティックとボタンを表示します。省略時はタッチ対応デバイスか自動判定します。 */
   touchDevice: boolean;
+  /** GameCanvasの要素（）の幅をCSS文字列で指定します。デフォルトは "600px" です。 */
+  width: string;
+  /** GameCanvasの要素（）の幅をCSS文字列で指定します。デフォルトは "300px" です。 */
+  height: string;
 }
 
 /** `GameCanvasOptions` のデフォルト値です。タッチポイント数でスマホかPCかを自動判定します。 */
 export const defaultGameCanvasOptions: GameCanvasOptions = {
-  touchDevice: (navigator.maxTouchPoints > 0)
+  touchDevice: (navigator.maxTouchPoints > 0),
+  width: '600px',
+  height: '300px'
 };
 
 /**
@@ -88,8 +94,8 @@ export class GameCanvas extends HTMLElement implements View {
     :host {
       display: block;
       position: relative;
-      width: 600px;
-      height: 300px;
+      width: ${this.options.width};
+      height: ${this.options.height};
 
       canvas-a3 {
         position: absolute;

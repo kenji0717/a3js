@@ -7,7 +7,7 @@
 import * as a3 from 'a3js';
 
 //const view = new a3.GameCanvas();
-const view = new a3.GameCanvas({touchDevice:true});
+const view = new a3.GameCanvas({touchDevice:true,width:'1000px',height:'300px'});
 document.body.appendChild(view);
 
 const leftBox = new a3.Box('red');
