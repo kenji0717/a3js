@@ -65,6 +65,7 @@ export class GameCanvas extends HTMLElement implements View {
    * `x`・`y` ともに -1 〜 1 の範囲で、中央が `0`、最大傾きが `±1` です。
    */
   leftJoystick: {x: number, y: number};
+  _leftPointerId: number | null = null;
   _rightActive: boolean;
   _rightCenter: {x:number, y:number};
   /**
@@ -72,6 +73,7 @@ export class GameCanvas extends HTMLElement implements View {
    * `x`・`y` ともに -1 〜 1 の範囲で、中央が `0`、最大傾きが `±1` です。
    */
   rightJoystick: {x: number, y: number};
+  _rightPointerId: number | null = null;
   /** 左ボタンが押されているとき `true`（PC では Space キーに対応）。 */
   leftButton: boolean;
   /** 右ボタンが押されているとき `true`（PC では Enter キーに対応）。 */
@@ -175,6 +177,7 @@ export class GameCanvas extends HTMLElement implements View {
 `;
     //this.canvas = new Canvas();
     //this.append(this.canvas);
+    this.style.touchAction = 'none'; // スマホとかでページスクロールなど禁止
     this.canvas = this.shadowRoot!.querySelector('canvas-a3')!;
     this.scene = this.canvas.scene;
     this.camera = this.canvas.camera;
@@ -183,6 +186,7 @@ export class GameCanvas extends HTMLElement implements View {
     this._leftActive = false;
     this._leftCenter = {x:0,y:0};
     this.leftJoystick = {x:0,y:0};
+    this._leftPointerId;
     this._rightActive = false;
     this._rightCenter = {x:0,y:0};
     this.rightJoystick = {x:0,y:0};
@@ -194,20 +198,23 @@ export class GameCanvas extends HTMLElement implements View {
     const leftStick = this.shadowRoot!.querySelector<HTMLDivElement>('.joystick.left .stick');
     if (!leftStick) return; // ありえん
     leftStick.addEventListener('pointerdown',(e)=>{
+      if (this._leftPointerId !== null) return;
+      this._leftPointerId = e.pointerId;
       this._leftActive = true;
+      leftStick.setPointerCapture(e.pointerId);
       const rect = leftStick.getBoundingClientRect();
       this._leftCenter.x = rect.left + rect.width / 2;
       this._leftCenter.y = rect.top + rect.height / 2;
-      leftStick.setPointerCapture(e.pointerId);
     });
     leftStick.addEventListener('pointermove',(e)=>{
       if (!this._leftActive) return;
+      if (e.pointerId !== this._leftPointerId) return;
       const dx = e.clientX - this._leftCenter.x;
       const dy = e.clientY - this._leftCenter.y;
       const distance = Math.sqrt(dx*dx + dy*dy);
       let limitedX = dx;
       let limitedY = dy;
-      if (distance > 40) {
+      if (distance > this._maxDistance) {
         const angle = Math.atan2(dy,dx);
         limitedX = Math.cos(angle) * this._maxDistance;
         limitedY = Math.sin(angle) * this._maxDistance;
@@ -216,15 +223,21 @@ export class GameCanvas extends HTMLElement implements View {
       this.leftJoystick.x = limitedX / this._maxDistance;
       this.leftJoystick.y = -(limitedY / this._maxDistance);
     });
-    leftStick.addEventListener('pointerup', ()=>{
+    const resetLeftStick = (e: PointerEvent) => {
+      if (e.pointerId !== this._leftPointerId) return;
+      this._leftPointerId = null;
       this._leftActive = false;
       leftStick.style.transform = 'translate(-50%, -50%)';
       this.leftJoystick.x = 0;
       this.leftJoystick.y = 0;
-    });
+    };
+    leftStick.addEventListener('pointerup', resetLeftStick);
+    leftStick.addEventListener('pointercancel', resetLeftStick);
     const rightStick = this.shadowRoot!.querySelector<HTMLDivElement>('.joystick.right .stick');
     if (!rightStick) return; // ありえん
     rightStick.addEventListener('pointerdown',(e)=>{
+      if (this._rightPointerId !== null) return;
+      this._rightPointerId = e.pointerId;
       this._rightActive = true;
       const rect = rightStick.getBoundingClientRect();
       this._rightCenter.x = rect.left + rect.width / 2;
@@ -233,12 +246,13 @@ export class GameCanvas extends HTMLElement implements View {
     });
     rightStick.addEventListener('pointermove',(e)=>{
       if (!this._rightActive) return;
+      if (e.pointerId !== this._rightPointerId) return;
       const dx = e.clientX - this._rightCenter.x;
       const dy = e.clientY - this._rightCenter.y;
       const distance = Math.sqrt(dx*dx + dy*dy);
       let limitedX = dx;
       let limitedY = dy;
-      if (distance > 40) {
+      if (distance > this._maxDistance) {
         const angle = Math.atan2(dy,dx);
         limitedX = Math.cos(angle) * this._maxDistance;
         limitedY = Math.sin(angle) * this._maxDistance;
@@ -247,12 +261,16 @@ export class GameCanvas extends HTMLElement implements View {
       this.rightJoystick.x = limitedX / this._maxDistance;
       this.rightJoystick.y = -(limitedY / this._maxDistance);
     });
-    rightStick.addEventListener('pointerup', ()=>{
+    const resetRightStick = (e: PointerEvent) => {
+      if (e.pointerId !== this._rightPointerId) return;
+      this._rightPointerId = null;
       this._rightActive = false;
       rightStick.style.transform = 'translate(-50%, -50%)';
       this.rightJoystick.x = 0;
       this.rightJoystick.y = 0;
-    });
+    };
+    rightStick.addEventListener('pointerup', resetRightStick);
+    rightStick.addEventListener('pointercancel', resetRightStick);
     const leftButton = this.shadowRoot!.querySelector<HTMLButtonElement>('.btn.left');
     if (!leftButton) return; // ありえん
     leftButton.addEventListener('pointerdown',()=>{
