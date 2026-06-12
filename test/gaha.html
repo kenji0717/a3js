@@ -71,12 +71,12 @@ await view.alert('START',async ()=>{
   view.requestFullscreen();
 });
 
-view.camera.setHeadLightEnable(false);
+view.camera.setHeadLight(false);
 const lights = new a3.StandardLights();
-lights.setLocation(100,100,100);
+lights.setPosition(100,100,100);
 view.scene.add(lights);
 const ground = await new a3.Acerola3D('./assets/A3/supertuxkart/tracks/city/stk_city.a3').ready;
-ground.initSimplePhysics({meshCollider:'tri_mesh',rigidBody:'fixed'});
+ground.setMode('SimplePhysics',{meshCollider:'tri_mesh',rigidBody:'fixed'});
 view.scene.add(ground);
 
 const obj = await new a3.Acerola3D('./assets/A3/supertuxkart/karts/tux/stk_tux.a3').ready;
@@ -87,7 +87,7 @@ obj.setState('default');
 view.scene.add(obj);
 cc.reset(new a3.Vec3(0,1.0,0),new a3.Quat(0,1,0,0));
 
-view.camera.setTransformer(new a3.FollowTransformer(obj,{lookFrom:{x:0,y:1,z:-3}}));
+view.camera.setMode('Follow',{target: obj,lookFrom:{x:0,y:1,z:-3}});
 
 while (true) {
   await view.waitForRender();

@@ -24,18 +24,18 @@ import * as THREE from 'three';
 import * as a3 from 'a3js';
 
 const oc = new THREE.OrthographicCamera(-2,2,1,-1,0.1,1000);
-const gc = new a3.GeneralCamera(oc);
+const gc = new a3.ThreeCamera(oc);
 const view = new a3.Window(600,300,{camera:gc});
-view.camera.setHeadLightEnable(false);
-view.camera.setLocation(3,0,0);
+view.camera.setHeadLight(false);
+view.camera.setPosition(3,0,0);
 view.camera.lookAt(0,0,0);
 
 const sl = new a3.StandardLights();
-sl.setLocation(100,100,100);
+sl.setPosition(100,100,100);
 view.scene.add(sl);
 
 const back = new a3.Box(1,50,50,'red');
-back.setLocation(-1,0,0);
+back.setPosition(-1,0,0);
 view.scene.add(back);
 
 const measure = await new a3.Acerola3D('./assets/A3/measure/measure.a3').ready;
