@@ -32,7 +32,7 @@ let t = 0;
 const vel = new a3.Vec3();
 while (true) {
   t += await view.waitForRender();
-  if (t<20) {
+  if (t<10) {
     player.getLinearVelocity(vel);
     console.log(`speed=${vel.length()}`);
   }
