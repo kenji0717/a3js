@@ -1,17 +1,16 @@
 
 APIの心配ごと
 
-* ObjectA3のsetTransformMode()をsetMode()に簡略化したくなった。
-* CameraのsetHeadLightEnable()をsetHeadLight()に簡略化したくなった。
+* ???
 
 -----
 
-StandardLightsのフィールドでirectionalLight?: THREE.DirectionalLight;
+StandardLightsのフィールドでdirectionalLight?: THREE.DirectionalLight;
 などがdeclareの宣言が必要な理由が難解だったので気をつけないと。
 
 -----
 
-* a3.Text3Dは手抜きすぎる。マテリアルを指定できるようにするべし。
+* a3.Text3Dは手抜きすぎたので少し改善したけどまだまだ。
 * GLTFLoaderの読み込みでキャッシュを有効にするために
   自分でGLTFLoaderで読み込み来んだやつのキャッシュを
   Mapで作るとさらに良いかもしれない。その時は単純なclone()で

@@ -23,16 +23,18 @@
     "docs": "npm run docs:api && npm run docs:site"
   },
   "devDependencies": {
-    "@types/three": "^0.182.0",
-    "typedoc": "^0.28.15",
-    "typescript": "~5.9.3",
-    "vite": "^7.2.4",
-    "vitepress": "^1.6.4"
+    "@types/three": "^0.184.1",
+    "typedoc": "^0.28.19",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16",
+    "vitepress": "^1.6.4",
+    "@dimforge/rapier3d-compat": "^0.19.3",
+    "fflate": "^0.8.3",
+    "three": "^0.184.0"
   },
   "dependencies": {
-    "@dimforge/rapier3d-compat": "^0.19.3",
-    "fflate": "^0.8.2",
-    "three": "^0.182.0"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
   }
 }
-

@@ -4,7 +4,7 @@ import * as a3 from 'a3js';
 const lookFrom = new a3.Vec3(0,3,-5);
 
 const view = new a3.Window(600,300);
-const player = await new a3.Acerola3D('./assets/vesma9.a3');
+const player = await new a3.Acerola3D('./assets/vesma9.a3').ready;
 view.scene.add(player);
 view.camera.setMode('Follow',{target:player,lookFrom});
 
