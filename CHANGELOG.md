@@ -1,0 +1,26 @@
+
+# Changelog
+すべての注目すべき変更はこのファイルに記録されます。
+
+## [Unreleased] - 年-月-日
+未リリースの追加・変更予定をここに記載します。
+
+### Added
+- CHANGELOG.mdを追加しました。
+### Changed
+- APIドキュメントを更新しました。
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [1.2.0] - 2026-06-15
+
+### Changed
+- ObjectA3.setLightShadow()にオプションを付けられるようにしました
+- setAutoDirection()の機能をActionObjectからObjectA3に移動しました
+
+## [1.0.0] - 2026-06-12
+
+### Changed
+- 0.0.55をベースに1.0.0としました
