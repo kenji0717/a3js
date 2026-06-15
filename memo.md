@@ -1,4 +1,14 @@
 
+v0.x系列をpublishするには以下のようにしないとダメだった。
+
+    npm publish --tag v0-legacy
+
+npm installするには以下。
+
+    npm install a3js@v0-legacy
+
+-----
+
 APIの心配ごと
 
 * ???
@@ -18,7 +28,9 @@ StandardLightsのフィールドでdirectionalLight?: THREE.DirectionalLight;
 
 -----
 
-モードが'Smooth','SmoothBillboard'の時の速度計算が変かも。
+* モードが'Smooth','SmoothBillboard'の時の速度計算が変かも。
+* FollowTransformerにもgetLinearVelocity(),getAngularVelocity()を実装
+  すべきだな。
 
 -----
 
