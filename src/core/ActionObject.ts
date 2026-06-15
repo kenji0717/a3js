@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { AsyncInitRequired } from './AsyncInitRequired';
-import { Vec3, Quat, getLookAtQuaternion } from './LinearMath';
+import { Vec3, Quat } from './LinearMath';
 import type { PhysicsWorld } from './Physics';
 import { Scene } from './Scene';
-import { tmp } from '../utils/math';
 
 /**
  * `ActionObject` が持つひとつのアクション（アニメーション状態）を表すクラスです。
@@ -85,8 +84,6 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
   overwriteMorphs: boolean;
   /** 自動アクション切り替え機能のON、OFF。デフォルトOFF。 */
   autoAction: boolean = false;
-  /** 自動向き調整機能のON、OFF。デフォルトOFF。 */
-  autoDirection: boolean = false;
   /** 静止時のアクション名。 */
   haltActionName: string = 'default';
   /** 歩行時のアクション名。 */
@@ -105,7 +102,6 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
     this.overwriteMorphs = false;
     this.ready = this.asyncInit(data);
     this.autoAction = false;
-    this.autoDirection = false;
   }
 
   /**
@@ -310,19 +306,6 @@ export abstract class ActionObject<T> extends ObjectA3 implements AsyncInitRequi
       } else {
         if (this.actions[this.runActionName]!==this.stateAction) {
           this.setState(this.runActionName);}
-      }
-    }
-    // 以下、自動向き調整機能の実装
-    if (this.autoDirection) {
-      if (speed>0.0001) {
-        vel.normalize();
-        const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-        tmp.v0.cross(vel,up)
-        if (tmp.v0.length()>0.0001) {
-          tmp.v0.set(0,0,0);
-          getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
-          this.setQuatNow(tmp.q0);
-        }
       }
     }
   }
