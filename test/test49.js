@@ -8,7 +8,8 @@ view.camera.lookAt(0,0,0);
 view.setShadowMap(true);
 
 const light = new a3.StandardLights();
-light.setLightShadow(true);
+const opt = {left:-5,right:5,top:5,bottom:-5,shadowMapWidth:64,shadowMapHeight:64};
+light.setLightShadow(true,opt);
 view.scene.add(light);
 
 const field = await new a3.GLTF('./assets/grass-ground2.glb').ready;
