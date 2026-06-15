@@ -140,8 +140,11 @@ export class ObjectA3 {
   children: ObjectA3[] = [];
   /** `setClickListener()` で登録されたクリックリスナー関数。 */
   clickListener?: (o: ObjectA3)=>void;
+  /** 自動向き調整機能のON、OFF。デフォルトOFF。 */
+  autoDirection: boolean = false;
 
   constructor(data?: any) {
+    this.autoDirection = false;
     this.transformer = this.initTransformer(data);
     this.object3D = new THREE.Object3D();
     const r = this.initObject(data);
@@ -234,6 +237,21 @@ export class ObjectA3 {
   }
   
   update(dt: number) {
+    // 以下、自動向き調整機能の実装
+    const vel = this.getLinearVelocity();
+    const speed = vel.length();
+    if (this.autoDirection) {
+      if (speed>0.0001) {
+        vel.normalize();
+        const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
+        tmp.v0.cross(vel,up)
+        if (tmp.v0.length()>0.0001) {
+          tmp.v0.set(0,0,0);
+          getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
+          this.setQuatNow(tmp.q0);
+        }
+      }
+    }
 //console.log(`GAHA:a `,this.transformer.trans.loc);
 //console.log(`GAHA:f `,this.transformer.trans.quat);
 //console.log(`GAHA:g `,(this.transformer instanceof DefaultTransformer));
