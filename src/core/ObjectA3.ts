@@ -54,6 +54,48 @@ const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 export let a3jsLoading = new THREE.Mesh(geo,mat);
 
 
+
+/**
+ * ObjectA3.setLightShadow(true,opt);のoptに与えるオプションの型です。
+ */
+export interface SetLightShadowOptions {
+  /** DirectionalLightの場合のcamera.leftの値 */
+  left: number;
+  /** DirectionalLightの場合のcamera.rightの値 */
+  right: number;
+  /** DirectionalLightの場合のcamera.topの値 */
+  top: number;
+  /** DirectionalLightの場合のcamera.bottomの値 */
+  bottom: number;
+  /** SpotLightの場合のangleの値 */
+  angle: number;
+  /** 影を落すことができる一番近い距離。全ての光源タイプ共通 */
+  near: number;
+  /** 影を落すことができる一番遠い距離。全ての光源タイプ共通 */
+  far: number;
+  /** 影の計算で使用するシャドーマップの横の解像度。全ての光源タイプ共通 */
+  shadowMapWidth: number;
+  /** 影の計算で使用するシャドーマップの縦の解像度。全ての光源タイプ共通 */
+  shadowMapHeight: number;
+}
+
+/**
+ * ObjectA3.setLightShadow(true,opt);のoptに与えるオプションのデフォルト値です。
+ */
+export const defaultSetLightShadowOptions: SetLightShadowOptions = {
+  left: -20,
+  right: 20,
+  top: 20,
+  bottom: -20,
+  angle: Math.PI / 6,
+  near: 0.1,
+  far: 100,
+  shadowMapWidth: 1024,
+  shadowMapHeight: 1024
+};
+
+
+
 /**
  * シーン内に配置される全てのオブジェクトの基底クラスです。
  *
@@ -296,13 +338,40 @@ export class ObjectA3 {
   /**
    * このオブジェクトの中に含まれるLightが影を作るかどうかを設定します。
    * @param value `true`の時は作る。`false`の時は作らない。
+   * @param options 影を作るために必要なカメラやシャドウマップの解像度の情報。
    */
-  setLightShadow(value: boolean) {
+  setLightShadow(value: boolean, options: Partial<SetLightShadowOptions>) {
+    const opt = {
+      ...defaultSetLightShadowOptions,
+      ...options
+    };
     this.object3D.traverse((o) => {
-      if (o instanceof THREE.DirectionalLight ||
-          o instanceof THREE.SpotLight ||
-          o instanceof THREE.PointLight) {
+      if (o instanceof THREE.DirectionalLight) {
         o.castShadow = value;
+        o.shadow.camera.left = opt.left;
+        o.shadow.camera.right = opt.right;
+        o.shadow.camera.top = opt.top;
+        o.shadow.camera.bottom = opt.bottom;
+        o.shadow.camera.near = opt.near;
+        o.shadow.camera.far = opt.far;
+        o.shadow.camera.updateProjectionMatrix();
+        o.shadow.mapSize.width = opt.shadowMapWidth;
+        o.shadow.mapSize.height = opt.shadowMapHeight;
+      } else if (o instanceof THREE.SpotLight) {
+        o.castShadow = value;
+        o.angle = opt.angle;
+        o.shadow.camera.near = opt.near;
+        o.shadow.camera.far = opt.far;
+        o.shadow.camera.updateProjectionMatrix();
+        o.shadow.mapSize.width = opt.shadowMapWidth;
+        o.shadow.mapSize.height = opt.shadowMapHeight;
+      } else if (o instanceof THREE.PointLight) {
+        o.castShadow = value;
+        o.shadow.camera.near = opt.near;
+        o.shadow.camera.far = opt.far;
+        o.shadow.camera.updateProjectionMatrix();
+        o.shadow.mapSize.width = opt.shadowMapWidth;
+        o.shadow.mapSize.height = opt.shadowMapHeight;
       }
     });
   }
