@@ -18,7 +18,9 @@ StandardLightsのフィールドでdirectionalLight?: THREE.DirectionalLight;
 
 -----
 
-モードが'Smooth','SmoothBillboard'の時の速度計算が変かも。
+* モードが'Smooth','SmoothBillboard'の時の速度計算が変かも。
+* FollowTransformerにもgetLinearVelocity(),getAngularVelocity()を実装
+  すべきだな。
 
 -----
 
