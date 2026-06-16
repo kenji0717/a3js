@@ -76,7 +76,7 @@ export type MeshColliderType = "tri_mesh" | "convex_hull";
  * 物理オブジェクトの挙動を設定するオプションです。
  * `setMode("SimplePhysics", options)` に渡します。
  */
-export interface PhysicsMotionOptions {
+export interface SimplePhysicsOptions {
   /** 剛体の種類。デフォルトは `"dynamic"`。 */
   rigidBody: RigidBodyType;
   /** コライダーの種類。デフォルトは `"solid"`。 */
@@ -98,9 +98,9 @@ export interface PhysicsMotionOptions {
 }
 
 /**
- * `PhysicsMotionOptions` のデフォルト値です。
+ * `SimplePhysicsOptions` のデフォルト値です。
  */
-export const defaultPhysicsMotionOptions: PhysicsMotionOptions = {
+export const defaultSimplePhysicsOptions: SimplePhysicsOptions = {
   rigidBody: "dynamic",
   collider: "solid",
   meshCollider: "convex_hull",

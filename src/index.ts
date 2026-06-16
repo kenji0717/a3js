@@ -33,15 +33,16 @@ export { GameCanvas, defaultGameCanvasOptions } from './core/GameCanvas';
 export type { GameCanvasOptions } from './core/GameCanvas';
 export type { View } from './core/View';
 export { BaseView } from './core/View';
+export { defaultSimplePhysicsOptions } from './core/Physics';
 export type { PhysicsEngine,
               PhysicsWorld,
               PhysicsWorldOptions,
-              PhysicsMotionOptions,
+              SimplePhysicsOptions,
               ColliderType,
               MeshColliderType,
               RigidBodyType,
               Collision } from './core/Physics';
-export { initPhysics, RapierPhysicsEngine, collisionMap, RapierPhysicsWorld } from './rapier/RapierPhysics';
+export { initPhysics, RapierPhysicsEngine, collisionMap, RapierPhysicsWorld, SimplePhysicsTransformer } from './rapier/RapierPhysics';
 export type { RapierPhysicsWorldOptions } from './rapier/RapierPhysics';
 export { KinematicCharacterTransformer, defaultKinematicCharacterTransformerOptions } from './rapier/KinematicCharacterTransformer';
 export type { KinematicCharacterTransformerOptions } from './rapier/KinematicCharacterTransformer';
@@ -49,7 +50,7 @@ export { DynamicCharacterTransformer, defaultDynamicCharacterTransformerOptions 
 export type { DynamicCharacterTransformerOptions } from './rapier/DynamicCharacterTransformer';
 export { CarControl, CarTransformer, CarMotion, defaultCarControlOptions } from './rapier/CarControl';
 export type { CarControlOptions } from './rapier/CarControl';
-export { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './core/LinearMath';
+export { Vec3, Quat, Transform, getLookAtQuat, eulerToQuat, quatToMatrix, quatToEuler } from './core/LinearMath';
 export type { RotationOrder, MutableVec3, MutableQuat } from './core/LinearMath';
 export { ThreeCamera } from './core/ThreeCamera';
 export { XRCamera } from './core/XRCamera';

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { View } from './View';
-import { Vec3, getLookAtQuaternion } from './LinearMath';
+import { Vec3, getLookAtQuat } from './LinearMath';
 
 /**
  * a3js のカメラの基底となる抽象クラスです。
@@ -87,7 +87,7 @@ export abstract class Camera extends ObjectA3 {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.getPosition(),target,up);
+    const newQuat = getLookAtQuat(this.getPosition(),target,up);
     newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuat(newQuat);
   }
@@ -134,7 +134,7 @@ export abstract class Camera extends ObjectA3 {
       target.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    const newQuat = getLookAtQuaternion(this.getPosition(),target,up);
+    const newQuat = getLookAtQuat(this.getPosition(),target,up);
     newQuat.mul(up.x,up.y,up.z,0); // up軸まわりで180度回転！
     this.setQuatNow(newQuat);
   }

@@ -6,9 +6,9 @@ import * as TG from '../utils/TypeGuard';
 import { ObjectA3 } from '../core/ObjectA3';
 import type { Transformer } from '../core/ObjectA3';
 import { Vec3, Quat, Transform } from '../core/LinearMath';
-import { defaultPhysicsMotionOptions } from '../core/Physics';
+import { defaultSimplePhysicsOptions } from '../core/Physics';
 import type { PhysicsEngine, PhysicsWorld, PhysicsWorldOptions,
-              PhysicsMotionOptions, Collision } from '../core/Physics';
+              SimplePhysicsOptions, Collision } from '../core/Physics';
 import type { Motion } from '../core/ActionObject';
 
 export let RAPIER: typeof import('@dimforge/rapier3d-compat');
@@ -135,19 +135,19 @@ export class RapierPhysicsWorld implements PhysicsWorld {
  * @remarks
  * 直接インスタンスを生成するのではなく、`setMode("SimplePhysics", options)` を通じて使用してください。
  */
-export class RapierTransformer implements Transformer {
+export class SimplePhysicsTransformer implements Transformer {
   transform: Transform;
   objectA3?: ObjectA3;
   bodyDesc?: Rapier.RigidBodyDesc;
   body?: Rapier.RigidBody;
   colliderDescs: Rapier.ColliderDesc[];
   colliders: Rapier.Collider[];
-  completeOptions: PhysicsMotionOptions;
+  completeOptions: SimplePhysicsOptions;
 
   // 最低限の初期化。
-  constructor(options: Partial<PhysicsMotionOptions> = {}) {
+  constructor(options: Partial<SimplePhysicsOptions> = {}) {
     this.completeOptions = {
-      ...defaultPhysicsMotionOptions,
+      ...defaultSimplePhysicsOptions,
       ...options
     };
     this.transform = new Transform();
