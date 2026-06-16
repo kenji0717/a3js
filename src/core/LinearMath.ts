@@ -551,7 +551,7 @@ const q3 = new Quat(); // 計算のテンポラリで使う
  * @param out 結果を書き込む `Quat`。省略時は新しい `Quat` を返します。
  * @returns 計算されたクォータニオン
  */
-export function getLookAtQuaternion(me: Vec3, target: Vec3, up: Vec3, out?: Quat): Quat {
+export function getLookAtQuat(me: Vec3, target: Vec3, up: Vec3, out?: Quat): Quat {
   up.normalize();
   const forward = me.clone().sub(target).normalize();
   const right = new Vec3().cross(forward,up).normalize();
@@ -589,7 +589,7 @@ export function getLookAtQuaternion(me: Vec3, target: Vec3, up: Vec3, out?: Quat
  * @param out 結果を書き込む `Quat`。省略時は新しい `Quat` を返します。
  * @returns 変換されたクォータニオン
  */
-export function eulerToQuaternion(rot: Vec3, order: RotationOrder = "ZXY", out?: Quat): Quat {
+export function eulerToQuat(rot: Vec3, order: RotationOrder = "ZXY", out?: Quat): Quat {
   const quat = out !== undefined ? out.set(0, 0, 0, 1) : new Quat(0, 0, 0, 1);
   for (let i=0;i<3;i++) {
     const c = order.charAt(i);
@@ -635,7 +635,7 @@ export function quatToMatrix(q: Quat): number[][] {
 }
 
 /*
- * 下のquatToVec3Eulerで使うclamp関数。
+ * 下のquatToEulerで使うclamp関数。
  */
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
@@ -646,7 +646,7 @@ const clamp = (v: number) => Math.max(-1, Math.min(1, v));
  * @param out 結果を書き込む `Vec3`。省略時は新しい `Vec3` を返します。
  * @returns 変換されたオイラー角（ラジアン）を表す `Vec3`
  */
-export function quatToVec3Euler(q: Quat, order: RotationOrder = "ZXY", out?: Vec3): Vec3 {
+export function quatToEuler(q: Quat, order: RotationOrder = "ZXY", out?: Vec3): Vec3 {
   const m = quatToMatrix(q);
   const v = out ?? new Vec3();
   let x=0,y=0,z=0;

@@ -1,4 +1,4 @@
-import { Vec3, Quat, getLookAtQuaternion, quatToVec3Euler, Transform } from './LinearMath';
+import { Vec3, Quat, getLookAtQuat, quatToEuler, Transform } from './LinearMath';
 import type { MutableVec3 } from './LinearMath';
 import type { PhysicsWorld } from "./Physics";
 import { ObjectA3 } from "./ObjectA3";
@@ -205,8 +205,8 @@ export class SmoothTransformer implements Transformer {
   getAngularVelocity(v?: Vec3) {
     if (!v)
       v = new Vec3();
-    quatToVec3Euler(this.startTransform.quat, 'ZXY', tmpVec1);
-    quatToVec3Euler(this.endTransform.quat, 'ZXY', tmpVec2);
+    quatToEuler(this.startTransform.quat, 'ZXY', tmpVec1);
+    quatToEuler(this.endTransform.quat, 'ZXY', tmpVec2);
     v.set(tmpVec2.x-tmpVec1.x, tmpVec2.y-tmpVec1.y, tmpVec2.z-tmpVec1.z);
     const t = this.currentTime<this.duration?this.currentTime:this.duration;
     v.scale((-6*t*t+6*t)/this.duration)
@@ -311,7 +311,7 @@ export class BillboardTransformer extends DefaultTransformer {
   update(_dt: number): void {
     tmpObjLoc.set(this.transform.loc);
     this.target.getPosition(tmpTargetLoc);
-    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    getLookAtQuat(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
 }
@@ -379,7 +379,7 @@ export class SmoothBillboardTransformer extends SmoothTransformer {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
     this.target.getPosition(tmpTargetLoc);
-    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    getLookAtQuat(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     this.transform.quat.set(tmpQuat);
   }
 }
@@ -451,7 +451,7 @@ export class FollowTransformer extends StaticTransformer {
     super.update(dt);
     tmpObjLoc.set(this.transform.loc);
     this.target.getPosition(tmpTargetLoc);
-    getLookAtQuaternion(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
+    getLookAtQuat(tmpObjLoc, tmpTargetLoc, this.up, tmpQuat);
     tmpQuat.mul(0, 1, 0, 0);
     tmpTransform.quat.set(tmpQuat);
 

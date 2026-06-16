@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ObjectA3 } from './ObjectA3';
 import type { Transformer } from './ObjectA3';
-import { Vec3, eulerToQuaternion } from './LinearMath';
+import { Vec3, eulerToQuat } from './LinearMath';
 import { DefaultTransformer } from './Transformers';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { deepMerge } from '../utils/math';
@@ -79,7 +79,7 @@ class SampleObjectMotion extends DefaultTransformer {
     super.update(dt);
     if (this.testMode) {
       this.rot.add(dt,dt,dt);
-      eulerToQuaternion(this.rot, 'ZXY', this.transform.quat);
+      eulerToQuat(this.rot, 'ZXY', this.transform.quat);
     }
   }
 }

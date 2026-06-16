@@ -1,6 +1,6 @@
 import { ObjectA3 } from './ObjectA3';
 import type { View } from './View';
-import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
+import { Vec3, Quat, Transform, getLookAtQuat, eulerToQuat } from './LinearMath';
 import { tmp } from '../utils/math';
 
 /**
@@ -149,7 +149,7 @@ export class OrbitController extends BaseController {
       newCameraLoc.apply(quatY);
       newCameraLoc.add(this.target);
       cameraLoc.set(newCameraLoc);
-      const newCameraQuat = getLookAtQuaternion(cameraLoc,this.target,new Vec3(0,1,0));
+      const newCameraQuat = getLookAtQuat(cameraLoc,this.target,new Vec3(0,1,0));
       newCameraQuat.mul(new Quat(0,1,0,0)); // カメラは-Zが前なのでY軸まわりに180度回転！
       cameraQuat.set(newCameraQuat);
     } else if (this.isLeftDown) {
@@ -319,11 +319,11 @@ export class AvatarPositionController extends BaseController {
     this._avatarNextLoc.add(0.0, this._velY, 0.0);
     if (this._keyLeft) {
       tmp.v0.set(0, this.options.angSpeed, 0);
-      this._avatarNextQuat.mul(eulerToQuaternion(tmp.v0, 'ZXY', tmp.q0));
+      this._avatarNextQuat.mul(eulerToQuat(tmp.v0, 'ZXY', tmp.q0));
     }
     if (this._keyRight) {
       tmp.v0.set(0, -this.options.angSpeed, 0);
-      this._avatarNextQuat.mul(eulerToQuaternion(tmp.v0, 'ZXY', tmp.q0));
+      this._avatarNextQuat.mul(eulerToQuat(tmp.v0, 'ZXY', tmp.q0));
     }
     avatar.setPosition(this._avatarNextLoc);
     avatar.setQuat(this._avatarNextQuat);

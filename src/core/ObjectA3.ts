@@ -5,8 +5,8 @@ import { DefaultTransformer, SmoothTransformer, FollowTransformer,
          BillboardTransformer, SmoothBillboardTransformer,
        } from './Transformers';
 import type { PhysicsWorld } from './Physics';
-import { RapierTransformer } from '../rapier/RapierPhysics';
-import { Vec3, Quat, Transform, getLookAtQuaternion, eulerToQuaternion } from './LinearMath';
+import { SimplePhysicsTransformer } from '../rapier/RapierPhysics';
+import { Vec3, Quat, Transform, getLookAtQuat, eulerToQuat } from './LinearMath';
 import type { RotationOrder } from './LinearMath';
 import { tmp } from '../utils/math';
 import { KinematicCharacterTransformer } from '../rapier/KinematicCharacterTransformer';
@@ -228,7 +228,7 @@ export class ObjectA3 {
     } else if (mode === "SmoothBillboard") {
       this.setTransformer(new SmoothBillboardTransformer(options));
     } else if (mode === "SimplePhysics") {
-      this.setTransformer(new RapierTransformer(options));
+      this.setTransformer(new SimplePhysicsTransformer(options));
     } else if (mode === "KinematicCharacter") {
       this.setTransformer(new KinematicCharacterTransformer(options));
     } else if (mode === "DynamicCharacter") {
@@ -247,7 +247,7 @@ export class ObjectA3 {
         tmp.v0.cross(vel,up)
         if (tmp.v0.length()>0.0001) {
           tmp.v0.set(0,0,0);
-          getLookAtQuaternion(tmp.v0,vel,up,tmp.q0);
+          getLookAtQuat(tmp.v0,vel,up,tmp.q0);
           this.setQuatNow(tmp.q0);
         }
       }
@@ -582,7 +582,7 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    eulerToQuaternion(tmp.v0, order, tmp.q1);
+    eulerToQuat(tmp.v0, order, tmp.q1);
     this.setQuat(tmp.q1);
   }
 
@@ -607,7 +607,7 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360);
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    eulerToQuaternion(tmp.v0, order, tmp.q0);
+    eulerToQuat(tmp.v0, order, tmp.q0);
     this.setQuatNow(tmp.q0);
   }
 
@@ -635,7 +635,7 @@ export class ObjectA3 {
       tmp.v1.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    getLookAtQuaternion(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
+    getLookAtQuat(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
     this.setQuat(tmp.q1);
   }
 
@@ -660,7 +660,7 @@ export class ObjectA3 {
       tmp.v1.set(xVO);
     }
     const up = this.upVector ? this.upVector : ObjectA3.defaultUpVector;
-    getLookAtQuaternion(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
+    getLookAtQuat(this.transformer.transform.loc, tmp.v1, up, tmp.q1);
     this.setQuatNow(tmp.q1);
   }
 
@@ -843,7 +843,7 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    eulerToQuaternion(tmp.v0, order, tmp.q1);
+    eulerToQuat(tmp.v0, order, tmp.q1);
     this.getQuat(tmp.q0);
     tmp.q0.mul(tmp.q1);
     this.setQuat(tmp.q0);
@@ -876,7 +876,7 @@ export class ObjectA3 {
       tmp.v0.set(xOrV);
     tmp.v0.scale(Math.PI/360); // デグリー to ラジアン & t to t/2
     const order = this.rotationOrder ? this.rotationOrder : ObjectA3.defaultRotationOrder;
-    eulerToQuaternion(tmp.v0, order, tmp.q1);
+    eulerToQuat(tmp.v0, order, tmp.q1);
     this.getQuat(tmp.q0);
     tmp.q0.mul(tmp.q1);
     this.setQuatNow(tmp.q0);
