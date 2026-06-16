@@ -1,7 +1,12 @@
 
 APIの心配ごと
 
-* ???
+* MotionとSimple
+    + RapierTransformerはSimplePhysicsTransformerにすべきか
+    + PhysicsMotionOptionのMotionが古いまま
+    + 他にもMotionとSimpleの変更が必要
++ RapierTransformerがindex.tsに入ってない！
+    + defaultPhysicsMotionOptionsもindex.tsに入ってない
 
 -----
 
