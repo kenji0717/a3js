@@ -188,10 +188,11 @@ export class SimplePhysicsTransformer implements Transformer {
     if (!this.objectA3) return; // あっちゃいけない
     const opt = this.completeOptions;
     const volumes: number[] = [];
+    const collisionGroups = (opt.membership << 16) | opt.filter;
+    const scale = this.transform.scale;
     this.objectA3.object3D.traverse((obj: any)=>{
       if (TG.isMesh(obj)) {
-        const cv = getShapeAndVolumeFromPrimitive(obj.geometry);
-        const collisionGroups = (opt.membership << 16) | opt.filter;
+        const cv = getShapeAndVolumeFromPrimitive(obj.geometry,scale);
         if (cv) {
           cv.colliderDesc.setCollisionGroups(collisionGroups);
           if (opt.collisionDetection)
@@ -235,11 +236,14 @@ export class SimplePhysicsTransformer implements Transformer {
     this.objectA3 = objectA3;
     this.colliderDescs = [];
     this.colliders = [];
+    // colliderDescを作る前にthis.objectA3.object3Dに
+    // scaleを反映させることで最初だけ拡大縮小に対応！
+    this.objectA3.object3D.scale.set(trans.scale.x,trans.scale.y,trans.scale.z);
     this.bodyDesc = this.makeBodyDesc();
     this.configColliderDescs();
     this.bodyDesc.setTranslation(trans.loc.x,trans.loc.y,trans.loc.z);
     this.bodyDesc.setRotation(trans.quat);
-    //this.bodyDesc.setScale(???); // 保留
+    //this.bodyDesc.setScale(???); // 上の方で対応
   }
 
   addOneselfToPhysics(world: RapierPhysicsWorld): void {
@@ -482,55 +486,61 @@ export function computeGeometryVolume(
 /**
  * BufferGeometryからColliderDescを生成する関数。
  * この関数はThree.jsのexamples/jsm/physics/RapierPhysics.jsに
- * かかれていたgetShapeをベースにしている。
+ * かかれていたgetShapeをベースにしている。引数でX,Y,Zのscaleを
+ * Vec3で受け付けるけど、Sphereとかを楕円にするのはむずいので、
+ * X,Y,Zの相乗平均でごまかしている。
  */
-export function getShapeAndVolumeFromPrimitive( geometry: THREE.BufferGeometry ): {colliderDesc: Rapier.ColliderDesc, volume: number} | null {
+export function getShapeAndVolumeFromPrimitive( geometry: THREE.BufferGeometry, scale: Vec3 = new Vec3(1,1,1) ): {colliderDesc: Rapier.ColliderDesc, volume: number} | null {
   if (TG.isRoundedBoxGeometry(geometry)) {
     const ps = geometry.parameters;
-    const sx = typeof ps?.width === "number" ? ps.width / 2 : 0.5;
-    const sy = typeof ps?.height === "number" ? ps.height / 2 : 0.5;
-    const sz = typeof ps?.depth === "number" ? ps.depth / 2 : 0.5;
+    const sx = (typeof ps?.width === "number" ? ps.width / 2 : 0.5) * scale.x;
+    const sy = (typeof ps?.height === "number" ? ps.height / 2 : 0.5) * scale.y;
+    const sz = (typeof ps?.depth === "number" ? ps.depth / 2 : 0.5) * scale.z;
     //const radius = typeof ps?.radius === "number" ? ps.radius : 0.1; // GAHAなぜ???
-    const radius = 0.1;
+    const radius = 0.1 * Math.cbrt(scale.x * scale.y * scale.z);
     return {
       colliderDesc: RAPIER.ColliderDesc.roundCuboid( sx - radius, sy - radius, sz - radius, radius ),
       volume: 2*sx * 2*sy * 2*sz // GAHA radiusも取れないし、不正確な体積
     };
   } else if (TG.isBoxGeometry(geometry)) {
     const ps = geometry.parameters;
-    const sx = typeof ps?.width === "number" ? ps.width / 2 : 0.5;
-    const sy = typeof ps?.height === "number" ? ps.height / 2 : 0.5;
-    const sz = typeof ps?.depth === "number" ? ps.depth / 2 : 0.5;
+    const sx = (typeof ps?.width === "number" ? ps.width / 2 : 0.5) * scale.x;
+    const sy = (typeof ps?.height === "number" ? ps.height / 2 : 0.5) * scale.y;
+    const sz = (typeof ps?.depth === "number" ? ps.depth / 2 : 0.5) * scale.z;
     return {
       colliderDesc: RAPIER.ColliderDesc.cuboid( sx, sy, sz ),
       volume: 2*sx * 2*sy * 2*sz
     };
   } else if (TG.isSphereGeometry(geometry)) {
     const ps = geometry.parameters;
-    const radius = typeof ps?.radius === "number" ? ps.radius : 1;
+    const xyz = Math.cbrt(scale.x * scale.y * scale.z);
+    const radius = (typeof ps?.radius === "number" ? ps.radius : 1) * xyz;
     return {
       colliderDesc: RAPIER.ColliderDesc.ball( radius ),
       volume: 4/3*Math.PI*radius*radius*radius
     };
   } else if (TG.isIcosahedronGeometry(geometry)) {
     const ps = geometry.parameters;
-    const radius = typeof ps?.radius === "number" ? ps.radius : 1;
+    const xyz = Math.cbrt(scale.x * scale.y * scale.z);
+    const radius = (typeof ps?.radius === "number" ? ps.radius : 1) * xyz;
     return {
       colliderDesc: RAPIER.ColliderDesc.ball( radius ),
       volume: 4/3*Math.PI*radius*radius*radius
     };
   } else if (TG.isCylinderGeometry(geometry)) {
     const ps = geometry.parameters;
-    const radius = typeof ps?.radiusBottom === "number" ? ps.radiusBottom : 0.5;
-    const length = typeof ps?.height === "number" ? ps.height : 0.5;
+    const xz = Math.sqrt(scale.x * scale.z);
+    const radius = (typeof ps?.radiusBottom === "number" ? ps.radiusBottom : 0.5) * xz;
+    const length = (typeof ps?.height === "number" ? ps.height : 0.5) * scale.y;
     return {
       colliderDesc: RAPIER.ColliderDesc.cylinder( length / 2, radius ),
       volume: (Math.PI*radius*radius)*length
     };
   } else if (TG.isCapsuleGeometry(geometry)) {
     const ps = geometry.parameters;
-    const radius = typeof ps?.radius === "number" ? ps.radius : 0.5;
-    const length = typeof ps?.height === "number" ? ps.height : 0.5;
+    const xz = Math.sqrt(scale.x * scale.z);
+    const radius = (typeof ps?.radius === "number" ? ps.radius : 0.5) * xz;
+    const length = (typeof ps?.height === "number" ? ps.height : 0.5) * scale.y;
     return {
       colliderDesc: RAPIER.ColliderDesc.capsule( length / 2, radius ),
       volume: 4/3*Math.PI*radius*radius*radius + (Math.PI*radius*radius)*length
