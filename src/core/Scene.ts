@@ -157,6 +157,7 @@ export class Scene {
             'color',
             new THREE.BufferAttribute(colors, 4)
           );
+          this.rapierLines.geometry.computeBoundingSphere();
         }
       }
     }
@@ -176,6 +177,7 @@ export class Scene {
         new THREE.BufferGeometry(),
         new THREE.LineBasicMaterial({vertexColors:true})
       );
+      //this.rapierLines.frustumCulled = false;
       this.scene.add(this.rapierLines);
     } else {
       if (this.rapierLines) {
