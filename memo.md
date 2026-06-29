@@ -1,7 +1,13 @@
 
 APIの心配ごと
 
-* ???
+* 'kinematic'同士はデフォルトで当たり判定が無いということが判明
+    + そもそもSimplePhysicsOptionsがRapierベースの考えになっていた。
+      もっとわかりやすい分類がありそう。
+    + 'kinematic'をkinematicPositionBased()で作ってるけど、
+      kinematicVelocityBased()のモードは必要か。Rapier依存に
+      なりすぎか。
+* 重力を設定する方法が無い。
 
 -----
 
