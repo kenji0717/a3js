@@ -219,8 +219,18 @@ export class SimplePhysicsTransformer implements Transformer {
     const collisionGroups = (opt.membership << 16) | opt.filter;
     for (let i=0;i<this.colliderDescs.length;i++) {
       this.colliderDescs[i].setCollisionGroups(collisionGroups);
-      if (opt.collisionDetection)
+      if (opt.collisionDetection) {
         this.colliderDescs[i].setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+        if (opt.rigidBody === 'kinematic') { // kinematic同士も当るように設定
+          this.colliderDescs[i].setActiveCollisionTypes(
+            RAPIER.ActiveCollisionTypes.DEFAULT |
+            RAPIER.ActiveCollisionTypes.KINEMATIC_FIXED |
+            RAPIER.ActiveCollisionTypes.KINEMATIC_KINEMATIC
+          );
+        }
+      }
+      if (opt.collider === 'sensor')
+        this.colliderDescs[i].setSensor(true);
       this.colliderDescs[i].setRestitution(opt.restitution);
       this.colliderDescs[i].setFriction(opt.friction);
       this.colliderDescs[i].setMass(opt.mass*(volumes[i]/volumeSum));
