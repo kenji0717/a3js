@@ -188,17 +188,12 @@ export class SimplePhysicsTransformer implements Transformer {
     if (!this.objectA3) return; // あっちゃいけない
     const opt = this.completeOptions;
     const volumes: number[] = [];
-    const collisionGroups = (opt.membership << 16) | opt.filter;
     const scale = this.transform.scale;
     this.objectA3.object3D.traverse((obj: any)=>{
       if (TG.isMesh(obj)) {
         const cv = getShapeAndVolumeFromPrimitive(obj.geometry,scale);
         if (cv) {
-          cv.colliderDesc.setCollisionGroups(collisionGroups);
-          if (opt.collisionDetection)
-            cv.colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
           this.colliderDescs.push(cv.colliderDesc);
-          cv.colliderDesc.setRestitution(opt.restitution).setFriction(opt.friction);
           volumes.push(cv.volume);
         } else {
           let c: Rapier.ColliderDesc | null, v: number;
@@ -213,18 +208,19 @@ export class SimplePhysicsTransformer implements Transformer {
               break;
           }
           if (c) {
-            c.setCollisionGroups(collisionGroups);
-            if (opt.collisionDetection)
-              c.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
-            c.setRestitution(opt.restitution).setFriction(opt.friction);
             this.colliderDescs.push(c);
             volumes.push(v);
           }
         }
       }
     });
+    // オプションの情報を反映
     let volumeSum = volumes.reduce((sum,vol)=>sum+vol,0);
+    const collisionGroups = (opt.membership << 16) | opt.filter;
     for (let i=0;i<this.colliderDescs.length;i++) {
+      this.colliderDescs[i].setCollisionGroups(collisionGroups);
+      if (opt.collisionDetection)
+        this.colliderDescs[i].setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
       this.colliderDescs[i].setRestitution(opt.restitution);
       this.colliderDescs[i].setFriction(opt.friction);
       this.colliderDescs[i].setMass(opt.mass*(volumes[i]/volumeSum));
