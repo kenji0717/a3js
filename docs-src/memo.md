@@ -107,7 +107,7 @@ GettingStarted.htmlのページに書く4行のサンプルプログラムとは
         + OtherFunctions.html（その他の機能）
             - プリミティブ
             - Text3D.html
-            - ImagePane.html
+            - ImagePlane.html
             - CarControl.html
             - Scene.setPhysicsDebugMode();
             - StandardLights.setDebugMode();
@@ -122,3 +122,48 @@ GettingStarted.htmlのページに書く4行のサンプルプログラムとは
         + サンプルプログラムについて
         + CarRace.html（カーレースサンプルプログラム）
         + TPS.html（TPSのサンプルプログラム）
+
+2026,07/06: ページへのサンプルプログラムの追加方法。
+
+VitePressのMarkdown内の`<script>`タグはVue SFCのscriptブロックと
+して解釈されるため、`<script type="importmap">`をページに直接
+書くことはできない。そのため、importmap入りのHTMLをiframeの
+srcdocに流し込んで実行するA3Runnerコンポーネントを用意した
+（playgroundと同じ方式）。
+
+関連ファイル:
+
+* .vitepress/theme/index.js
+    - A3Runnerコンポーネントをグローバル登録している。
+* .vitepress/theme/components/A3Runner.vue
+    - 「実行」「停止」ボタン付きのiframeコンポーネント。
+      「実行」でpublic/samples/のサンプルをfetchし、
+      importmap入りのHTMLテンプレートに埋め込んでsrcdocで実行する。
+    - importmap（CDNのURLやバージョン）は
+      public/playground/playground.jsのテンプレートと重複して
+      いるので、変更するときは両方更新すること。
+* public/samples/*.js
+    - サンプルプログラムの置き場所。
+
+各ページへのサンプルの追加手順:
+
+1. サンプルプログラムをpublic/samples/にjsファイルとして置く。
+   （例: public/samples/window-basic.js）
+2. Markdownにソースコードを表示する。VitePressのスニペット機能で
+   同じファイルをそのまま表示できる。
+
+        <<< @/public/samples/window-basic.js{js}
+
+3. 実行用のコンポーネントを書く。srcはpublic/samples/以下の
+   ファイル名。heightは省略可（デフォルト345px）。
+
+        <A3Runner src="window-basic.js" height="500" />
+
+表示と実行が1つのjsファイルを共有するので、サンプルの修正は
+両方に反映される。
+
+動作確認は`npx vitepress dev docs-src`を起動して
+`http://localhost:5173/a3js/`で行う。なお起動時にViteの依存
+スキャンがplayground.jsのcodemirror import（importmapで解決
+される前提のもの）を解決できない旨のエラーを出すが、ページの
+表示・サンプル実行には影響しない。

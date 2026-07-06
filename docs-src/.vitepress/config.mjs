@@ -54,7 +54,7 @@ export default defineConfig({
             text: 'サウンドについて',
             link: '/FeaturesIntroduction/AboutSound/',
             items: [
-              { text: 'Sound', link: '/FeaturesIntroduction/AboutSound/Sound' }
+              { text: 'Soundクラス', link: '/FeaturesIntroduction/AboutSound/Sound' }
             ]
           },
           {
@@ -98,7 +98,7 @@ export default defineConfig({
             link: '/FeaturesIntroduction/OtherFunctions/',
             items: [
               { text: 'Text3Dクラス', link: '/FeaturesIntroduction/OtherFunctions/Text3D' },
-              { text: 'ImagePaneクラス', link: '/FeaturesIntroduction/OtherFunctions/ImagePane' },
+              { text: 'ImagePlaneクラス', link: '/FeaturesIntroduction/OtherFunctions/ImagePlane' },
               { text: 'CarControlクラス', link: '/FeaturesIntroduction/OtherFunctions/CarControl' }
             ]
           },
@@ -113,7 +113,8 @@ export default defineConfig({
         link: '/SamplePrograms/',
         items: [
           { text: 'カーレースサンプルプログラム', link: '/SamplePrograms/CarRace' },
-          { text: 'TPSのサンプルプログラム', link: '/SamplePrograms/TPS' }
+          { text: 'TPSのサンプルプログラム', link: '/SamplePrograms/TPS' },
+          { text: 'フライトシミュレーターのサンプル', link: '/SamplePrograms/FlightSimulator' }
         ]
       }
     ]

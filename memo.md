@@ -1,4 +1,20 @@
 
+2026,07/07: ドキュメント作成中に見つかった修正するべきこと。
+
+* setAutoDirection()メソッドがActionObjectに定義されているが、
+  autoDirectionプロパティと毎フレームの処理はObjectA3にあるので、
+  setAutoDirection()もObjectA3にあるべき。移動する。
+  （ドキュメントのAutoDirectionAndActionのページの見出しは
+  ObjectA3.setAutoDirection(true)としてある。）
+* test53.jsのコメントにある「'Smooth'、'SmoothBillboard'時の
+  速度の計算が間違ってそう」の件を確認する。
+  （未確定のためドキュメントには載せていない。）
+* FollowモードでもsetAutoDirection()が使えるように改善する予定。
+  （ドキュメントのAutoDirectionAndActionのページには、Followモードも
+  使えるものとして記載済み。）
+
+-----
+
 APIの心配ごと
 
 * 'kinematic'同士はデフォルトで当たり判定が無いということが判明
