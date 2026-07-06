@@ -1,0 +1,1 @@
+import{_ as i,o as a,c as t,ae as e}from"./chunks/framework.BmsPYn1i.js";const g=JSON.parse('{"title":"a3js docs","description":"","frontmatter":{},"headers":[],"relativePath":"index.md","filePath":"index.md"}'),n={name:"index.md"};function h(l,s,p,r,k,d){return a(),t("div",null,[...s[0]||(s[0]=[e("",6)])])}const E=i(n,[["render",h]]);export{g as __pageData,E as default};

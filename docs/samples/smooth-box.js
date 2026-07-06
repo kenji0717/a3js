@@ -1,0 +1,23 @@
+import * as a3 from 'a3js';
+
+const view = new a3.Window(600,300);
+const obj = new a3.Box("blue");
+obj.setMode('Smooth');
+view.scene.add(obj);
+
+// 2秒ごとに位置・回転・拡大率を切り替える。
+// Smoothモードなので約1秒かけてなめらかに変化する。
+let i = 0;
+while (true) {
+  if (i%2 === 0) {
+    obj.setPosition(1,0,0);
+    obj.setRotation(0,90,0);
+    obj.setScale(2,2,2);
+  } else {
+    obj.setPosition(-1,0,0);
+    obj.setRotation(0,-90,0);
+    obj.setScale(0.5,0.5,0.5);
+  }
+  i++;
+  await a3.asyncSleep(2000);
+}

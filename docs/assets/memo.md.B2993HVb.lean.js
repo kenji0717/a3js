@@ -1,1 +1,0 @@
-import{_ as i,o as t,c as e,ae as o}from"./chunks/framework.BmsPYn1i.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"memo.md","filePath":"memo.md"}'),a={name:"memo.md"};function r(n,l,h,m,u,c){return t(),e("div",null,[...l[0]||(l[0]=[o("",7)])])}const p=i(a,[["render",r]]);export{d as __pageData,p as default};

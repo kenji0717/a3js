@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>カーレースサンプルプログラム</title>
+    <script type="importmap">
+       {
+         "imports": {
+           "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.min.js",
+           "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+           "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/+esm",
+           "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+           "meshoptimizer": "https://unpkg.com/meshoptimizer@1.0.1/meshopt_decoder.module.js",
+           "a3js": "https://cdn.jsdelivr.net/npm/a3js@0/+esm"
+         }
+       }
+    </script>
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@latest/+esm" -->
+    <!-- "a3js": "https://cdn.jsdelivr.net/npm/a3js@0.0.60/+esm" -->
+    <!-- "a3js": "./a3js/dist/a3js.es.js" -->
+    <!-- "a3js": "../a3js/dist/a3js.es.js" -->
+  </head>
+  <body>
+    <style>
+     * {
+       margin: 0;
+     }
+     html, body {
+       overscroll-behavior: none;
+     }
+     #contents {
+       height: 100vh;
+       width: 100vw;
+       display: flex;
+       flex-direction: column;
+     }
+     #instructions {
+       padding: 0.5em;
+       flex-shrink: 0;
+     }
+     #base-div {
+       position: relative;
+       flex: 1;
+     }
+     #volume-div {
+       display: none;
+       position: absolute;
+       width: 100%;
+       margin: 100px auto;
+       text-align: center;
+       color: white;
+       z-index: 100;
+     }
+     #display-div {
+       display: none;
+       position: absolute;
+       top: 10px;
+       left: 10px;
+       color: red;
+       z-index: 100;
+     }
+     game-canvas-a3 {
+       position: absolute;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       /* touch-action: none; */
+    }
+    </style>
+    <div id="contents">
+      <div id="instructions">
+        <p>PCではASDWとスペース、エンターのキーで操作して下さい。スマホでは画面に表示されるジョイスティックと"L"と"R"のボタンで操作して下さい。Space or 「L」：ブレーキ。Enter or 「R」リセット。</p>
+      </div>
+      <div id="base-div">
+        <div id="volume-div">
+          <p>volume: <input id="volume" type="range" min="0" max="2" value="1" step="0.01"></p>
+          <p>←→でもvolume調整可能</p>
+          <p>PCならSpaceキー、スマホなら「L」ボタンで次へ</p>
+        </div>
+        <div id="display-div">
+          <p>TIME: <span id="time"></span></p>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+     import * as a3 from 'a3js';
+
+     // minからmaxの間の実数乱数を生成
+     function rnd(min,max) {return min+(max-min)*Math.random();}
+     // min(整数)以上max(整数)未満の整数乱数を生成
+     function rndI(min,max) {return Math.floor(min+(max-min)*Math.random());}
+
+     // カートの設定
+     const stk_kart = {
+       mass: 10.0, // ブレーキの効きが悪いので、こちらで調節することにした
+       chassisWidth: 0.7,
+       chassisHeight: 0.5,
+       chassisLength: 1.5,
+       chassisOffset: {x:  0.0, y: -0.25,  z:  0.0 },
+       wheelFrontYPosition: -0.05,
+       wheelFrontZPosition: 0.40,
+       wheelFrontAxleLength: 0.6,
+       wheelRearYPosition: -0.00,
+       wheelRearZPosition: -0.35,
+       wheelRearAxleLength: 0.7,
+       wheelFrontRadius: 0.1,
+       wheelRearRadius: 0.15,
+       wheelFrontWidth: 0.19,
+       wheelRearWidth: 0.24,
+       wheelFrontSuspensionRestLength: 0.26,
+       wheelRearSuspensionRestLength: 0.25,
+       wheelFrontSuspensionStiffness: 200.0, // ほとんど述び縮みしない設定
+       wheelRearSuspensionStiffness: 250.0, // ほとんど述び縮みしない設定
+       wheelFrontSuspensionCompression: 4.0,
+       wheelRearSuspensionCompression: 4.0,
+       wheelFrontSuspensionRelaxation: 10.0,
+       wheelRearSuspensionRelaxation: 10.0,
+       wheelFrontMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+       wheelRearMaxSuspensionTravel: 0.05, // ほとんど述び縮みしない設定
+       aerodynamicDrag: 0.5, // 空気抵抗
+     };
+
+     // ############################################################
+     // 最初はクラス宣言
+     // ############################################################
+
+     // このゲーム用のAcerola3D
+     class GameAcerola3D extends a3.Acerola3D {
+       constructor(url,mode,opt) {
+         super(url);
+         this.ready.then(()=>{
+           this.setMode(mode,opt);
+         });
+       }
+     }
+
+     // このゲーム用のGLTF
+     class GameGLTF extends a3.GLTF {
+       constructor(data,mode,opt) {
+         super(data);
+         this.ready.then(()=>{
+           this.setMode(mode,opt);
+         });
+       }
+     }
+
+     // カートクラス(a3.Acerola3Dから自前実装)
+     class Kart extends a3.Acerola3D {
+       carControl;
+       constructor() {
+         super('../assets/stk_tux.a3');
+         this.carControl = new a3.CarControl(stk_kart);
+         this.ready.then(()=>{
+           this.setTransformer(this.carControl.trans);
+           this.getAction('default').motion = this.carControl.motion;
+           this.setState('default');
+         });
+       }
+     }
+
+     class Field extends GameAcerola3D {
+       constructor() {
+         super('../assets/stk_racetrack.a3','SimplePhysics',{meshCollider: 'tri_mesh', rigidBody: 'fixed'});
+       }
+     }
+
+     class Goal extends GameAcerola3D {
+       touched;
+       constructor() {
+         super('../assets/ClearBlocks.a3','SimplePhysics',{rigidBody:'kinematic',collider:'sensor',collisionDetection:true});
+         this.setScale(10,3,0.5);
+         this.touched = false;
+       }
+       handleCollision(obj, started, myPartNo, yourPartNo) {
+         if (obj instanceof Kart) {
+           this.touched = true;
+           se1.play();
+         }
+       }
+     }
+
+     class SkyBox extends GameAcerola3D {
+       constructor() {
+         super('../assets/SkyBox01.a3','Default');
+       }
+     }
+
+     class BGM extends a3.Sound {
+       constructor(url) {
+         super(url,{type:'sound',loop:true,volume:0.5});
+       }
+     }
+
+     class SoundEffect extends a3.Sound {
+       constructor(url) {
+         super(url,{type:'positional',loop:false,volume:1.0});
+       }
+     }
+
+     // ############################################################
+     // 以下、実際にゲームの処理を行なう部分
+     // ############################################################
+
+     // a3.GameCanvasを生成。
+     //const view = new a3.GameCanvas({touchDevice:true, width:'100%', height: '100%'});
+     const view = new a3.GameCanvas({width:'100%', height: '100%'});
+     view.camera.setHeadLight(false); // ヘッドライトOFF
+     view.setController(new a3.BaseController()); // マウスでグリグリできなくする
+     document.querySelector('#base-div').appendChild(view);
+
+     // HTMLで用意してある要素を抽出
+     const baseDiv = document.querySelector('#base-div');
+     const volumeDiv = document.querySelector('#volume-div');
+     const volume = document.querySelector('#volume');
+     const displayDiv = document.querySelector('#display-div');
+     const timeSpan = displayDiv.querySelector('#time');
+
+     // ページを開いた時に一度だけ初期化が必要な処理
+     await a3.initPhysics(); // 物理演算初期化
+     await a3.initFont('../assets/M-PLUS-1_Bold.json.zip'); // 3Dフォント初期化
+     await view.alert('スマホプレイの時は横向き画面をお勧めします。',async ()=>{
+       await a3.initSound(); // 音声の初期化
+       if (baseDiv.requestFullscreen)
+         baseDiv.requestFullscreen(); // 全画面表示
+     });
+     // ボリューム調整できるようにする
+     volume.addEventListener('input',(e)=>{
+       const v = volume.value;
+       a3.Sound.listener.setMasterVolume(v);
+     });
+     // ゲームのシーン(≒画面)を3つ(start,maidend)用意
+     const startScene = new a3.Scene(); // スタート画面
+     const mainScene = new a3.Scene(); // メイン画面(とりあえず空)
+     const clearScene = new a3.Scene(); // ゲームクリア画面
+     const overScene = new a3.Scene(); // ゲームオーバー画面
+
+     // ゲーム必要な変数や定数
+     let time; // ゲーム内時間(秒)
+     const lookFrom = {x:0, y:3, z:-5}; // カートから見たカメラの位置
+     const TIME_LIMIT = 60; // 制限時間
+
+     let heavyInitFinished = false;
+     // 先読みしておくゲーム内オブジェクトの変数
+     let kart; // カート
+     let field; // 背景
+     let gameTitleTxt; // 文字1
+     let gameClearTxt; // 文字2
+     let gameOverTxt; // 文字3
+     let goal; // ゴール
+     let bgm2; // BGM2
+     let se1; // 効果音1
+     let se2; // 効果音2
+     let skybox; // スカイボックス
+     let light; // ライト(光)
+     async function heavyInit() {
+       // 使い捨てしないゲームオブジェクトはここで作る
+       if (heavyInitFinished) return; // すでに読み込み済みなら何もしない
+       const loadings = [];
+       loadings.push(new Kart()); // カート
+       loadings.push(new Field()); // フィールド
+       loadings.push(new Goal()); // ゴール
+       loadings.push(new BGM('../assets/bgm_maoudamashii_8bit02.mp3')); // BGM2
+       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint01.wav')); // 効果音1
+       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint02.wav')); // 効果音2
+       loadings.push(new SkyBox()); // スカイボックス
+       [kart,field,goal,bgm2,se1,se2,skybox] = await Promise.all(loadings);
+       // 重くない処理だけど1回やっとけばOKな初期化
+       gameClearTxt = new a3.Text3D("Game Clear!",{color:0x0000ff});
+       clearScene.add(gameClearTxt);
+       clearScene.add(new a3.StandardLights());
+       gameOverTxt = new a3.Text3D("Game Over!",{color:0xff0000});
+       overScene.add(gameOverTxt);
+       overScene.add(new a3.StandardLights());
+       light = new a3.StandardLights(); // mainScene用
+       light.setPosition(100,100,100);
+       goal.setPositionNow(0,1.5,-5);
+       // 初期化が完了したことを記録
+       heavyInitFinished = true;
+     }
+     // 以下はすぐ必要なやつ
+     const bgm1 = await new BGM('../assets/bgm_maoudamashii_8bit01.mp3').ready; // BGM1
+     gameTitleTxt = new a3.Text3D("カーレース",{color:0x00ff00});
+     startScene.add(gameTitleTxt);
+     startScene.add(new a3.StandardLights());
+
+     // ゲーム全体の無限ループ
+     while (true) {
+       await gameStart();
+       await gameMain();
+       if (time <= TIME_LIMIT)
+         await gameClear();
+       else
+         await gameOver();
+     }
+
+     // ゲームのスタート画面の処理
+     async function gameStart() {
+       volumeDiv.style.display = 'block';
+       view.replaceScene(startScene);
+       view.camera.setMode('Default');
+       view.camera.setPosition(0,0,5);
+       view.camera.lookAt(0,0,0);
+       startScene.add(bgm1);
+       bgm1.play();
+       const p = heavyInit(); // このタイミングで初期化開始
+       let v = Number(volume.value);
+       while (true) {
+         await view.waitForRender();
+         gameTitleTxt.turnUp(1.0);
+         if (view.rightJoystick.x !== 0) {
+           v += 0.05*view.rightJoystick.x;
+           v = Math.min(Math.max(0,v),2);
+           volume.value = String(v);
+           volume.dispatchEvent(new Event("input", {bubbles:true}));
+         }
+         if (view.getLeftButtonCount() > 0)
+           break;
+       }
+       await p; // 初期化完全終了まで待つ。
+       bgm1.stop();
+       startScene.remove(bgm1);
+       volumeDiv.style.display = 'none';
+     }
+
+     // ゲームのメイン画面の処理
+     async function gameMain() {
+       await gameMainInit();
+       await gameMainLoop();
+       await gameMainCleanUp();
+     }
+
+     // ゲーム開始直前に毎回必要な初期化
+     async function gameMainInit() {
+       mainScene.add(bgm2);
+       bgm2.play();
+       mainScene.add(se1);
+       mainScene.add(se2);
+       mainScene.add(kart);
+       // 路面(y=0.1)にシャーシ(底面はボディ位置-0.5)がめり込まないように
+       // 0.5mのクリアランスを取って上から落とす
+       kart.carControl.reset(new a3.Vec3(0,1.1,0),new a3.Quat());
+       mainScene.add(field);
+       mainScene.add(goal);
+       goal.touched = false;
+       mainScene.add(skybox);
+       mainScene.add(light);
+       field.setPositionNow(0,0,0);
+       view.replaceScene(mainScene);
+       view.camera.setMode('Follow',{target:kart,lookFrom:lookFrom});
+       time = 0;
+       displayDiv.style.display = 'block';
+     }
+
+     // ゲームのメインループ
+     async function gameMainLoop() {
+       while (true) {
+         time += await view.waitForRender();
+         timeSpan.textContent = `${(TIME_LIMIT - time).toFixed(1)}`;
+         let a = 0, h = 0, b = 0;
+         kart.carControl.steer(-0.2*view.leftJoystick.x);
+         kart.carControl.accelerate(10*view.leftJoystick.y);
+         kart.carControl.brake(view.leftButton ? 1000.0 : 0.0);
+         if (view.rightButton)
+           kart.carControl.reset(new a3.Vec3(0,1.1,0),new a3.Quat());
+         // ゲーム終了の判定(色々な理由で終了する)
+         if (goal.touched || time > TIME_LIMIT)
+           break;
+       }
+     }
+
+     // ゲーム終了直後の後処理
+     async function gameMainCleanUp() {
+       // 次のゲームのために全部消す
+       bgm2.stop();
+       mainScene.removeAll();
+       displayDiv.style.display = 'none';
+     }
+
+     // ゲームクリア画面の処理
+     async function gameClear() {
+       //document.exitPointerLock(); // Pointer Unlock
+       view.replaceScene(clearScene);
+       view.camera.setMode('Default');
+       view.camera.setPosition(0,0,5);
+       view.camera.lookAt(0,0,0);
+       clearScene.add(bgm1);
+       bgm1.play();
+       volumeDiv.style.display = 'block';
+       let v = Number(volume.value);
+       while (true) {
+         await view.waitForRender();
+         gameClearTxt.turnUp(1.0);
+         if (view.rightJoystick.x !== 0) {
+           v += 0.05*view.rightJoystick.x;
+           v = Math.min(Math.max(0,v),2);
+           volume.value = String(v);
+           volume.dispatchEvent(new Event("input", {bubbles:true}));
+         }
+         if (view.getLeftButtonCount() > 0)
+           break;
+       }
+       volumeDiv.style.display = 'none';
+       bgm1.stop();
+       clearScene.remove(bgm1);
+     }
+
+     // ゲームオーバー画面の処理
+     async function gameOver() {
+       view.replaceScene(overScene);
+       view.camera.setMode('Default');
+       view.camera.setPosition(0,0,5);
+       view.camera.lookAt(0,0,0);
+       overScene.add(bgm1);
+       bgm1.play();
+       volumeDiv.style.display = 'block';
+       let v = Number(volume.value);
+       while (true) {
+         await view.waitForRender();
+         gameOverTxt.turnUp(1.0);
+         if (view.rightJoystick.x !== 0) {
+           v += 0.05*view.rightJoystick.x;
+           v = Math.min(Math.max(0,v),2);
+           volume.value = String(v);
+           volume.dispatchEvent(new Event("input",{bubbles:true}));
+         }
+         if (view.getLeftButtonCount() > 0)
+           break;
+       }
+       volumeDiv.style.display = 'none';
+       bgm1.stop();
+       overScene.remove(bgm1);
+     }
+    </script>
+  </body>
+</html>
