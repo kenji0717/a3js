@@ -81,10 +81,15 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   collisionEventQueue: Rapier.EventQueue;
   kinematicCharacterCollisionEventQueue: Collision[];
 
+  // GAHA 以下はオプションで変更できるようにした方が良いかも
+  private accumulator = 0;
+  private static readonly MAX_DT = 0.1;   // スパイク対策のクランプ
+  private static readonly MAX_STEPS = 4;  // 1フレームあたりのステップ数上限
+
   constructor(world:Rapier.World, timestep:number) {
     this.world = world;
     this.timestep = timestep;
-    this.collisionEventQueue = new RAPIER.EventQueue(true);
+    this.collisionEventQueue = new RAPIER.EventQueue(false); // 2026,07/17 falseにした
     this.world.integrationParameters.dt = this.timestep;
     this.kinematicCharacterCollisionEventQueue = [];
   }
@@ -98,10 +103,18 @@ export class RapierPhysicsWorld implements PhysicsWorld {
   }
 
   update(dt: number) {
-    // ここの実装は良く考えた方が良い。今は適当
-    const n = Math.ceil(dt / this.timestep);
-    for (let i=0;i<n;i++)
+    // 巨大dtを丸める
+    this.accumulator += Math.min(dt, RapierPhysicsWorld.MAX_DT);
+    let steps = 0;
+    while (this.accumulator >= this.timestep && steps < RapierPhysicsWorld.MAX_STEPS) {
       this.world.step(this.collisionEventQueue);
+      this.accumulator -= this.timestep;
+      steps++;
+    }
+    // 上限に達したら残りを捨てる(処理落ちの連鎖=spiral of deathを防ぐ)
+    if (steps === RapierPhysicsWorld.MAX_STEPS) {
+      this.accumulator = 0;
+    }
   }
 
   getCollisions(): Collision[] {
@@ -119,6 +132,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
         });
       }
     });
+    this.collisionEventQueue.clear(); // 2026,07/17
     collisions.push(...this.kinematicCharacterCollisionEventQueue);
     this.kinematicCharacterCollisionEventQueue.length=0;
     return collisions;
