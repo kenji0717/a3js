@@ -89,6 +89,8 @@ export interface CarControlOptions {
   wheelRearMaxSuspensionTravel: number;
   /** 空気抵抗係数。`0` で無効。デフォルトは `0`。 */
   aerodynamicDrag: number;
+  /** シミュレーションのタイムステップ(秒)。RapierPhysicsWorldOptionsのtimestepと合せること。デフォルトは`1/60`。 */
+  timestep: number;
 }
 
 /**
@@ -130,7 +132,8 @@ export const defaultCarControlOptions = {
   wheelRearWheelFrictionSlip: 100.0,
   wheelFrontMaxSuspensionTravel: 0.25,
   wheelRearMaxSuspensionTravel: 0.25,
-  aerodynamicDrag: 0
+  aerodynamicDrag: 0,
+  timestep: 1/60
 };
 
 /**
@@ -245,10 +248,16 @@ export class CarTransformer implements Transformer {
   chassisBody?: Rapier.RigidBody;
   chassisColliderDesc?: Rapier.ColliderDesc;
   chassisCollider?: Rapier.Collider;
+  timestep: number;
+  accumulator: number;
+  private static readonly MAX_DT = 0.1;   // スパイク対策のクランプ
+  private static readonly MAX_STEPS = 4;  // 1フレームあたりのステップ数上限
 
   constructor(cm: CarControl) {
     this.cc = cm;
     this.transform = new Transform();
+    this.timestep = this.cc.opt.timestep;
+    this.accumulator = 0;
   }
 
   init(trans: Transform, objectA3: ObjectA3) {
@@ -427,7 +436,20 @@ export class CarTransformer implements Transformer {
       }
     }
 
-    this.controller?.updateVehicle(dt);
+    // 以下RapierPhysicsWorldのupdate()の処理と同じにする
+    // 巨大dtを丸める
+    this.accumulator += Math.min(dt, CarTransformer.MAX_DT);
+    let steps = 0;
+    while (this.accumulator >= this.timestep && steps < CarTransformer.MAX_STEPS) {
+      this.controller?.updateVehicle(this.timestep);
+      this.accumulator -= this.timestep;
+      steps++;
+    }
+    // 上限に達したら残りを捨てる(処理落ちの連鎖=spiral of deathを防ぐ)
+    if (steps === CarTransformer.MAX_STEPS) {
+      this.accumulator = 0;
+    }
+
     if (this.chassisBody)
       this.transform.loc.set(this.chassisBody.translation());
     if (this.chassisBody)
