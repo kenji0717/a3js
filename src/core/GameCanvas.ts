@@ -360,11 +360,21 @@ export class GameCanvas extends HTMLElement implements View {
       this.rightButton = false;
   }
 
+  /** 左ボタンを押した回数をリセットして0にする。 */
+  resetLeftButtonCount() {
+    this._leftButtonCount = 0;
+  }
+
   /** 左ボタンを押した回数を読み出して内部変数を0にリセット。 */
   getLeftButtonCount() {
     const c = this._leftButtonCount;
     this._leftButtonCount = 0;
     return c;
+  }
+
+  /** 右ボタンを押した回数をリセットして0にする。 */
+  resetRightButtonCount() {
+    this._rightButtonCount = 0;
   }
 
   /** 右ボタンを押した回数を読み出して内部変数を0にリセット。 */
