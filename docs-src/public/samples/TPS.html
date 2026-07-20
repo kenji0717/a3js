@@ -362,12 +362,12 @@
        // 使い捨てしないゲームオブジェクトはここで作る
        if (heavyInitFinished) return; // すでに読み込み済みなら何もしない
        const loadings = [];
-       loadings.push(new Player()); // プレーヤー
-       loadings.push(new Field()); // フィールド
-       loadings.push(new BGM('../assets/bgm_maoudamashii_8bit02.mp3')); // BGM2
-       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint01.wav')); // 効果音1
-       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint02.wav')); // 効果音2
-       loadings.push(new SkyBox()); // スカイボックス
+       loadings.push(new Player().ready); // プレーヤー
+       loadings.push(new Field().ready); // フィールド
+       loadings.push(new BGM('../assets/bgm_maoudamashii_8bit02.mp3').ready); // BGM2
+       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint01.wav').ready); // 効果音1
+       loadings.push(new SoundEffect('../assets/se_maoudamashii_onepoint02.wav').ready); // 効果音2
+       loadings.push(new SkyBox().ready); // スカイボックス
        [player,field,bgm2,se1,se2,skybox] = await Promise.all(loadings);
        // 重くない処理だけど1回やっとけばOKな初期化
        gameClearTxt = new a3.Text3D("Game Clear!",{color:0x0000ff});
