@@ -87,15 +87,16 @@ export class Scene {
    * @param object 取り除く `ObjectA3`
    */
   remove(object: ObjectA3) {
-    this.scene.remove(object.object3D);
     {
       // やりたいのはthis.objects.remove(object);なんだけど無い
       // そして順番は変になるけど以下の方法はゲーム系では速くて
       // 良いらしい。
       const i = this.objects.indexOf(object);
+      if (i===-1) return; // 2026,07/20
       this.objects[i] = this.objects[this.objects.length-1];
       this.objects.pop();
     }
+    this.scene.remove(object.object3D);
     object.scene = undefined;
     if (this.physicsWorld) {
       object.removeOneselfFromPhysics(this.physicsWorld);
