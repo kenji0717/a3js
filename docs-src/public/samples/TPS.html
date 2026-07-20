@@ -132,7 +132,7 @@
          this.upSpeed += (-9.8*dt);
          if (this.isGrounded()) {
            this.upSpeed = 0;
-           if (view.leftButton) this.upSpeed = 5.0;
+           if (view.getLeftButtonCount()>0) this.upSpeed = 5.0;
          }
          const linvel = new a3.Vec3();
          linvel.add(this.getUnitVecZ().scale(view.leftJoystick.y)); // 前後方向
@@ -435,6 +435,8 @@
 
      // ゲーム開始直前に毎回必要な初期化
      async function gameMainInit() {
+       view.resetLeftButtonCount();
+       view.resetRightButtonCount();
        mainScene.add(bgm2);
        bgm2.play();
        mainScene.add(se1);

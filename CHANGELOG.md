@@ -14,6 +14,15 @@
 ### Fixed
 ### Security
 
+## [1.3.2] - 2026-07-30
+
+### Added
+- GameCanvas.resetLeftButtonCount();
+- GameCanvas.resetRightButtonCount();
+### Fixed
+- Scene.remove();のバグ修正。
+- CarControlの方でもRapierPhysicsWorld.update()と同じ修正。
+
 ## [1.3.1] - 2026-07-17
 
 ### Added
